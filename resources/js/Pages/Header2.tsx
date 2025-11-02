@@ -6,7 +6,7 @@ import SearchModal from './SearchModal';
 import ProfileModal from './ProfileModal';
 import PricingModal from './PricingModal';
 import SupportModal from './SupportModal';
-import { Settings, MessageSquare, UserPlus } from 'lucide-react';
+import { Settings, MessageSquare, UserPlus, Menu } from 'lucide-react';
 import axios from 'axios';
 import { AnimatedGradientBorderStyles } from './PriceComponents/PricingCard';
 
@@ -75,6 +75,7 @@ interface Header2Props {
   };
   currentPlan?: CurrentPlan | null;
   settings?: Settings;
+  onMobileSidebarToggle?: () => void;
 }
 
 const Header2: React.FC<Header2Props> = ({
@@ -89,6 +90,7 @@ const Header2: React.FC<Header2Props> = ({
   onLibraryViewed,
   currentPlan,
   settings,
+  onMobileSidebarToggle,
 }) => {
   const [query, setQuery] = useState(searchQuery);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -96,7 +98,6 @@ const Header2: React.FC<Header2Props> = ({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBrowseDropdownOpen, setIsBrowseDropdownOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [currentUser, setCurrentUser] = useState(auth?.user || null);
@@ -140,10 +141,6 @@ const Header2: React.FC<Header2Props> = ({
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   const toggleBrowseDropdown = () => {
@@ -290,8 +287,41 @@ const Header2: React.FC<Header2Props> = ({
       <AnimatedGradientBorderStyles />
       <header className="bg-white dark:bg-gray-900 px-4 sm:px-6 pb-4 pt-4 sm:pt-6 font-sora dark:border-gray-700">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
+          {/* Mobile Sidebar Toggle + Browse - Only on mobile */}
+          <div className="flex items-center space-x-1 lg:hidden">
+            <button
+              onClick={onMobileSidebarToggle}
+              className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors outline-none focus:outline-none"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <div className="relative" ref={browseRef}>
+              <button
+                onClick={toggleBrowseDropdown}
+                className="bg-transparent border-none text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:!outline-none focus:border-none text-sm flex items-center hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Browse
+                <svg
+                  className={`ml-1 w-4 h-4 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <BrowseDropdown
+                isOpen={isBrowseDropdownOpen}
+                onClose={() => setIsBrowseDropdownOpen(false)}
+                filters={filters || defaultFilters}
+              />
+            </div>
+          </div>
+
+          {/* Logo - Desktop Only */}
+          <div className="hidden lg:flex items-center">
             <Link href="/" className="flex items-center space-x-2 focus:outline-none">
               {logo ? (
                 <img
@@ -312,8 +342,8 @@ const Header2: React.FC<Header2Props> = ({
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="relative" ref={browseRef}>
+          <div className="hidden lg:flex items-center space-x-4">
+            <div className="relative">
               <button
                 onClick={toggleBrowseDropdown}
                 className="bg-transparent border-none text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:!outline-none focus:border-none text-sm lg:text-base flex items-center hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -350,6 +380,16 @@ const Header2: React.FC<Header2Props> = ({
             </span>
           </div>
 
+          {/* Mobile Plugin Link */}
+         <a
+            href="https://plugin.ripplix.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="lg:hidden relative text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:outline-none transition-colors text-xs whitespace-nowrap duration-500 flex items-center"
+          >
+            <span className="opacity-80 hover:opacity-100 transition-opacity">Plugin</span>
+          </a>
+
           {/* Center - Search (Desktop) */}
           <div className="hidden sm:flex flex-1 max-w-xs sm:max-w-md lg:max-w-2xl mx-4 lg:mx-8">
             <form onSubmit={handleSearch} className="relative w-full">
@@ -381,7 +421,7 @@ const Header2: React.FC<Header2Props> = ({
           </div>
 
           {/* Right side - Actions */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-1.5 sm:space-x-4">
             {/* Mobile Search Button */}
             <button
               onClick={handleSearchInputClick}
@@ -392,33 +432,23 @@ const Header2: React.FC<Header2Props> = ({
               </svg>
             </button>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={toggleMobileMenu}
-              className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-
             {/* Unlock Pro button */}
-            <div className="animated-gradient-border-button">
+            {/* <div className="animated-gradient-border-button"> */}
               <button
                 onClick={handlePricingModalOpen}
-                className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 ${buttonStyle}`}
+                className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[14px] sm:text-[16px] transition-colors whitespace-nowrap outline-none focus:outline-none duration-500 min-w-[60px] sm:min-w-0 ${buttonStyle}`}
               >
                 <span className="hidden sm:inline">{buttonText.full}</span>
                 <span className="sm:hidden">{buttonText.short}</span>
               </button>
-            </div>
+            {/* </div> */}
 
             {/* User Profile/Auth */}
             {currentUser ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
-                  className="bg-[#E6E7F3] dark:bg-gray-800 text-[#443B82] dark:text-gray-300 p-2 rounded-3xl border outline-none focus:outline-none border-[#CECCFF] dark:border-gray-600 dark:hover:bg-gray-700 transition-colors flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 overflow-hidden"
+                  className="bg-[#E6E7F3] dark:bg-gray-800 text-[#443B82] dark:text-gray-300 p-2 rounded-3xl border outline-none focus:outline-none border-[#CECCFF] dark:border-gray-600 dark:hover:bg-gray-700 transition-colors flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 overflow-hidden"
                 >
                   {shouldShowAvatar ? (
                     <img
@@ -529,7 +559,7 @@ const Header2: React.FC<Header2Props> = ({
             ) : (
               <Link
                 href="/register"
-                className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
+                className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[14px] sm:text-[16px] hover:opacity-95 transition-opacity whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none min-w-[60px] sm:min-w-0 text-center"
               >
                 <span className="hidden sm:inline">Join Now</span>
                 <span className="sm:hidden">Join</span>
@@ -537,73 +567,6 @@ const Header2: React.FC<Header2Props> = ({
             )}
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col space-y-3">
-              <button
-                onClick={toggleBrowseDropdown}
-                className="bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-[#2B235A] dark:text-gray-300 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
-              >
-                <span>Browse</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <a
-                href="https://plugin.ripplix.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#2B235A] dark:text-gray-300 font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2 flex items-center justify-between border border-gray-200 dark:border-gray-600 rounded-lg px-3"
-              >
-                <span>Figma Plugin</span>
-                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium outline-none focus:outline-none">
-                  New
-                </span>
-              </a>
-
-              {currentUser && (
-                <button
-                  onClick={handleSupportModalOpen}
-                  className="text-gray-700 dark:text-gray-300 font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2 flex items-center justify-between border border-gray-200 dark:border-gray-600 rounded-lg px-3"
-                >
-                  <div className="flex items-center">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    <span>Support</span>
-                  </div>
-                  {unreadSupportCount > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {unreadSupportCount}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {!currentUser && (
-                <div className="flex flex-col space-y-2">
-                  <Link
-                    href={route('login')}
-                    className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 ${buttonStyle}`}
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href={route('register')}
-                    className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
-                  >
-                    Join Now
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Modals */}

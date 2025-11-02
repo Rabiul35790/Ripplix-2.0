@@ -4,6 +4,7 @@ import { PageProps } from '@/types';
 import Sidebar2 from './Sidebar2';
 import Header2 from './Header2';
 import HeroSection from '../Components/HeroSection';
+import { X } from 'lucide-react';
 
 interface Filter {
   id: number;
@@ -82,6 +83,15 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
   const { props } = usePage<PageProps>();
   const authData = auth || props.auth;
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleMobileSidebarToggle = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  };
+
+  const closeMobileSidebar = () => {
+    setIsMobileSidebarOpen(false);
+  };
 
   useEffect(() => {
     const header = document.getElementById('main-header');
@@ -162,6 +172,19 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
     };
   }, []);
 
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isMobileSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileSidebarOpen]);
+
   return (
     <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F8F8F9] dark:bg-gray-900">
 
@@ -179,7 +202,39 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={onLibraryViewed}
           settings={settings}
+          onMobileSidebarToggle={handleMobileSidebarToggle}
         />
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-[60] lg:hidden"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <div
+        className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 z-[70] transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between p-4 dark:border-gray-700">
+          <button
+            onClick={closeMobileSidebar}
+            className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors outline-none focus:outline-none"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="h-[calc(100vh-64px)] overflow-y-auto">
+          <Sidebar2
+            currentRoute={currentRoute}
+            auth={authData}
+            ziggy={props.ziggy}
+          />
+        </div>
       </div>
 
       {/* Hero Section - Full Width */}

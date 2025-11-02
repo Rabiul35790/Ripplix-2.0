@@ -342,7 +342,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
             {/* Interactions Column (Updated Color Palette to Match All Apps) */}
             <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
             <div className="sticky top-0 bg-[#efeff7e5] dark:bg-gray-900 z-10 py-4 px-6 pb-2">
-                <div className="flex items-center mb-3">
+                <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-[#F7F7FCE5] dark:bg-blue-900 border border-[#E3E2FF] rounded flex items-center justify-center mr-3">
                     <Component className='w-4 h-4'/>
                 </div>

@@ -40,6 +40,7 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
   const { url, props } = usePage<ExtendedPageProps>();
 
   const copyright_text = props?.settings?.copyright_text || null;
+  const logo = props?.settings?.logo || null;
 
   useEffect(() => {
     const fetchSidebarAd = async () => {
@@ -193,6 +194,27 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
   return (
     <div className="bg-off-white rounded-t-md dark:bg-gray-900 h-[calc(100vh-theme(spacing.16))] overflow-y-auto">
       <div className="flex flex-col h-full">
+        {/* Logo - Mobile Only */}
+        <div className="lg:hidden px-5 pt-6 pb-4 dark:border-gray-700">
+          <Link href="/" className="flex items-center space-x-2 focus:outline-none">
+            {logo ? (
+              <img
+                src={logo}
+                alt="RippliX Logo"
+                className="h-8 max-w-[120px] object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center ${logo ? 'hidden' : ''}`}>
+              <span className="text-white dark:text-black font-bold text-sm">R</span>
+            </div>
+          </Link>
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 px-5 pt-6">
           {/* Workspace */}

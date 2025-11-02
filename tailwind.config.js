@@ -26,6 +26,7 @@ export default {
                 sora: ['Sora',  'sans-serif'],
                 poppins: ['Poppins'],
                 kalam: ["Kalam"],
+                inter: ["Inter"]
             },
         },
     },
