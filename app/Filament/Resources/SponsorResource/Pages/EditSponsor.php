@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Filament\Resources\SponsorResource\Pages;
+
+use App\Filament\Resources\SponsorResource;
+use Filament\Actions;
+use Filament\Resources\Pages\EditRecord;
+
+class EditSponsor extends EditRecord
+{
+    protected static string $resource = SponsorResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\ViewAction::make(),
+            Actions\DeleteAction::make(),
+        ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+}
