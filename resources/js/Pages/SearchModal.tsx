@@ -200,7 +200,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           setResults(newLibraries);
         } else {
           // For unauthenticated users, limit to 12 results
-          setResults(newLibraries.slice(0, 12));
+          setResults(newLibraries.slice(0, 18));
         }
       } else {
         // This only applies to authenticated users (infinite scroll)
@@ -359,7 +359,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   };
 
   // Check if we should show the login prompt
-  const showLoginPrompt = !isAuthenticated && totalCount > 12;
+  const showLoginPrompt = !isAuthenticated && totalCount > 18;
 
   return (
     <>
@@ -414,8 +414,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <div className="px-3 sm:px-4 py-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs sm:text-sm text-[#443B82] font-sora dark:text-gray-400">
-                  {!isAuthenticated && totalCount > 12
-                    ? `Showing 12 of ${totalCount} results`
+                  {!isAuthenticated && totalCount > 18
+                    ? `Showing 18 of ${totalCount} results`
                     : `${totalCount} ${totalCount === 1 ? 'result' : 'results'} found`
                   }
                 </p>

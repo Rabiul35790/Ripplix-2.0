@@ -269,8 +269,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             Search Results for "{searchQuery}"
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {!isAuthenticated && totalCount > 12
-              ? `Showing 12 of ${totalCount} results`
+            {!isAuthenticated && totalCount > 18
+              ? `Showing 18 of ${totalCount} results`
               : `${totalCount} ${totalCount === 1 ? 'result' : 'results'} found`
             }
           </p>
@@ -307,7 +307,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             />
 
             {/* Unauthenticated User Sign Up Prompt - Exact same as LibraryGrid */}
-            {!isAuthenticated && totalCount > 12 && (
+            {/* {!isAuthenticated && totalCount > 18 && (
               <div className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl" style={{ background: 'linear-gradient(179.63deg, rgba(248, 248, 249, 0) 0%, #FFFFFF 40%, #F6F5FA 85%)' }}>
                 <div className="relative z-10">
                   <h2 className="text-3xl sm:text-4xl pt-10 font-bold text-[#BCBCC7] dark:text-white mb-2 font-sora">
@@ -322,7 +322,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <span className='font-semibold text-[#9D9DA8]'>Covering web, mobile, smartwatches and even AR/VR.</span>
                   </p>
 
-                  {/* Buttons */}
+
                   <div className="flex items-center justify-center gap-4 mb-10">
                     <Link
                       href="/login"
@@ -342,7 +342,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     Where designers from the world's leading teams spark interaction ideas
                   </p>
 
-                  {/* Brand Logos with automatic scrolling animation */}
+
                   <style>{`
                     @keyframes scroll-infinite {
                       0% {
@@ -363,7 +363,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   `}</style>
                   <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
                     <div className="scroll-container">
-                      {/* First set */}
+
                       <div className="flex items-center gap-6 shrink-0 px-3">
                         <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
                         <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
@@ -372,7 +372,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
                         <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
                       </div>
-                      {/* Second set (duplicate) - must be identical */}
+
                       <div className="flex items-center gap-6 shrink-0 px-3">
                         <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
                         <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
@@ -385,7 +385,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </>
         ) : (
           <div className="text-center py-12">

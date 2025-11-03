@@ -132,10 +132,16 @@ Route::post('/following/status', [FollowingController::class, 'getFollowStatus']
 | Browse Routes
 |--------------------------------------------------------------------------
 */
+// routes/web.php
+
+// ✅ KEEP THESE - They handle initial page navigation (instant!)
 Route::get('/browse', [LibraryController::class, 'browse'])->middleware('verified')->name('browse');
 Route::get('/browse/category/{slug}', [LibraryController::class, 'browseByCategory'])->name('browse.category');
 Route::get('/browse/industry/{slug}', [LibraryController::class, 'browseByIndustry'])->name('browse.industry');
 Route::get('/browse/interaction/{slug}', [LibraryController::class, 'browseByInteraction'])->name('browse.interaction');
+
+// ✅ ADD THIS - For fetching libraries after navigation
+Route::get('/api/browse/libraries', [LibraryController::class, 'getBrowseLibraries'])->name('api.browse.libraries');
 
 /*
 |--------------------------------------------------------------------------

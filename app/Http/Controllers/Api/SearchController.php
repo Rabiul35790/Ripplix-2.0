@@ -38,7 +38,7 @@ class SearchController extends Controller
         $isAuthenticated = auth()->check();
 
         // Different pagination logic for authenticated vs unauthenticated users
-        $perPage = $isAuthenticated ? 20 : 12; // 20 for auth users, 12 for unauth
+        $perPage = $isAuthenticated ? 20 : 18; // 20 for auth users, 12 for unauth
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
@@ -95,7 +95,7 @@ class SearchController extends Controller
         // For authenticated users, handle normal pagination
         if (!$isAuthenticated) {
             // Always return first 12 results for unauthenticated users
-            $libraries = $searchQuery->take(12)->get();
+            $libraries = $searchQuery->take(18)->get();
             $hasMore = false; // Never show "has more" for unauthenticated users
             $currentPage = 1;
         } else {

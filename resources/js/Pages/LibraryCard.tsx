@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { Atom, Star } from 'lucide-react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
@@ -64,6 +65,100 @@ interface LibraryCardProps extends PageProps {
   onLibraryViewed?: (libraryId: number) => void;
 }
 
+// Global video manager to handle all videos efficiently
+class VideoManager {
+  private static instance: VideoManager;
+  private videos: Set<HTMLVideoElement> = new Set();
+  private monitorInterval: NodeJS.Timeout | null = null;
+  private intersectionObserver: IntersectionObserver | null = null;
+  private visibleVideos: Set<HTMLVideoElement> = new Set();
+
+  private constructor() {
+    this.startMonitoring();
+    this.setupIntersectionObserver();
+  }
+
+  static getInstance(): VideoManager {
+    if (!VideoManager.instance) {
+      VideoManager.instance = new VideoManager();
+    }
+    return VideoManager.instance;
+  }
+
+  private setupIntersectionObserver() {
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target as HTMLVideoElement;
+
+          if (entry.isIntersecting) {
+            this.visibleVideos.add(video);
+            this.playVideo(video);
+          } else {
+            this.visibleVideos.delete(video);
+            // Optionally pause videos that are out of view to save resources
+            if (video && !video.paused) {
+              video.pause();
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px' // Start loading slightly before entering viewport
+      }
+    );
+  }
+
+  private startMonitoring() {
+    // Monitor only visible videos every 3 seconds
+    this.monitorInterval = setInterval(() => {
+      this.visibleVideos.forEach((video) => {
+        if (video.paused && !video.ended && video.readyState >= 2) {
+          this.playVideo(video);
+        }
+      });
+    }, 3000);
+  }
+
+  private playVideo(video: HTMLVideoElement) {
+    if (video && video.paused && !video.ended) {
+      video.play().catch((err) => {
+        // Silently handle autoplay restrictions
+        if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+          console.error('Video play error:', err);
+        }
+      });
+    }
+  }
+
+  register(video: HTMLVideoElement) {
+    this.videos.add(video);
+    if (this.intersectionObserver) {
+      this.intersectionObserver.observe(video);
+    }
+  }
+
+  unregister(video: HTMLVideoElement) {
+    this.videos.delete(video);
+    this.visibleVideos.delete(video);
+    if (this.intersectionObserver) {
+      this.intersectionObserver.unobserve(video);
+    }
+  }
+
+  destroy() {
+    if (this.monitorInterval) {
+      clearInterval(this.monitorInterval);
+    }
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
+    this.videos.clear();
+    this.visibleVideos.clear();
+  }
+}
+
 const LibraryCard: React.FC<LibraryCardProps> = ({
   library,
   onClick,
@@ -82,7 +177,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
-  const [isHovered, setIsHovered] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showLibrarySelectionModal, setShowLibrarySelectionModal] = useState(false);
@@ -92,6 +186,13 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   const [localUserLibraryIds, setLocalUserLibraryIds] = useState<number[]>(userLibraryIds);
   const [localViewedLibraryIds, setLocalViewedLibraryIds] = useState<number[]>(viewedLibraryIds);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoManagerRef = useRef<VideoManager>(VideoManager.getInstance());
+
+  // Lazy loading with intersection observer
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
 
   // Update local state when props change
   useEffect(() => {
@@ -102,6 +203,18 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   useEffect(() => {
     setLocalViewedLibraryIds(viewedLibraryIds);
   }, [viewedLibraryIds]);
+
+  // Register video with global manager
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && inView) {
+      videoManagerRef.current.register(video);
+
+      return () => {
+        videoManagerRef.current.unregister(video);
+      };
+    }
+  }, [inView, isVideoLoaded]);
 
   // Check if library is starred based on local state
   const isStarred = localUserLibraryIds.includes(library.id);
@@ -151,21 +264,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
       console.error('Error refreshing user library IDs:', error);
     }
   }, [authData?.user]);
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (videoRef.current) {
-      videoRef.current.play().catch(console.error);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
 
   const handleVideoLoad = () => {
     setIsVideoLoaded(true);
@@ -343,144 +441,145 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
   return (
     <>
-      <div
-  className={`relative overflow-hidden group border border-transparent transition-all duration-500 ease-in-out hover:border-[#F2F2FF] ${getCardClasses()}`}
->
-  {/* Animated hover background */}
-  <div className="absolute inset-0 bg-white translate-y-[-100%] group-hover:translate-y-0 transition-transform duration-700 ease-in-out"></div>
-
-  {/* Keep the rest of your card content inside this next wrapper */}
-  <div className="relative z-8">
         <div
-          className={`${getVideoContainerClasses()}`}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onClick={handleVideoClick}
+        ref={ref}
+        className={`relative overflow-hidden group border border-transparent bg-transparent hover:bg-white transition-colors duration-500 ease-in-out hover:border-[#F2F2FF] ${getCardClasses()}`}
         >
-          {library.video_url && (
-            <video
-              ref={videoRef}
-              src={library.video_url}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
-                isVideoLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              autoPlay
-              muted
-              loop
-              playsInline
-              onLoadedData={handleVideoLoad}
-            />
-          )}
+        {/* Animated hover background */}
+        <div className="absolute"></div>
 
-          {/* Fallback when video is not loaded */}
-          {!isVideoLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white">
-              <div
-                className="flex items-center justify-center bg-[#F7F7FB] rounded-xl"
-                style={{
-                  width: 'calc(100% - 36px)', // 18px left + 18px right
-                  height: 'calc(100% - 120px)', // 60px top + 60px bottom
-                }}
-              >
-                <img
-                  src="images/Spin.gif"
-                  height={60}
-                  width={60}
-                  alt="Loading..."
-                />
-              </div>
-            </div>
-          )}
+        {/* Keep the rest of your card content inside this next wrapper */}
+        <div className="relative z-8">
+          <div
+            className={`${getVideoContainerClasses()}`}
+            onClick={handleVideoClick}
+          >
+            {/* Only load video when card is in view */}
+            {inView && library.video_url && (
+              <video
+                ref={videoRef}
+                src={library.video_url}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
+                  isVideoLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onLoadedData={handleVideoLoad}
+              />
+            )}
 
-          {/* New Tag - Shows if library has NOT been viewed */}
-          {isNewLibrary() && (
-            <div className="absolute top-3 right-3 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
-              New
-            </div>
-          )}
-        </div>
-
-        {/* Content - Not clickable */}
-        <div className={getContentPadding()}>
-          <div className="flex items-start gap-2">
-            {/* Category Image */}
-            {getCategoryImage() ? (
-              <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] hover:shadow-[6px_0px_24px_-1px_#6D16C321,0px_6px_20px_-1px_#6D16C321] transition-shadow duration-300 overflow-hidden flex-shrink-0 ${getCategoryImageSize()}`}>
-                <Link
-                  href={`/browse?category=${getCategorySlug()}`}
-                  className={`font-sora !font-bold ${
-                    filterValue === getCategorySlug() ? '' : ''
-                  }`}
+            {/* Fallback when video is not loaded or not in view */}
+            {(!inView || !isVideoLoaded) && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white">
+                <div
+                  className="flex items-center justify-center bg-[#F7F7FB] rounded-xl"
+                  style={{
+                    width: 'calc(100% - 36px)', // 18px left + 18px right
+                    height: 'calc(100% - 120px)', // 60px top + 60px bottom
+                  }}
                 >
                   <img
-                    src={getCategoryImage()}
-                    alt="Category"
-                    className="w-full h-full object-cover"
+                    src="images/Spin.gif"
+                    height={60}
+                    width={60}
+                    alt="Loading..."
                   />
-                </Link>
-              </div>
-            ) : (
-              <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] flex items-center justify-center flex-shrink-0 ${getCategoryImageSize()}`}>
-                <Atom className='text-[#CECCFF] h-6 w-6'/>
+                </div>
               </div>
             )}
 
-            {/* Title and Interactions Container */}
-            <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
-              {/* Title */}
-              <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
-                {library.title}
-              </h3>
+            {/* New Tag - Shows if library has NOT been viewed */}
+            {isNewLibrary() && (
+              <div className="absolute top-3 right-3 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
+                New
+              </div>
+            )}
+          </div>
 
-              {/* Interactions */}
-              <div className="font-medium text-[#8787A8] opacity-70">
-                {library.interactions.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {library.interactions.slice(0, 2).map((interaction, index) => (
-                      <span
-                        key={interaction.id}
-                        className={`font-sora ${
-                          cardSize === 'large' ? 'text-base' : 'text-sm'
-                        }`}
-                      >
-                        <Link
-                          href={`/browse?interaction=${interaction.name.toLowerCase().replace(/\s+/g, '-')}`}
-                          className={`focus:outline-none focus:ring-0 hover:text-[#9943EE] transition-color duration-500 ${
-                            filterValue === interaction.name.toLowerCase().replace(/\s+/g, '-') ? '' : ''
+          {/* Content - Not clickable */}
+          <div className={getContentPadding()}>
+            <div className="flex items-start gap-2">
+              {/* Category Image */}
+              {getCategoryImage() ? (
+                <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] hover:shadow-[6px_0px_24px_-1px_#6D16C321,0px_6px_20px_-1px_#6D16C321] transition-shadow duration-300 overflow-hidden flex-shrink-0 ${getCategoryImageSize()}`}>
+                  <Link
+                    href={`/browse?category=${getCategorySlug()}`}
+                    className={`font-sora !font-bold ${
+                      filterValue === getCategorySlug() ? '' : ''
+                    }`}
+                  >
+                    <img
+                      src={getCategoryImage()}
+                      alt="Category"
+                      className="w-full h-full object-cover"
+                    />
+                  </Link>
+                </div>
+              ) : (
+                <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] flex items-center justify-center flex-shrink-0 ${getCategoryImageSize()}`}>
+                  <Atom className='text-[#CECCFF] h-6 w-6'/>
+                </div>
+              )}
+
+              {/* Title and Interactions Container */}
+              <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
+                {/* Title */}
+                <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
+                  {library.title}
+                </h3>
+
+                {/* Interactions */}
+                <div className="font-medium text-[#8787A8] opacity-70">
+                  {library.interactions.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {library.interactions.slice(0, 2).map((interaction, index) => (
+                        <span
+                          key={interaction.id}
+                          className={`font-sora ${
+                            cardSize === 'large' ? 'text-base' : 'text-sm'
                           }`}
                         >
-                          {interaction.name}
-                        </Link>
-                        {index < Math.min(library.interactions.length - 1, 1)}
-                      </span>
-                    ))}
-                    {library.interactions.length > 2 && (
-                      <span className={`text-[#8787A8] dark:text-gray-400 ${
-                        cardSize === 'large' ? 'text-base' : 'text-sm'
-                      }`}>
-                        +{library.interactions.length - 2}
-                      </span>
-                    )}
-                  </div>
-                )}
+                          <Link
+                            href={`/browse?interaction=${interaction.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            className={`focus:outline-none focus:ring-0 hover:text-[#9943EE] transition-color duration-500 ${
+                              filterValue === interaction.name.toLowerCase().replace(/\s+/g, '-') ? '' : ''
+                            }`}
+                          >
+                            {interaction.name}
+                          </Link>
+                          {index < Math.min(library.interactions.length - 1, 1)}
+                        </span>
+                      ))}
+                      {library.interactions.length > 2 && (
+                        <span className={`text-[#8787A8] dark:text-gray-400 ${
+                          cardSize === 'large' ? 'text-base' : 'text-sm'
+                        }`}>
+                          +{library.interactions.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Star Icon - Clickable */}
-            <button
-              onClick={handleStarClick}
-              disabled={isLoadingBoards}
-              className="text-[#2B235A] hover:text-[#2B235A] dark:hover:text-gray-300 transition-colors flex-shrink-0 focus:outline-none disabled:opacity-50"
-              title={isStarred ? "Added to collection" : "Add to collection"}
-            >
-              <Star
-                size={getStarSize()}
-                fill={isStarred ? "currentColor" : "none"}
-                className={isStarred ? "text-[#2B235A]" : "text-[#2B235A]"}
-              />
-            </button>
+              {/* Star Icon - Clickable */}
+              <button
+                onClick={handleStarClick}
+                disabled={isLoadingBoards}
+                className="text-[#2B235A] hover:text-[#2B235A] dark:hover:text-gray-300 transition-colors flex-shrink-0 focus:outline-none disabled:opacity-50"
+                title={isStarred ? "Added to collection" : "Add to collection"}
+              >
+                <Star
+                  size={getStarSize()}
+                  fill={isStarred ? "currentColor" : "none"}
+                  className={isStarred ? "text-[#2B235A]" : "text-[#2B235A]"}
+                />
+              </button>
+            </div>
           </div>
-        </div>
         </div>
       </div>
 

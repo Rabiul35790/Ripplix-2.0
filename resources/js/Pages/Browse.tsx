@@ -21,7 +21,7 @@ interface Library {
   industries: Array<{ id: number; name: string }>;
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
-  published_date:string;
+  published_date: string;
 }
 
 interface UserPlanLimits {
@@ -44,7 +44,7 @@ interface BrowseProps extends PageProps {
   libraries: Library[];
   selectedLibrary?: Library | null;
   userLibraryIds?: number[];
-  viewedLibraryIds?: number[]; // ADD THIS
+  viewedLibraryIds?: number[];
   isAuthenticated: boolean;
   totalLibraryCount: number;
   userPlanLimits?: UserPlanLimits | null;
@@ -57,19 +57,21 @@ interface BrowseProps extends PageProps {
   filterType?: 'category' | 'industry' | 'interaction';
   filterValue?: string;
   filterName?: string;
+  categoryData?: any;
 }
 
 const Browse: React.FC<BrowseProps> = ({
-  libraries,
+  libraries: initialLibraries = [],
   selectedLibrary: initialSelectedLibrary = null,
   userLibraryIds: initialUserLibraryIds = [],
-  viewedLibraryIds: initialViewedLibraryIds = [], // ADD THIS
+  viewedLibraryIds: initialViewedLibraryIds = [],
   isAuthenticated: initialIsAuthenticated = false,
-  totalLibraryCount = 0,
+  totalLibraryCount,
   filters,
   filterType,
   filterValue,
   filterName,
+  categoryData,
   userPlanLimits,
   auth
 }) => {
@@ -87,27 +89,32 @@ const Browse: React.FC<BrowseProps> = ({
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [cardsPerRow, setCardsPerRow] = useState(3);
 
-  // ADD THIS: State for userLibraryIds
+  // State for libraries data
+  const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
+  const [allLibraries, setAllLibraries] = useState<Library[]>([]);
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState(initialLibraries.length === 0);
+
+  // State for userLibraryIds
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
 
-  // ADD THIS: State for viewedLibraryIds with real-time updates
+  // State for viewedLibraryIds with real-time updates
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
   // Modal state
   const [modalLibrary, setModalLibrary] = useState<Library | null>(initialSelectedLibrary);
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
 
-  // ADD THIS: Update viewedLibraryIds when props change
+  // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
   }, [initialViewedLibraryIds]);
 
-  // ADD THIS: Update userLibraryIds when props change
+  // Update userLibraryIds when props change
   useEffect(() => {
     setUserLibraryIds(initialUserLibraryIds);
   }, [initialUserLibraryIds]);
 
-  // ADD THIS: Callback to handle when a library is viewed
+  // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
       // Avoid duplicates
@@ -115,6 +122,90 @@ const Browse: React.FC<BrowseProps> = ({
       return [...prev, libraryId];
     });
   }, []);
+
+  // Fetch libraries after component mounts (NEW - for instant navigation)
+  useEffect(() => {
+    const fetchLibraries = async () => {
+      if (libraries.length > 0) {
+        setIsLoadingLibraries(false);
+        return; // Already have data
+      }
+
+      try {
+        setIsLoadingLibraries(true);
+
+        // Build query params from current filter state
+        const params = new URLSearchParams();
+
+        if (filterValue) {
+          if (filterType === 'category') params.set('category', filterValue);
+          if (filterType === 'industry') params.set('industry', filterValue);
+          if (filterType === 'interaction') params.set('interaction', filterValue);
+        }
+
+        if (selectedPlatform !== 'all') {
+          params.set('platform', selectedPlatform);
+        }
+
+        const response = await fetch(`/api/browse/libraries?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch libraries');
+        }
+
+        const data = await response.json();
+
+        setLibraries(data.libraries);
+        setAllLibraries(data.allLibraries);
+      } catch (error) {
+        console.error('Error fetching libraries:', error);
+      } finally {
+        setIsLoadingLibraries(false);
+      }
+    };
+
+    fetchLibraries();
+  }, [filterType, filterValue]); // Re-fetch when filter changes
+
+  // Re-fetch when platform filter changes
+  useEffect(() => {
+    if (libraries.length === 0) return; // Initial load is handled above
+
+    const fetchFilteredLibraries = async () => {
+      try {
+        setIsLoadingLibraries(true);
+
+        const params = new URLSearchParams();
+
+        if (filterValue) {
+          if (filterType === 'category') params.set('category', filterValue);
+          if (filterType === 'industry') params.set('industry', filterValue);
+          if (filterType === 'interaction') params.set('interaction', filterValue);
+        }
+
+        if (selectedPlatform !== 'all') {
+          params.set('platform', selectedPlatform);
+        }
+
+        const response = await fetch(`/api/browse/libraries?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch libraries');
+        }
+
+        const data = await response.json();
+
+        setLibraries(data.libraries);
+        setAllLibraries(data.allLibraries);
+      } catch (error) {
+        console.error('Error fetching libraries:', error);
+      } finally {
+        setIsLoadingLibraries(false);
+      }
+    };
+
+    fetchFilteredLibraries();
+  }, [selectedPlatform]);
 
   // Check URL for library modal - now checks path instead of query parameter
   useEffect(() => {
@@ -185,22 +276,9 @@ const Browse: React.FC<BrowseProps> = ({
 
   // Apply FilterSection's platform filter separately on top of existing filters
   const finalFilteredLibraries = useMemo(() => {
-    let filtered = filteredLibraries;
-
-    // Apply FilterSection's platform filter
-    if (selectedPlatform !== 'all') {
-      filtered = filtered.filter(library =>
-        library.platforms.some(platform => {
-          if (!isNaN(Number(selectedPlatform))) {
-            return platform.id.toString() === selectedPlatform;
-          }
-          return platform.name.toLowerCase() === selectedPlatform.toLowerCase();
-        })
-      );
-    }
-
-    return filtered;
-  }, [filteredLibraries, selectedPlatform]);
+    // Platform filtering is now handled by the API, so just return filtered libraries
+    return filteredLibraries;
+  }, [filteredLibraries]);
 
   // Update displayed libraries when finalFilteredLibraries or itemsToShow changes
   useEffect(() => {
@@ -208,14 +286,14 @@ const Browse: React.FC<BrowseProps> = ({
       // For authenticated users, show normal pagination
       setDisplayedLibraries(finalFilteredLibraries.slice(0, itemsToShow));
     } else {
-      // For unauthenticated users, limit to 3 results maximum
-      setDisplayedLibraries(finalFilteredLibraries.slice(0, 3));
+      // For unauthenticated users, limit to 18 results maximum
+      setDisplayedLibraries(finalFilteredLibraries.slice(0, 18));
     }
   }, [finalFilteredLibraries, itemsToShow, isAuthenticated]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setItemsToShow(isAuthenticated ? 12 : 3);
+    setItemsToShow(isAuthenticated ? 12 : 10);
   };
 
   const handleLoadMore = () => {
@@ -255,7 +333,7 @@ const Browse: React.FC<BrowseProps> = ({
   // Filter handlers
   const handlePlatformChange = (platform: string) => {
     setSelectedPlatform(platform);
-    setItemsToShow(isAuthenticated ? 12 : 3);
+    setItemsToShow(isAuthenticated ? 12 : 10);
   };
 
   const handleCardsPerRowChange = (count: number) => {
@@ -340,7 +418,7 @@ const Browse: React.FC<BrowseProps> = ({
         onLibraryViewed={handleLibraryViewed}
       >
 
-        {/* Header Section */}
+        {/* Header Section - Shows immediately */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6 font-sora">
             {/* Breadcrumb */}
@@ -371,9 +449,9 @@ const Browse: React.FC<BrowseProps> = ({
                   Showing
                 </div>
                 <div className="text-[#2E241C] dark:text-gray-400 text-sm sm:text-sm md:text-[13px] mt-1 font-semibold">
-                  {!isAuthenticated && finalFilteredLibraries.length > 3
-                    ? `3 of ${finalFilteredLibraries.length} Results`
-                    : `${finalFilteredLibraries.length} ${finalFilteredLibraries.length === 1 ? 'Result' : 'Results'}`
+                  {!isAuthenticated && totalLibraryCount > 18
+                    ? `18 of ${totalLibraryCount} Results`
+                    : `${totalLibraryCount} ${totalLibraryCount === 1 ? 'Result' : 'Results'}`
                   }
                   {searchQuery && ` for "${searchQuery}"`}
                 </div>
@@ -382,166 +460,131 @@ const Browse: React.FC<BrowseProps> = ({
           </div>
         </div>
 
-        {/* Category Header - Only show for category filter */}
-        {currentCategory && filterType === 'category' && (
-          <CategoryHeader
-            category={currentCategory}
-            auth={authData}
-            ziggy={ziggyData}
-          />
-        )}
-
-        {/* Filter Section */}
-        <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
-          <FilterSection
-            filters={filters}
-            selectedPlatform={selectedPlatform}
-            onPlatformChange={handlePlatformChange}
-            cardsPerRow={cardsPerRow}
-            onCardsPerRowChange={handleCardsPerRowChange}
-          />
-        </div>
-
-        {/* Library Grid */}
-        <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16 pt-4 sm:pt-8 md:pt-6">
-          <LibraryGrid
-            ziggy={ziggyData}
-            libraries={displayedLibraries}
-            onLibraryClick={handleLibraryClick}
-            onLoadMore={hasMore ? handleLoadMore : undefined}
-            hasMore={hasMore}
-            isLoading={false}
-            cardsPerRow={cardsPerRow}
-            auth={authData}
-            onStarClick={handleStarClick}
-            userLibraryIds={userLibraryIds}
-            viewedLibraryIds={viewedLibraryIds}
-            onLibraryViewed={handleLibraryViewed}
-            userPlanLimits={userPlanLimits}
-          />
-
-          {/* Unauthenticated User Sign Up Prompt - Exact same as LibraryGrid */}
-          {!isAuthenticated && finalFilteredLibraries.length > 3 && (
-            <div className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl" style={{ background: 'linear-gradient(179.63deg, rgba(248, 248, 249, 0) 0%, #FFFFFF 40%, #F6F5FA 85%)' }}>
-              <div className="relative z-10">
-                <h2 className="text-3xl sm:text-4xl pt-10 font-bold text-[#BCBCC7] dark:text-white mb-2 font-sora">
-                  You're <span className="text-[#2B235A] dark:text-[#8a7eff] font-extrabold">one click away</span> from
-                </h2>
-                <p className="text-2xl sm:text-3xl font-semibold text-[#BCBCC7] dark:text-gray-400 mb-6 font-sora">
-                  unlimited inspiration
-                </p>
-
-                <p className="max-w-2xl text-sm sm:text-sm text-[#9D9DA8] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
-                  3,000+ UI animations from 600+ real apps across 200+ categories. <br />
-                  <span className='font-semibold text-[#9D9DA8]'>Covering web, mobile, smartwatches and even AR/VR.</span>
-                </p>
-
-                {/* Buttons */}
-                <div className="flex items-center justify-center gap-4 mb-10">
-                  <Link
-                    href="/login"
-                    className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
-                  >
-                    <span className='z-10'>Log In</span>
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
-                    >
-                    <span className='z-10'>Join Free</span>
-                  </Link>
-                </div>
-
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-6 font-sora">
-                  Where designers from the world's leading teams spark interaction ideas
-                </p>
-
-                {/* Brand Logos with automatic scrolling animation */}
-                <style>{`
-                  @keyframes scroll-infinite {
-                    0% {
-                      transform: translateX(0);
-                    }
-                    100% {
-                      transform: translateX(-50%);
-                    }
-                  }
-                  .scroll-container {
-                    animation: scroll-infinite 30s linear infinite;
-                    display: flex;
-                    width: fit-content;
-                  }
-                  .scroll-container:hover {
-                    animation-play-state: paused;
-                  }
-                `}</style>
-                <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
-                  <div className="scroll-container">
-                    {/* First set */}
-                    <div className="flex items-center gap-6 shrink-0 px-3">
-                      <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/notion.png" alt="Notion" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/slack.png" alt="Slack" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
-                    </div>
-                    {/* Second set (duplicate) - must be identical */}
-                    <div className="flex items-center gap-6 shrink-0 px-3">
-                      <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/notion.png" alt="Notion" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/slack.png" alt="Slack" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
-                      <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
-                    </div>
+        {/* Loading state or content */}
+        {isLoadingLibraries ? (
+          <>
+            {/* Category Header Skeleton - Only show for category filter */}
+            {currentCategory && filterType === 'category' && (
+              <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-6">
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Filter Section */}
+            <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
+              <FilterSection
+                filters={filters}
+                selectedPlatform={selectedPlatform}
+                onPlatformChange={handlePlatformChange}
+                cardsPerRow={cardsPerRow}
+                onCardsPerRowChange={handleCardsPerRowChange}
+              />
             </div>
-          )}
 
-        </div>
-
-        {/* Empty State */}
-        {finalFilteredLibraries.length === 0 && (
-          <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16">
-            <div className="text-center py-8 sm:py-12 md:py-10 font-sora px-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-18 md:h-18 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-5">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 md:w-9 md:h-9 text-[#2B235A] dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            {/* Skeleton Loader */}
+            <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16 pt-4 sm:pt-8 md:pt-6">
+              <div className={`grid gap-4 sm:gap-6 md:gap-5 ${
+                cardsPerRow === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                cardsPerRow === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }`}>
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 dark:bg-gray-700 rounded-lg aspect-video mb-3"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-xl sm:text-2xl md:text-[22px] font-sora !font-bold text-[#2B235A] dark:text-white mb-2">
-                No libraries found
-              </h3>
-              <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 max-w-md mx-auto mb-4 sm:mb-6 md:mb-5">
-                {searchQuery || selectedPlatform !== 'all'
-                  ? `No libraries match your current filters${filterName ? ` in ${filterName}` : ''}.`
-                  : `No libraries found${filterName ? ` for ${filterName}` : ''}.`
-                }
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedPlatform('all');
-                  setItemsToShow(isAuthenticated ? 12 : 3);
-                }}
-                className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-4 sm:px-4 md:px-3.5 py-2 rounded-[4px] !font-sora !font-medium text-sm sm:text-[16px] md:text-[15px] hover:opacity-95 transition-all whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
-              >
-                <span className='z-10'>Clear All Filters</span>
-              </button>
             </div>
-          </div>
+          </>
+        ) : (
+          <>
+            {/* Category Header - Only show for category filter */}
+            {currentCategory && filterType === 'category' && categoryData && (
+              <CategoryHeader
+                category={categoryData}
+                auth={authData}
+                ziggy={ziggyData}
+              />
+            )}
+
+            {/* Filter Section */}
+            <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
+              <FilterSection
+                filters={filters}
+                selectedPlatform={selectedPlatform}
+                onPlatformChange={handlePlatformChange}
+                cardsPerRow={cardsPerRow}
+                onCardsPerRowChange={handleCardsPerRowChange}
+              />
+            </div>
+
+            {/* Library Grid */}
+            <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16 pt-4 sm:pt-8 md:pt-6">
+              <LibraryGrid
+                ziggy={ziggyData}
+                libraries={displayedLibraries}
+                onLibraryClick={handleLibraryClick}
+                onLoadMore={hasMore ? handleLoadMore : undefined}
+                hasMore={hasMore}
+                isLoading={false}
+                cardsPerRow={cardsPerRow}
+                auth={authData}
+                onStarClick={handleStarClick}
+                userLibraryIds={userLibraryIds}
+                viewedLibraryIds={viewedLibraryIds}
+                onLibraryViewed={handleLibraryViewed}
+                userPlanLimits={userPlanLimits}
+              />
+            </div>
+
+            {/* Empty State */}
+            {finalFilteredLibraries.length === 0 && !isLoadingLibraries && (
+              <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16">
+                <div className="text-center py-8 sm:py-12 md:py-10 font-sora px-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-18 md:h-18 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-5">
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 md:w-9 md:h-9 text-[#2B235A] dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl md:text-[22px] font-sora !font-bold text-[#2B235A] dark:text-white mb-2">
+                    No libraries found
+                  </h3>
+                  <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 max-w-md mx-auto mb-4 sm:mb-6 md:mb-5">
+                    {searchQuery || selectedPlatform !== 'all'
+                      ? `No libraries match your current filters${filterName ? ` in ${filterName}` : ''}.`
+                      : `No libraries found${filterName ? ` for ${filterName}` : ''}.`
+                    }
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedPlatform('all');
+                      setItemsToShow(isAuthenticated ? 12 : 3);
+                    }}
+                    className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-4 sm:px-4 md:px-3.5 py-2 rounded-[4px] !font-sora !font-medium text-sm sm:text-[16px] md:text-[15px] hover:opacity-95 transition-all whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
+                  >
+                    <span className='z-10'>Clear All Filters</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Library Modal - Pass limited libraries for unauthenticated users */}
+        {/* Library Modal */}
         <LibraryModal
           library={modalLibrary}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onClick={handleLibraryClick}
-          allLibraries={displayedLibraries}
+          allLibraries={allLibraries}
           onNavigate={handleLibraryNavigation}
           onStarClick={handleStarClick}
           auth={authData}

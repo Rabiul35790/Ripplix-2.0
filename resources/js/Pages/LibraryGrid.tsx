@@ -197,8 +197,8 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   }
 
   // For unauthenticated users, split the libraries: first 12 normal + rest blurred
-  const normalLibraries = isUserAuthenticated ? libraries : libraries.slice(0, 12);
-  const blurredLibraries = isUserAuthenticated ? [] : libraries.slice(12, 18); // Show only 6 blurred items
+  const normalLibraries = isUserAuthenticated ? libraries : libraries.slice(0, 18);
+  const blurredLibraries = isUserAuthenticated ? [] : libraries.slice(15, 18); // Show only 6 blurred items
 
   // Calculate whether to show login prompt
   const showLoginPrompt = !isUserAuthenticated && blurredLibraries.length > 0;
@@ -231,20 +231,19 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         {showLoginPrompt && (
             <div className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl" style={{ background: 'linear-gradient(179.63deg, rgba(248, 248, 249, 0) 0%, #FFFFFF 40%, #F6F5FA 85%)' }}>
                 <div className="relative z-10">
-                  <h2 className="text-3xl sm:text-4xl pt-10 font-bold text-[#BCBCC7] dark:text-white mb-2 font-sora">
-                  You're <span className="text-[#2B235A] dark:text-[#8a7eff] font-extrabold">one click away</span> from
+                  <h2 className=" font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
+                  You're <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">one click away </span>from
                   </h2>
-                  <p className="text-2xl sm:text-3xl font-semibold text-[#BCBCC7] dark:text-gray-400 mb-6 font-sora">
+                  <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
                   unlimited inspiration
                   </p>
 
-                  <p className="max-w-2xl text-sm sm:text-sm text-[#9D9DA8] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
-                  3,000+ UI animations from 600+ real apps across 200+ categories. <br />
-                  <span className='font-semibold text-[#9D9DA8]'>Covering web, mobile, smartwatches and even AR/VR.</span>
+                  <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
+                  Explore thousands of real UI animations, thoughtfully curated for modern design team
                   </p>
 
-                  {/* Buttons */}
-                  <div className="flex items-center justify-center gap-4 mb-10">
+
+                  <div className="flex items-center justify-center gap-4 mb-16">
                   <Link
                       href="/login"
                       className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
@@ -262,11 +261,10 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
 
                   </Link>
                   </div>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-6 font-sora">
+                <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
                   Where designers from the world's leading teams spark interaction ideas
                   </p>
-                  {/* Brand Logos with automatic scrolling animation */}
-                  {/* Brand Logos with automatic scrolling animation */}
+
                     <style>{`
                     @keyframes scroll-infinite {
                         0% {
@@ -287,23 +285,23 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
                     `}</style>
                     <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
                     <div className="scroll-container">
-                        {/* First set */}
+
                         <div className="flex items-center gap-6 shrink-0 px-3">
-                        <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/notion.png" alt="Notion" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/slack.png" alt="Slack" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
+                        <img src="images/brand/git.png" alt="GitHub" className="h-6 " />
+                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 " />
+                        <img src="images/brand/notion.png" alt="Notion" className="h-6 " />
+                        <img src="images/brand/slack.png" alt="Slack" className="h-6 " />
+                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 " />
+                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 " />
                         </div>
-                        {/* Second set (duplicate) - must be identical */}
+
                         <div className="flex items-center gap-6 shrink-0 px-3">
-                        <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/notion.png" alt="Notion" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/slack.png" alt="Slack" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
+                        <img src="images/brand/git.png" alt="GitHub" className="h-6 " />
+                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 " />
+                        <img src="images/brand/notion.png" alt="Notion" className="h-6 " />
+                        <img src="images/brand/slack.png" alt="Slack" className="h-6 " />
+                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 " />
+                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 " />
                         </div>
                     </div>
                     </div>

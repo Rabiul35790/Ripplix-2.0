@@ -293,7 +293,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
   };
 
   return (
-    <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-14 mt-12 sm:mt-16 lg:mt-24 pb-8 sm:pb-10 lg:pb-12 space-y-12 sm:space-y-16 lg:space-y-24 font-sora">
+    <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-14 mt-12 sm:mt-16 lg:mt-12 pb-8 sm:pb-10 lg:pb-12 space-y-12 sm:space-y-16 lg:space-y-16 font-sora">
       {/* Top Apps Section */}
         {topLibrariesByCategory.length > 0 && (
         <div>

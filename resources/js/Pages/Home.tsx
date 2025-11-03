@@ -439,6 +439,26 @@ const Home: React.FC<HomeProps> = ({
           />
         </div>
 
+        <div className="mx-4 sm:mx-6 lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
+          <LibraryGrid
+            libraries={filteredLibraries}
+            onLibraryClick={handleLibraryCardClick}
+            onLoadMore={isAuthenticated ? loadMoreLibraries : undefined}
+            hasMore={isAuthenticated ? (pagination?.has_more || false) : false}
+            isLoadingMore={isLoadingMore}
+            cardsPerRow={cardsPerRow}
+            auth={authData}
+            ziggy={ziggyData}
+            onStarClick={handleStarClick}
+            userPlanLimits={userPlanLimits}
+            userLibraryIds={userLibraryIds}
+            viewedLibraryIds={viewedLibraryIds}
+            onLibraryViewed={handleLibraryViewed}
+            isAuthenticated={isAuthenticated}
+          />
+        </div>
+
+
         <LibraryModal
           library={modalLibrary}
           isOpen={isModalOpen}

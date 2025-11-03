@@ -241,7 +241,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
       {showHero && <HeroSection settings={settings} />}
 
       {/* Content Area with Sidebar */}
-      <div id="content-wrapper" className="w-full mt-12 lg:mt-16">
+      <div id="content-wrapper" className="w-full">
         <div className="flex w-full">
           {/* Sidebar - Hidden on mobile, visible on lg screens */}
           <div id="sidebar-container" className="hidden lg:block w-64 flex-shrink-0">
