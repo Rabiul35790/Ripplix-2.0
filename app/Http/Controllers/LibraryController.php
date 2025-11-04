@@ -38,193 +38,234 @@ class LibraryController extends Controller
         return LibraryView::getViewedLibraryIds($userId, $sessionId);
     }
 
-    public function index(Request $request)
-    {
-        $page = (int) $request->get('page', 1);
-        $perPage = self::LIBRARIES_PER_PAGE;
-        $isAuthenticated = auth()->check();
+public function index(Request $request)
+{
+    $page = (int) $request->get('page', 1);
+    $perPage = self::LIBRARIES_PER_PAGE;
+    $isAuthenticated = auth()->check();
 
-        // Get user plan limits
-        $userPlanLimits = null;
-        if ($isAuthenticated) {
-            $userPlanLimits = $this->getUserPlanLimits(auth()->user());
-        }
+    // Get user plan limits
+    $userPlanLimits = null;
+    if ($isAuthenticated) {
+        $userPlanLimits = $this->getUserPlanLimits(auth()->user());
+    }
 
-        // Get platform filter
-        $platformFilter = $request->get('platform', 'all');
+    // Get platform filter
+    $platformFilter = $request->get('platform', 'all');
 
-        // Build query with platform filter
-        $query = Library::with(['platforms:id,name', 'categories:id,name,image,slug,is_top', 'industries:id,name,is_top', 'interactions:id,name,is_top'])
-            ->select('id', 'title', 'published_date', 'slug', 'url', 'video_url', 'description', 'logo', 'created_at')
-            ->where('is_active', true);
+    // Build optimized query with specific columns only
+    $query = Library::select([
+            'libraries.id',
+            'libraries.title',
+            'libraries.published_date',
+            'libraries.slug',
+            'libraries.url',
+            'libraries.video_url',
+            'libraries.description',
+            'libraries.logo',
+            'libraries.created_at'
+        ])
+        ->with([
+            'platforms:id,name',
+            'categories:id,name,image,slug,is_top',
+            'industries:id,name,is_top',
+            'interactions:id,name,is_top'
+        ])
+        ->where('libraries.is_active', true);
 
-        // Apply platform filter if not 'all'
-        if ($platformFilter !== 'all') {
-            $query->whereHas('platforms', function($q) use ($platformFilter) {
-                $q->where('name', 'like', '%' . $platformFilter . '%');
-            });
-        }
+    // Apply platform filter if not 'all'
+    if ($platformFilter !== 'all') {
+        $query->whereHas('platforms', function($q) use ($platformFilter) {
+            $q->where('name', 'like', '%' . $platformFilter . '%');
+        });
+    }
 
-        $query->latest();
+    $query->latest('libraries.created_at');
 
-        // Get total count for pagination
-        $total = $query->count();
+    // Get total count for pagination
+    $total = $query->count();
 
-        // Calculate offset and get libraries for current page
-        $offset = ($page - 1) * $perPage;
-        $libraries = $query->offset($offset)->limit($perPage)->get();
+    // Calculate offset and get libraries for current page
+    $offset = ($page - 1) * $perPage;
+    $libraries = $query->offset($offset)->limit($perPage)->get();
 
-        $viewedLibraryIds = $this->getViewedLibraryIds($request);
+    $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
-        $paginationData = [
-            'current_page' => $page,
-            'last_page' => ceil($total / $perPage),
-            'per_page' => $perPage,
-            'total' => $total,
-            'has_more' => $page < ceil($total / $perPage)
-        ];
+    $paginationData = [
+        'current_page' => $page,
+        'last_page' => ceil($total / $perPage),
+        'per_page' => $perPage,
+        'total' => $total,
+        'has_more' => $page < ceil($total / $perPage)
+    ];
 
-        // Get filters
-        $filters = $this->getFilters();
+    // Get lightweight filters
+    $filters = $this->getFilters();
 
-        // Get user's library IDs for authenticated users
-        $userLibraryIds = [];
-        if ($isAuthenticated) {
-            $userLibraryIds = Board::getUserLibraryIds(auth()->id());
-        }
+    // Get user's library IDs for authenticated users
+    $userLibraryIds = [];
+    if ($isAuthenticated) {
+        $userLibraryIds = Board::getUserLibraryIds(auth()->id());
+    }
 
-        $settings = Setting::getInstance();
+    $settings = Setting::getInstance();
 
-        // Get all libraries for modal navigation (only for authenticated users)
-        $allLibraries = [];
-        if ($isAuthenticated) {
-            $allLibraries = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-                ->where('is_active', true)
-                ->latest()
-                ->get();
-        }
+    // Get all libraries for modal navigation (only for authenticated users)
+    $allLibraries = [];
+    if ($isAuthenticated) {
+        $allLibraries = Library::select(['id', 'slug', 'title'])
+            ->where('is_active', true)
+            ->latest('created_at')
+            ->get();
+    }
 
-        // OPTIMIZED: Get top libraries grouped by categories, interactions, and industries
-        // Only send 4 libraries per group with total count
-        $topLibrariesByCategory = [];
-        $topLibrariesByInteraction = [];
-        $topLibrariesByIndustry = [];
-
-        // Get libraries with top categories (limit to 4 per category)
-        $topCategories = Category::where('is_top', 1)->get();
-        foreach ($topCategories as $category) {
-            $totalCount = Library::whereHas('categories', function($q) use ($category) {
-                    $q->where('categories.id', $category->id);
-                })
-                ->where('is_active', true)
-                ->count();
-
-            $topLibrariesByCategory[] = [
-                'name' => $category->name,
-                'slug' => $category->slug,
-                'image' => $category->image,
-                'total_count' => $totalCount,
-                'libraries' => Library::with(['platforms:id,name', 'categories:id,name', 'industries:id,name', 'interactions:id,name'])
-                    ->select('id', 'title', 'slug', 'url', 'video_url', 'logo')
-                    ->whereHas('categories', function($q) use ($category) {
-                        $q->where('categories.id', $category->id);
-                    })
-                    ->where('is_active', true)
-                    ->latest()
-                    ->limit(3)
-                    ->get()
-            ];
-        }
-
-        // Get libraries with top interactions (limit to 4 per interaction)
-        $topInteractions = Interaction::where('is_top', 1)->get();
-        foreach ($topInteractions as $interaction) {
-            $totalCount = Library::whereHas('interactions', function($q) use ($interaction) {
-                    $q->where('interactions.id', $interaction->id);
-                })
-                ->where('is_active', true)
-                ->count();
-
-            $topLibrariesByInteraction[] = [
-                'name' => $interaction->name,
-                'slug' => $interaction->slug,
-                'total_count' => $totalCount,
-                'libraries' => Library::with(['platforms:id,name', 'categories:id,name', 'industries:id,name', 'interactions:id,name'])
-                    ->select('id', 'title', 'slug', 'url', 'video_url', 'logo')
-                    ->whereHas('interactions', function($q) use ($interaction) {
-                        $q->where('interactions.id', $interaction->id);
-                    })
-                    ->where('is_active', true)
-                    ->latest()
-                    ->limit(3)
-                    ->get()
-            ];
-        }
-
-        // Get libraries with top industries (limit to 4 per industry)
-        $topIndustries = Industry::where('is_top', 1)->get();
-        foreach ($topIndustries as $industry) {
-            $totalCount = Library::whereHas('industries', function($q) use ($industry) {
-                    $q->where('industries.id', $industry->id);
-                })
-                ->where('is_active', true)
-                ->count();
-
-            $topLibrariesByIndustry[] = [
-                'name' => $industry->name,
-                'slug' => $industry->slug,
-                'total_count' => $totalCount,
-                'libraries' => Library::with(['platforms:id,name', 'categories:id,name', 'industries:id,name', 'interactions:id,name'])
-                    ->select('id', 'title', 'slug', 'url', 'video_url', 'logo')
-                    ->whereHas('industries', function($q) use ($industry) {
-                        $q->where('industries.id', $industry->id);
-                    })
-                    ->where('is_active', true)
-                    ->latest()
-                    ->limit(3)
-                    ->get()
-            ];
-        }
-
-        // For initial page load, return full page
-        if ($page === 1 && !$request->wantsJson()) {
-            return Inertia::render('Home', [
-                'libraries' => $libraries,
-                'filters' => $filters,
-                'selectedLibrary' => null,
-                'allLibraries' => $allLibraries,
-                'userLibraryIds' => $userLibraryIds,
-                'viewedLibraryIds' => $viewedLibraryIds,
-                'userPlanLimits' => $userPlanLimits,
-                'pagination' => $paginationData,
-                'currentPlatformFilter' => $platformFilter,
-                'topLibrariesByCategory' => $topLibrariesByCategory,
-                'topLibrariesByInteraction' => $topLibrariesByInteraction,
-                'topLibrariesByIndustry' => $topLibrariesByIndustry,
-                'canLogin' => Route::has('login'),
-                'canRegister' => Route::has('register'),
-                'laravelVersion' => Application::VERSION,
-                'phpVersion' => PHP_VERSION,
-                'isAuthenticated' => $isAuthenticated,
-                'settings' => [
-                    'logo' => $settings->logo ? asset('storage/' . $settings->logo) : null,
-                    'favicon' => $settings->favicon ? asset('storage/' . $settings->favicon) : null,
-                    'authentication_page_image' => $settings->authentication_page_image ? asset('storage/' . $settings->authentication_page_image) : null,
-                    'copyright_text' => $settings->copyright_text,
-                    'hero_image' => $settings->hero_image ? asset('storage/' . $settings->hero_image) : null,
-                ]
-            ]);
-        }
-
-        // For AJAX requests (pagination), return JSON
-        return response()->json([
+    // For initial page load, return page WITHOUT top libraries (load them via API)
+    if ($page === 1 && !$request->wantsJson()) {
+        return Inertia::render('Home', [
             'libraries' => $libraries,
-            'pagination' => $paginationData,
+            'filters' => $filters,
+            'selectedLibrary' => null,
+            'allLibraries' => $allLibraries,
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'pagination' => $paginationData,
+            'currentPlatformFilter' => $platformFilter,
+            'topLibrariesByCategory' => [], // Empty - will load via API
+            'topLibrariesByInteraction' => [], // Empty - will load via API
+            'topLibrariesByIndustry' => [], // Empty - will load via API
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+            'isAuthenticated' => $isAuthenticated,
+            'settings' => [
+                'logo' => $settings->logo ? asset('storage/' . $settings->logo) : null,
+                'favicon' => $settings->favicon ? asset('storage/' . $settings->favicon) : null,
+                'authentication_page_image' => $settings->authentication_page_image ? asset('storage/' . $settings->authentication_page_image) : null,
+                'copyright_text' => $settings->copyright_text,
+                'hero_image' => $settings->hero_image ? asset('storage/' . $settings->hero_image) : null,
+            ]
         ]);
     }
+
+    // For AJAX requests (pagination), return JSON
+    return response()->json([
+        'libraries' => $libraries,
+        'pagination' => $paginationData,
+        'userLibraryIds' => $userLibraryIds,
+        'viewedLibraryIds' => $viewedLibraryIds,
+        'userPlanLimits' => $userPlanLimits,
+    ]);
+}
+
+// Add this new method for loading top libraries via API
+public function getTopLibraries(Request $request)
+{
+    $topLibrariesByCategory = [];
+    $topLibrariesByInteraction = [];
+    $topLibrariesByIndustry = [];
+
+    // Get libraries with top categories (limit to 3 per category)
+    $topCategories = Category::where('is_top', 1)->get(['id', 'name', 'slug', 'image']);
+
+    foreach ($topCategories as $category) {
+        $totalCount = Library::whereHas('categories', function($q) use ($category) {
+                $q->where('categories.id', $category->id);
+            })
+            ->where('is_active', true)
+            ->count();
+
+        $topLibrariesByCategory[] = [
+            'name' => $category->name,
+            'slug' => $category->slug,
+            'image' => $category->image,
+            'total_count' => $totalCount,
+            'libraries' => Library::select(['id', 'title', 'slug', 'url', 'video_url', 'logo'])
+                ->with([
+                    'platforms:id,name',
+                    'categories:id,name',
+                    'industries:id,name',
+                    'interactions:id,name'
+                ])
+                ->whereHas('categories', function($q) use ($category) {
+                    $q->where('categories.id', $category->id);
+                })
+                ->where('is_active', true)
+                ->latest('created_at')
+                ->limit(3)
+                ->get()
+        ];
+    }
+
+    // Get libraries with top interactions (limit to 3 per interaction)
+    $topInteractions = Interaction::where('is_top', 1)->get(['id', 'name', 'slug']);
+
+    foreach ($topInteractions as $interaction) {
+        $totalCount = Library::whereHas('interactions', function($q) use ($interaction) {
+                $q->where('interactions.id', $interaction->id);
+            })
+            ->where('is_active', true)
+            ->count();
+
+        $topLibrariesByInteraction[] = [
+            'name' => $interaction->name,
+            'slug' => $interaction->slug,
+            'total_count' => $totalCount,
+            'libraries' => Library::select(['id', 'title', 'slug', 'url', 'video_url', 'logo'])
+                ->with([
+                    'platforms:id,name',
+                    'categories:id,name',
+                    'industries:id,name',
+                    'interactions:id,name'
+                ])
+                ->whereHas('interactions', function($q) use ($interaction) {
+                    $q->where('interactions.id', $interaction->id);
+                })
+                ->where('is_active', true)
+                ->latest('created_at')
+                ->limit(3)
+                ->get()
+        ];
+    }
+
+    // Get libraries with top industries (limit to 3 per industry)
+    $topIndustries = Industry::where('is_top', 1)->get(['id', 'name', 'slug']);
+
+    foreach ($topIndustries as $industry) {
+        $totalCount = Library::whereHas('industries', function($q) use ($industry) {
+                $q->where('industries.id', $industry->id);
+            })
+            ->where('is_active', true)
+            ->count();
+
+        $topLibrariesByIndustry[] = [
+            'name' => $industry->name,
+            'slug' => $industry->slug,
+            'total_count' => $totalCount,
+            'libraries' => Library::select(['id', 'title', 'slug', 'url', 'video_url', 'logo'])
+                ->with([
+                    'platforms:id,name',
+                    'categories:id,name',
+                    'industries:id,name',
+                    'interactions:id,name'
+                ])
+                ->whereHas('industries', function($q) use ($industry) {
+                    $q->where('industries.id', $industry->id);
+                })
+                ->where('is_active', true)
+                ->latest('created_at')
+                ->limit(3)
+                ->get()
+        ];
+    }
+
+    return response()->json([
+        'topLibrariesByCategory' => $topLibrariesByCategory,
+        'topLibrariesByInteraction' => $topLibrariesByInteraction,
+        'topLibrariesByIndustry' => $topLibrariesByIndustry,
+    ]);
+}
 
 
     // New method for loading more libraries via AJAX with filter support
@@ -243,10 +284,24 @@ class LibraryController extends Controller
         // Get platform filter from request
         $platformFilter = $request->get('platform', 'all');
 
-        // Build query with platform filter
-        $query = Library::with(['platforms:id,name', 'categories:id,name,image,slug', 'industries:id,name', 'interactions:id,name'])
-            ->select('id', 'title', 'slug', 'url', 'video_url', 'description', 'logo', 'created_at')
-            ->where('is_active', true);
+        // Build optimized query with specific columns
+        $query = Library::select([
+                'libraries.id',
+                'libraries.title',
+                'libraries.slug',
+                'libraries.url',
+                'libraries.video_url',
+                'libraries.description',
+                'libraries.logo',
+                'libraries.created_at'
+            ])
+            ->with([
+                'platforms:id,name',
+                'categories:id,name,image,slug',
+                'industries:id,name',
+                'interactions:id,name'
+            ])
+            ->where('libraries.is_active', true);
 
         // Apply platform filter if not 'all'
         if ($platformFilter !== 'all') {
@@ -255,7 +310,7 @@ class LibraryController extends Controller
             });
         }
 
-        $query->latest();
+        $query->latest('libraries.created_at');
 
         $total = $query->count();
         $offset = ($page - 1) * $perPage;
@@ -398,67 +453,90 @@ class LibraryController extends Controller
     }
 
     // NEW: API endpoint to fetch libraries for browse page
-    public function getBrowseLibraries(Request $request)
-    {
-        $isAuthenticated = auth()->check();
+public function getBrowseLibraries(Request $request)
+{
+    $isAuthenticated = auth()->check();
+    $page = (int) $request->get('page', 1);
+    $perPage = $isAuthenticated ? 50 : 18; // Limit initial load
 
-        $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true);
+    // Use select to get only needed columns (reduces data transfer)
+    $query = Library::select([
+            'libraries.id',
+            'libraries.title',
+            'libraries.slug',
+            'libraries.url',
+            'libraries.video_url',
+            'libraries.description',
+            'libraries.logo',
+            'libraries.created_at',
+            'libraries.published_date'
+        ])
+        ->with([
+            'platforms:id,name',
+            'categories:id,name,slug,image',
+            'industries:id,name,slug',
+            'interactions:id,name,slug'
+        ])
+        ->where('libraries.is_active', true);
 
-        // Apply category filter
-        if ($request->has('category') && $request->category !== 'all') {
-            $category = Category::where('slug', $request->category)->first();
-            if ($category) {
-                $query->whereHas('categories', function($q) use ($category) {
-                    $q->where('categories.id', $category->id);
-                });
-            }
-        }
-
-        // Apply industry filter
-        if ($request->has('industry') && $request->industry !== 'all') {
-            $industry = Industry::where('slug', $request->industry)->first();
-            if ($industry) {
-                $query->whereHas('industries', function($q) use ($industry) {
-                    $q->where('industries.id', $industry->id);
-                });
-            }
-        }
-
-        // Apply interaction filter
-        if ($request->has('interaction') && $request->interaction !== 'all') {
-            $interaction = Interaction::where('slug', $request->interaction)->first();
-            if ($interaction) {
-                $query->whereHas('interactions', function($q) use ($interaction) {
-                    $q->where('interactions.id', $interaction->id);
-                });
-            }
-        }
-
-        // Apply platform filter if provided
-        if ($request->has('platform') && $request->platform !== 'all') {
-            $query->whereHas('platforms', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->platform . '%');
+    // Apply category filter
+    if ($request->has('category') && $request->category !== 'all') {
+        $category = Category::where('slug', $request->category)->first(['id']);
+        if ($category) {
+            $query->whereHas('categories', function($q) use ($category) {
+                $q->where('categories.id', $category->id);
             });
         }
-
-        if (!$isAuthenticated) {
-            $libraries = $query->latest()->take(18)->get();
-        } else {
-            $libraries = $query->latest()->get();
-        }
-
-        // Get all libraries for modal navigation
-        $allLibraries = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true)
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'libraries' => $libraries,
-            'allLibraries' => $allLibraries,
-        ]);
     }
+
+    // Apply industry filter
+    if ($request->has('industry') && $request->industry !== 'all') {
+        $industry = Industry::where('slug', $request->industry)->first(['id']);
+        if ($industry) {
+            $query->whereHas('industries', function($q) use ($industry) {
+                $q->where('industries.id', $industry->id);
+            });
+        }
+    }
+
+    // Apply interaction filter
+    if ($request->has('interaction') && $request->interaction !== 'all') {
+        $interaction = Interaction::where('slug', $request->interaction)->first(['id']);
+        if ($interaction) {
+            $query->whereHas('interactions', function($q) use ($interaction) {
+                $q->where('interactions.id', $interaction->id);
+            });
+        }
+    }
+
+    // Apply platform filter if provided
+    if ($request->has('platform') && $request->platform !== 'all') {
+        $query->whereHas('platforms', function($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->platform . '%');
+        });
+    }
+
+    // Get paginated results with proper ordering
+    $libraries = $query->latest('libraries.created_at')
+        ->paginate($perPage);
+
+    // Get all libraries for modal navigation (optimized - only essential fields)
+    $allLibraries = Library::select(['id', 'slug', 'title'])
+        ->where('is_active', true)
+        ->latest('created_at')
+        ->get();
+
+    return response()->json([
+        'libraries' => $libraries->items(),
+        'allLibraries' => $allLibraries,
+        'pagination' => [
+            'current_page' => $libraries->currentPage(),
+            'last_page' => $libraries->lastPage(),
+            'total' => $libraries->total(),
+            'has_more' => $libraries->hasMorePages()
+        ]
+    ]);
+}
 
     // Keep existing browse methods unchanged
     public function browseByCategory(Request $request, $slug)

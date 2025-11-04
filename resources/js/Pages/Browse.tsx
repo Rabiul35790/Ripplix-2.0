@@ -104,6 +104,13 @@ const Browse: React.FC<BrowseProps> = ({
   const [modalLibrary, setModalLibrary] = useState<Library | null>(initialSelectedLibrary);
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
 
+  const [pagination, setPagination] = useState({
+  current_page: 1,
+  last_page: 1,
+  total: 0,
+  has_more: false
+});
+
   // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
@@ -125,48 +132,49 @@ const Browse: React.FC<BrowseProps> = ({
 
   // Fetch libraries after component mounts (NEW - for instant navigation)
   useEffect(() => {
-    const fetchLibraries = async () => {
-      if (libraries.length > 0) {
-        setIsLoadingLibraries(false);
-        return; // Already have data
+  const fetchLibraries = async () => {
+    if (libraries.length > 0) {
+      setIsLoadingLibraries(false);
+      return;
+    }
+
+    try {
+      setIsLoadingLibraries(true);
+
+      const params = new URLSearchParams();
+
+      if (filterValue) {
+        if (filterType === 'category') params.set('category', filterValue);
+        if (filterType === 'industry') params.set('industry', filterValue);
+        if (filterType === 'interaction') params.set('interaction', filterValue);
       }
 
-      try {
-        setIsLoadingLibraries(true);
-
-        // Build query params from current filter state
-        const params = new URLSearchParams();
-
-        if (filterValue) {
-          if (filterType === 'category') params.set('category', filterValue);
-          if (filterType === 'industry') params.set('industry', filterValue);
-          if (filterType === 'interaction') params.set('interaction', filterValue);
-        }
-
-        if (selectedPlatform !== 'all') {
-          params.set('platform', selectedPlatform);
-        }
-
-        const response = await fetch(`/api/browse/libraries?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch libraries');
-        }
-
-        const data = await response.json();
-
-        setLibraries(data.libraries);
-        setAllLibraries(data.allLibraries);
-      } catch (error) {
-        console.error('Error fetching libraries:', error);
-      } finally {
-        setIsLoadingLibraries(false);
+      if (selectedPlatform !== 'all') {
+        params.set('platform', selectedPlatform);
       }
-    };
 
-    fetchLibraries();
-  }, [filterType, filterValue]); // Re-fetch when filter changes
+      params.set('page', '1'); // Start with page 1
 
+      const response = await fetch(`/api/browse/libraries?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch libraries');
+      }
+
+      const data = await response.json();
+
+      setLibraries(data.libraries);
+      setAllLibraries(data.allLibraries);
+      setPagination(data.pagination); // Store pagination info
+    } catch (error) {
+      console.error('Error fetching libraries:', error);
+    } finally {
+      setIsLoadingLibraries(false);
+    }
+  };
+
+  fetchLibraries();
+}, [filterType, filterValue]);
   // Re-fetch when platform filter changes
   useEffect(() => {
     if (libraries.length === 0) return; // Initial load is handled above

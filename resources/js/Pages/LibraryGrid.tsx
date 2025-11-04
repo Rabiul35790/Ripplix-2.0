@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { usePage, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
@@ -77,6 +77,93 @@ const MemoizedLibraryCard = memo<{
 
 MemoizedLibraryCard.displayName = 'MemoizedLibraryCard';
 
+// Memoized brand logo component with lazy loading
+const BrandLogo = memo<{ src: string; alt: string }>(({ src, alt }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <div className="flex items-center justify-center w-24 h-10 bg-transparent">
+      {!hasError ? (
+        <>
+          {!isLoaded && (
+            <div className="w-20 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          )}
+          <img
+            src={src}
+            alt={alt}
+            className={`max-h-full max-w-full object-contain transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setIsLoaded(true)}
+            onError={() => setHasError(true)}
+            loading="lazy"
+            decoding="async"
+          />
+        </>
+      ) : (
+        <div className="w-20 h-6 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
+          <span className="text-xs text-gray-400">{alt}</span>
+        </div>
+      )}
+    </div>
+  );
+});
+
+BrandLogo.displayName = 'BrandLogo';
+
+// Memoized scrolling brands section
+const ScrollingBrands = memo(() => {
+  const brands = useMemo(() => [
+    { src: "images/brand/atlas.png", alt: "Atlassian" },
+    { src: "images/brand/air.png", alt: "Airbnb" },
+    { src: "images/brand/monday.png", alt: "Monday" },
+    { src: "images/brand/klarna.png", alt: "Klarna" },
+    { src: "images/brand/spotify.png", alt: "Spotify" },
+    { src: "images/brand/plaid.png", alt: "Plaid" },
+    { src: "images/brand/linktree.png", alt: "Linktree" },
+  ], []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes scroll-infinite {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .scroll-container {
+          animation: scroll-infinite 30s linear infinite;
+          display: flex;
+          width: fit-content;
+        }
+        .scroll-container:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
+        <div className="scroll-container">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex items-center gap-8 shrink-0 px-3">
+              {brands.map((brand, index) => (
+                <BrandLogo key={`${i}-${index}`} src={brand.src} alt={brand.alt} />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Optional fade edges for premium look */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
+      </div>
+    </>
+  );
+});
+
+ScrollingBrands.displayName = 'ScrollingBrands';
+
 const LibraryGrid: React.FC<LibraryGridProps> = ({
   libraries,
   onLibraryClick,
@@ -134,8 +221,8 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     };
   }, [handleScroll]);
 
-  // Dynamic grid columns based on cardsPerRow prop
-  const getGridCols = () => {
+  // Dynamic grid columns based on cardsPerRow prop - memoized
+  const gridCols = useMemo(() => {
     switch (cardsPerRow) {
       case 1:
         return 'grid-cols-1';
@@ -148,12 +235,15 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
       default:
         return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
     }
-  };
+  }, [cardsPerRow]);
 
-  // Dynamic gap based on cardsPerRow for better spacing
-  const getGridGap = () => {
+  // Dynamic gap based on cardsPerRow for better spacing - memoized
+  const gridGap = useMemo(() => {
     return cardsPerRow === 2 ? 'gap-8' : 'gap-6';
-  };
+  }, [cardsPerRow]);
+
+  // Memoize card size calculation
+  const cardSize = useMemo(() => cardsPerRow === 2 ? 'large' : 'normal', [cardsPerRow]);
 
   // Check if libraries is null, undefined, or not an array
   if (!libraries) {
@@ -196,26 +286,28 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     );
   }
 
-  // For unauthenticated users, split the libraries: first 12 normal + rest blurred
-  const normalLibraries = isUserAuthenticated ? libraries : libraries.slice(0, 18);
-  const blurredLibraries = isUserAuthenticated ? [] : libraries.slice(15, 18); // Show only 6 blurred items
+  // For unauthenticated users, split the libraries: first 12 normal + rest blurred - memoized
+  const { normalLibraries, blurredLibraries, showLoginPrompt } = useMemo(() => {
+    const normal = isUserAuthenticated ? libraries : libraries.slice(0, 18);
+    const blurred = isUserAuthenticated ? [] : libraries.slice(15, 18);
+    const showPrompt = !isUserAuthenticated && blurred.length > 0;
 
-  // Calculate whether to show login prompt
-  const showLoginPrompt = !isUserAuthenticated && blurredLibraries.length > 0;
+    return { normalLibraries: normal, blurredLibraries: blurred, showLoginPrompt: showPrompt };
+  }, [libraries, isUserAuthenticated]);
 
   return (
     <div className="p-6">
       {/* Container for grid and overlay */}
       <div className="relative">
         {/* Grid */}
-        <div className={`grid ${getGridCols()} ${getGridGap()}`}>
+        <div className={`grid ${gridCols} ${gridGap}`}>
           {/* Normal libraries */}
           {normalLibraries.map((library) => (
             <MemoizedLibraryCard
               key={library.id}
               library={library}
               onLibraryClick={onLibraryClick}
-              cardSize={cardsPerRow === 2 ? 'large' : 'normal'}
+              cardSize={cardSize}
               auth={authData}
               ziggy={ziggyData}
               onStarClick={onStarClick}
@@ -229,88 +321,56 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
 
         {/* Login Prompt positioned after visible cards with gradient overlay */}
         {showLoginPrompt && (
-            <div className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl" style={{ background: 'linear-gradient(179.63deg, rgba(248, 248, 249, 0) 0%, #FFFFFF 40%, #F6F5FA 85%)' }}>
-                <div className="relative z-10">
-                  <h2 className=" font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
-                  You're <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">one click away </span>from
-                  </h2>
-                  <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
-                  unlimited inspiration
-                  </p>
+        <div
+            className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl"
+            style={{
+            background:
+                "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.7) 80%, rgba(248, 248, 249, 0.2) 100%)",
+            }}
+        >
+            <div className="relative z-10">
+            <h2 className="font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
+                You're{" "}
+                <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
+                one click away{" "}
+                </span>
+                from
+            </h2>
 
-                  <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
-                  Explore thousands of real UI animations, thoughtfully curated for modern design team
-                  </p>
+            <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
+                unlimited inspiration
+            </p>
 
+            <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
+                Explore thousands of real UI animations, thoughtfully curated for modern
+                design teams
+            </p>
 
-                  <div className="flex items-center justify-center gap-4 mb-16">
-                  <Link
-                      href="/login"
-                      className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
-                  >
-                    <span className='z-10'>Log In</span>
+            <div className="flex items-center justify-center gap-4 mb-16">
+                <Link
+                href="/login"
+                className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
+                >
+                <span className="z-10">Log In</span>
+                </Link>
 
-                  </Link>
-                  <Link
-                      href="/register"
-                      className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
-                  >
-                    <span className='z-10'>
-                        Join Free
-                    </span>
-
-                  </Link>
-                  </div>
-                <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
-                  Where designers from the world's leading teams spark interaction ideas
-                  </p>
-
-                    <style>{`
-                    @keyframes scroll-infinite {
-                        0% {
-                        transform: translateX(0);
-                        }
-                        100% {
-                        transform: translateX(-50%);
-                        }
-                    }
-                    .scroll-container {
-                        animation: scroll-infinite 30s linear infinite;
-                        display: flex;
-                        width: fit-content;
-                    }
-                    .scroll-container:hover {
-                        animation-play-state: paused;
-                    }
-                    `}</style>
-                    <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
-                    <div className="scroll-container">
-
-                        <div className="flex items-center gap-6 shrink-0 px-3">
-                        <img src="images/brand/git.png" alt="GitHub" className="h-6 " />
-                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 " />
-                        <img src="images/brand/notion.png" alt="Notion" className="h-6 " />
-                        <img src="images/brand/slack.png" alt="Slack" className="h-6 " />
-                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 " />
-                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 " />
-                        </div>
-
-                        <div className="flex items-center gap-6 shrink-0 px-3">
-                        <img src="images/brand/git.png" alt="GitHub" className="h-6 " />
-                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 " />
-                        <img src="images/brand/notion.png" alt="Notion" className="h-6 " />
-                        <img src="images/brand/slack.png" alt="Slack" className="h-6 " />
-                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 " />
-                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 " />
-                        </div>
-                    </div>
-                    </div>
-
-
-                </div>
+                <Link
+                href="/register"
+                className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+                >
+                <span className="z-10">Join Free</span>
+                </Link>
             </div>
-            )}
 
+            <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
+                Where designers from the world's leading teams spark interaction ideas
+            </p>
+
+            {/* Optimized scrolling logo section */}
+            <ScrollingBrands />
+            </div>
+        </div>
+        )}
       </div>
 
       {/* Loading State */}

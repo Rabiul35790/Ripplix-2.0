@@ -5,7 +5,6 @@ import LibraryGrid from './LibraryGrid';
 import LibraryModal from './LibraryModal';
 import FilterSection from './Website/Components/FilterSection';
 import Layout from './Layout';
-import { Infinity } from 'lucide-react';
 
 interface Filter {
   id: number;
@@ -35,7 +34,7 @@ interface Library {
   industries: Array<{ id: number; name: string }>;
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
-  published_date:string;
+  published_date: string;
 }
 
 interface SearchResultsProps extends PageProps {
@@ -44,7 +43,7 @@ interface SearchResultsProps extends PageProps {
   selectedPlatform: string;
   selectedLibrary?: Library | null;
   userLibraryIds?: number[];
-  viewedLibraryIds?: number[]; // ADD THIS
+  viewedLibraryIds?: number[];
   totalCount: number;
   hasMore: boolean;
   currentPage: number;
@@ -59,12 +58,12 @@ interface SearchResultsProps extends PageProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
-  libraries: initialLibraries,
+  libraries: initialLibraries = [],
   searchQuery,
   selectedPlatform,
   selectedLibrary: initialSelectedLibrary = null,
   userLibraryIds: initialUserLibraryIds = [],
-  viewedLibraryIds: initialViewedLibraryIds = [], // ADD THIS
+  viewedLibraryIds: initialViewedLibraryIds = [],
   totalCount: initialTotalCount,
   hasMore: initialHasMore,
   currentPage: initialCurrentPage,
@@ -83,6 +82,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   const [activePlatform, setActivePlatform] = useState(selectedPlatform || 'all');
   const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState(initialLibraries.length === 0 && searchQuery.trim() !== '');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [currentPage, setCurrentPage] = useState(initialCurrentPage);
@@ -90,38 +90,120 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   const [cardsPerRow, setCardsPerRow] = useState(3);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // ADD THIS: State for userLibraryIds
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
-
-  // ADD THIS: State for viewedLibraryIds with real-time updates
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
   // Modal state
   const [modalLibrary, setModalLibrary] = useState<Library | null>(initialSelectedLibrary);
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
 
-  // ADD THIS: Update viewedLibraryIds when props change
+  // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
   }, [initialViewedLibraryIds]);
 
-  // ADD THIS: Update userLibraryIds when props change
+  // Update userLibraryIds when props change
   useEffect(() => {
     setUserLibraryIds(initialUserLibraryIds);
   }, [initialUserLibraryIds]);
 
-  // ADD THIS: Callback to handle when a library is viewed
+  // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
-      // Avoid duplicates
       if (prev.includes(libraryId)) return prev;
       return [...prev, libraryId];
     });
   }, []);
 
-  // UPDATED: Check URL for library modal - now checks path instead of query parameter
+  // Fetch search results after navigation (NEW - for instant navigation)
   useEffect(() => {
-    // Check if URL matches /library/{slug} pattern
+    const fetchSearchResults = async () => {
+      // Don't fetch if no query or already have data
+      if (!searchQuery.trim()) {
+        setIsLoadingLibraries(false);
+        return;
+      }
+
+      if (libraries.length > 0) {
+        setIsLoadingLibraries(false);
+        return;
+      }
+
+      try {
+        setIsLoadingLibraries(true);
+
+        const params = new URLSearchParams();
+        params.set('q', searchQuery);
+
+        if (activePlatform && activePlatform !== 'all') {
+          params.set('platform', activePlatform);
+        }
+
+        params.set('page', '1');
+
+        const response = await fetch(`/api/search?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch search results');
+        }
+
+        const data = await response.json();
+
+        setLibraries(data.libraries);
+        setHasMore(data.has_more);
+        setCurrentPage(data.current_page);
+        setTotalCount(data.total_count);
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+      } finally {
+        setIsLoadingLibraries(false);
+      }
+    };
+
+    fetchSearchResults();
+  }, [searchQuery]); // Re-fetch when search query changes
+
+  // Re-fetch when platform filter changes
+  useEffect(() => {
+    if (!searchQuery.trim() || libraries.length === 0) return;
+
+    const fetchFilteredResults = async () => {
+      try {
+        setIsLoadingLibraries(true);
+
+        const params = new URLSearchParams();
+        params.set('q', searchQuery);
+
+        if (activePlatform && activePlatform !== 'all') {
+          params.set('platform', activePlatform);
+        }
+
+        params.set('page', '1');
+
+        const response = await fetch(`/api/search?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch search results');
+        }
+
+        const data = await response.json();
+
+        setLibraries(data.libraries);
+        setHasMore(data.has_more);
+        setCurrentPage(data.current_page);
+        setTotalCount(data.total_count);
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+      } finally {
+        setIsLoadingLibraries(false);
+      }
+    };
+
+    fetchFilteredResults();
+  }, [activePlatform]);
+
+  // Check URL for library modal
+  useEffect(() => {
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
     if (pathMatch) {
@@ -130,7 +212,6 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         fetchLibraryForModal(librarySlug);
       }
     } else if (isModalOpen && !window.location.pathname.startsWith('/library/')) {
-      // Close modal if we're not on a library URL
       setIsModalOpen(false);
       setModalLibrary(null);
     }
@@ -149,21 +230,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       setIsModalOpen(true);
     } catch (error) {
       console.error('Error fetching library for modal:', error);
-      // Redirect to search page if library not found
       window.history.replaceState({}, '', '/search' + window.location.search);
       setIsModalOpen(false);
       setModalLibrary(null);
     }
   };
-
-  // Update state when props change (when URL changes)
-  useEffect(() => {
-    setLibraries(initialLibraries);
-    setHasMore(initialHasMore);
-    setCurrentPage(initialCurrentPage);
-    setTotalCount(initialTotalCount);
-    setActivePlatform(selectedPlatform || 'all');
-  }, [initialLibraries, initialHasMore, initialCurrentPage, initialTotalCount, selectedPlatform]);
 
   const handleSearch = (query: string) => {
     setCurrentQuery(query);
@@ -177,36 +248,25 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   const handlePlatformChange = (platform: string) => {
     setActivePlatform(platform);
-    if (currentQuery.trim()) {
-      router.get('/search', {
-        q: currentQuery,
-        platform: platform !== 'all' ? platform : ''
-      });
-    }
+    // Don't use router.get here, let the useEffect handle the API call
   };
 
   const handleCardsPerRowChange = (count: number) => {
     setCardsPerRow(count);
   };
 
-  // UPDATED: Handle library click - URL update is handled by LibraryCard
   const handleLibraryClick = (library: Library) => {
     setModalLibrary(library);
     setIsModalOpen(true);
-    // URL update is handled by LibraryCard component
   };
 
-  // UPDATED: Handle close modal - URL update is handled by LibraryModal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setModalLibrary(null);
-    // URL update is handled by LibraryModal component
   };
 
-  // UPDATED: Handle modal navigation - URL is handled by LibraryModal
   const handleLibraryNavigation = (library: Library) => {
     setModalLibrary(library);
-    // URL update is handled by LibraryModal component
   };
 
   const handleStarClick = (library: Library, isStarred: boolean) => {
@@ -218,7 +278,6 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   };
 
   const loadMoreResults = useCallback(async () => {
-    // Only allow load more for authenticated users
     if (!isAuthenticated || !hasMore || isLoadingMore || isLoading) return;
 
     setIsLoadingMore(true);
@@ -231,7 +290,6 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         setCurrentPage(data.current_page);
         setHasMore(data.has_more);
 
-        // UPDATED: Update viewedLibraryIds if provided
         if (data.viewedLibraryIds) {
           setViewedLibraryIds(data.viewedLibraryIds);
         }
@@ -263,7 +321,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       <Head title={`Search Results for "${searchQuery}"`} />
 
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sora">
-        {/* Search Header */}
+        {/* Search Header - Shows immediately */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Search Results for "{searchQuery}"
@@ -276,8 +334,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </p>
         </div>
 
-        {/* Filter Section */}
-        <div className="sticky top-16 md:top-20 lg:top-20 z-10 mb-8 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
+        {/* Filter Section - Shows immediately */}
+        <div className="sticky top-16 md:top-20 lg:top-20 z-10 mb-2 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
           <FilterSection
             filters={filters}
             selectedPlatform={activePlatform}
@@ -287,120 +345,55 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           />
         </div>
 
-        {/* Results Grid using LibraryGrid component */}
-        {libraries.length > 0 || currentQuery.trim() ? (
-          <>
-            <LibraryGrid
-              ziggy={ziggyData}
-              libraries={libraries}
-              onLibraryClick={handleLibraryClick}
-              onLoadMore={loadMoreResults}
-              hasMore={isAuthenticated ? hasMore : false}
-              isLoading={isLoadingMore}
-              cardsPerRow={cardsPerRow}
-              auth={authData}
-              onStarClick={handleStarClick}
-              userLibraryIds={userLibraryIds}
-              viewedLibraryIds={viewedLibraryIds}
-              onLibraryViewed={handleLibraryViewed}
-              userPlanLimits={userPlanLimits}
-            />
-
-            {/* Unauthenticated User Sign Up Prompt - Exact same as LibraryGrid */}
-            {/* {!isAuthenticated && totalCount > 18 && (
-              <div className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl" style={{ background: 'linear-gradient(179.63deg, rgba(248, 248, 249, 0) 0%, #FFFFFF 40%, #F6F5FA 85%)' }}>
-                <div className="relative z-10">
-                  <h2 className="text-3xl sm:text-4xl pt-10 font-bold text-[#BCBCC7] dark:text-white mb-2 font-sora">
-                    You're <span className="text-[#2B235A] dark:text-[#8a7eff] font-extrabold">one click away</span> from
-                  </h2>
-                  <p className="text-2xl sm:text-3xl font-semibold text-[#BCBCC7] dark:text-gray-400 mb-6 font-sora">
-                    unlimited inspiration
-                  </p>
-
-                  <p className="max-w-2xl text-sm sm:text-sm text-[#9D9DA8] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
-                    3,000+ UI animations from 600+ real apps across 200+ categories. <br />
-                    <span className='font-semibold text-[#9D9DA8]'>Covering web, mobile, smartwatches and even AR/VR.</span>
-                  </p>
-
-
-                  <div className="flex items-center justify-center gap-4 mb-10">
-                    <Link
-                      href="/login"
-                      className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
-                    >
-                      <span className='z-10'>Log In</span>
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
-                    >
-                      <span className='z-10'>Join Free</span>
-                    </Link>
-                  </div>
-
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-6 font-sora">
-                    Where designers from the world's leading teams spark interaction ideas
-                  </p>
-
-
-                  <style>{`
-                    @keyframes scroll-infinite {
-                      0% {
-                        transform: translateX(0);
-                      }
-                      100% {
-                        transform: translateX(-50%);
-                      }
-                    }
-                    .scroll-container {
-                      animation: scroll-infinite 30s linear infinite;
-                      display: flex;
-                      width: fit-content;
-                    }
-                    .scroll-container:hover {
-                      animation-play-state: paused;
-                    }
-                  `}</style>
-                  <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
-                    <div className="scroll-container">
-
-                      <div className="flex items-center gap-6 shrink-0 px-3">
-                        <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/notion.png" alt="Notion" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/slack.png" alt="Slack" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
-                      </div>
-
-                      <div className="flex items-center gap-6 shrink-0 px-3">
-                        <img src="images/brand/git.png" alt="GitHub" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/airbnb.png" alt="Airbnb" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/notion.png" alt="Notion" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/slack.png" alt="Slack" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/atlasian.png" alt="Atlassian" className="h-6 grayscale opacity-70" />
-                        <img src="images/brand/spotify.png" alt="Spotify" className="h-6 grayscale opacity-70" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        {/* Loading state or results */}
+        {isLoadingLibraries ? (
+          <div className={`grid gap-4 sm:gap-6 md:gap-5 ${
+            cardsPerRow === 2 ? 'grid-cols-1 md:grid-cols-2' :
+            cardsPerRow === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          }`}>
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 dark:bg-gray-700 rounded-lg aspect-video mb-3"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
               </div>
-            )} */}
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Start searching
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Enter a search query to find interactions.
-            </p>
+            ))}
           </div>
+        ) : (
+          <>
+            {libraries.length > 0 || currentQuery.trim() ? (
+              <LibraryGrid
+                ziggy={ziggyData}
+                libraries={libraries}
+                onLibraryClick={handleLibraryClick}
+                onLoadMore={loadMoreResults}
+                hasMore={isAuthenticated ? hasMore : false}
+                isLoading={isLoadingMore}
+                cardsPerRow={cardsPerRow}
+                auth={authData}
+                onStarClick={handleStarClick}
+                userLibraryIds={userLibraryIds}
+                viewedLibraryIds={viewedLibraryIds}
+                onLibraryViewed={handleLibraryViewed}
+                userPlanLimits={userPlanLimits}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Start searching
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Enter a search query to find interactions.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 

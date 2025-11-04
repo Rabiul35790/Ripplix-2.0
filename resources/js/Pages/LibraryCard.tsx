@@ -589,7 +589,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
         onClose={closeMembershipModal}
         title="Become member to Add collection"
         message="Sign up now to Add Collection, Add more unlimited interactions to your Portal, and share them with your team"
-        buttonText="Become Member Now"
+        buttonText="Login"
         redirectUrl="/login"
       />
 

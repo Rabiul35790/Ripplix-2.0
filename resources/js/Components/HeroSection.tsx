@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
 interface Settings {
   logo?: string;
@@ -15,9 +15,11 @@ interface HeroSectionProps {
 const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
 
-  const gifs = [
+  const gifs = useMemo(() => [
     '/images/Gif/amoweb.gif',
     '/images/Gif/dayweb.gif',
     '/images/Gif/mobday.gif',
@@ -25,15 +27,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     '/images/Gif/scrollwatch.gif',
     '/images/Gif/shopmob.gif',
     '/images/Gif/squarewapp.gif'
-  ];
+  ], []);
 
-  const avats = [
+  const avats = useMemo(() => [
     'images/hero/tes1.jpg',
     'images/hero/tes2.jpg',
     'images/hero/tes3.jpg',
-  ];
+  ], []);
 
-  const colors = [
+  const colors = useMemo(() => [
     'from-purple-200 to-purple-300',
     'from-pink-200 to-pink-300',
     'from-cyan-200 to-cyan-300',
@@ -41,7 +43,56 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     'from-blue-200 to-blue-300',
     'from-green-200 to-green-300',
     'from-yellow-200 to-yellow-300'
-  ];
+  ], []);
+
+  // Preload critical images (first 3 cards)
+  useEffect(() => {
+    const preloadImages = gifs.slice(0, 3);
+    preloadImages.forEach((src, idx) => {
+      const img = new Image();
+      img.onload = () => {
+        setLoadedImages(prev => ({ ...prev, [idx]: true }));
+      };
+      img.onerror = () => {
+        setImageErrors(prev => ({ ...prev, [idx]: true }));
+      };
+      img.src = src;
+    });
+  }, [gifs]);
+
+  // Lazy load remaining images with intersection observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            const idx = parseInt(img.dataset.index || '0');
+
+            if (idx >= 3 && !loadedImages[idx] && !imageErrors[idx]) {
+              const src = img.dataset.src;
+              if (src) {
+                img.onload = () => {
+                  setLoadedImages(prev => ({ ...prev, [idx]: true }));
+                };
+                img.onerror = () => {
+                  setImageErrors(prev => ({ ...prev, [idx]: true }));
+                };
+                img.src = src;
+              }
+            }
+          }
+        });
+      },
+      { rootMargin: '50px' }
+    );
+
+    imageRefs.current.forEach((img) => {
+      if (img) observer.observe(img);
+    });
+
+    return () => observer.disconnect();
+  }, [loadedImages, imageErrors]);
 
   useEffect(() => {
     intervalRef.current = setInterval(() => {
@@ -55,12 +106,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     };
   }, [gifs.length]);
 
-  const handleImageError = (index: number) => {
+  const handleImageError = useCallback((index: number) => {
     setImageErrors(prev => ({ ...prev, [index]: true }));
-  };
+  }, []);
 
-  const getCardStyle = (index: number) => {
-    const position = (index - activeIndex + gifs.length) % gifs.length;
+  const getCardStyle = useCallback((index: number, activeIdx: number) => {
+    const position = (index - activeIdx + gifs.length) % gifs.length;
 
     const positions = {
       0: { y: -50, x: -50, scale: 1, opacity: 1, z: 50 },
@@ -79,15 +130,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       opacity: pos.opacity,
       zIndex: pos.z
     };
-  };
+  }, [gifs.length]);
 
-  const handleBookmark = () => {
+  const handleBookmark = useCallback(() => {
     if (typeof window !== 'undefined') {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const shortcut = isMac ? 'Cmd+D' : 'Ctrl+D';
       alert(`Please bookmark this page by pressing ${shortcut}`);
     }
-  };
+  }, []);
 
   return (
     <div className="w-full min-h-screen lg:min-h-[90vh] bg-[#080921] relative overflow-hidden flex items-center py-12 lg:py-0">
@@ -112,6 +163,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           transition: transform 1000ms cubic-bezier(0.4, 0, 0.2, 1),
                       opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1),
                       z-index 0ms;
+        }
+        .skeleton-shimmer {
+          background: linear-gradient(90deg, #1a1a2e 25%, #2d2d44 50%, #1a1a2e 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
       `}</style>
 
@@ -155,8 +215,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
             <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>
             </button>
 
-
-
               {/* User Avatars */}
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="flex -space-x-2 sm:-space-x-2.5">
@@ -183,9 +241,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[520px] xl:h-[550px] flex items-center justify-center lg:justify-end order-2 lg:order-2">
             <div className="relative w-full h-full lg:ml-8 xl:ml-24 xl:mr-[-8rem]">
               {gifs.map((gif, idx) => {
-                const style = getCardStyle(idx);
+                const style = getCardStyle(idx, activeIndex);
                 const colorIndex = idx % colors.length;
                 const hasError = imageErrors[idx];
+                const isLoaded = loadedImages[idx];
+                const shouldPreload = idx < 3;
 
                 return (
                   <div
@@ -195,13 +255,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
                   >
                     <div className="w-full aspect-[4/3] sm:aspect-[20/15] rounded-lg sm:rounded-xl overflow-hidden bg-gray-900">
                       {!hasError ? (
-                        <img
-                          src={gif}
-                          alt={`Motion pattern ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={() => handleImageError(idx)}
-                          loading="lazy"
-                        />
+                        <>
+                          {!isLoaded && (
+                            <div className="skeleton-shimmer w-full h-full" />
+                          )}
+                          <img
+                            ref={el => imageRefs.current[idx] = el}
+                            src={shouldPreload ? gif : undefined}
+                            data-src={!shouldPreload ? gif : undefined}
+                            data-index={idx}
+                            alt={`Motion pattern ${idx + 1}`}
+                            className={`w-full h-full object-cover ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+                            onError={() => handleImageError(idx)}
+                            loading="lazy"
+                          />
+                        </>
                       ) : (
                         <div className={`w-full h-full bg-gradient-to-br ${colors[colorIndex]} flex items-center justify-center`}>
                           <div className="text-center p-4 sm:p-6 md:p-8">

@@ -143,7 +143,7 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }
         onClose={closeMembershipModal}
         title="Become member to Follow App"
         message="Sign up now to follow your favorite Apps, discover new interactions, and stay updated with the latest designs."
-        buttonText="Become Member Now"
+        buttonText="Login"
         redirectUrl="/login"
       />
     </>

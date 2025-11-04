@@ -27,6 +27,7 @@ use Inertia\Inertia;
 | Search Routes
 |--------------------------------------------------------------------------
 */
+// routes/web.php - KEEP THESE
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/load-more', [SearchController::class, 'loadMore'])->name('search.load-more');
 Route::get('/api/search', [SearchController::class, 'apiSearch'])->name('api.search');
@@ -40,11 +41,21 @@ Route::get('/api/search', [SearchController::class, 'apiSearch'])->name('api.sea
 Route::get('/', [LibraryController::class, 'index'])
     ->middleware('verified')
     ->name('home');
+Route::get('/api/home/top-libraries', [LibraryController::class, 'getTopLibraries'])->name('api.home.top-libraries');
 Route::get('/explore', [LibraryController::class, 'explore'])->name('explore');
 Route::get('/collections', [CollectionController::class, 'index'])->middleware('verified')->name('collections');
+// routes/web.php
+
+// Existing routes - KEEP THESE
 Route::get('/all-apps', [BrowseController::class, 'allApps'])->middleware('verified')->name('all-apps');
 Route::get('/all-categories', [BrowseController::class, 'allCategories'])->middleware('verified')->name('all-categories');
 Route::get('/all-elements', [BrowseController::class, 'allElements'])->middleware('verified')->name('all-elements');
+
+// NEW: Add API routes for loading libraries
+Route::get('/api/all-apps/libraries', [BrowseController::class, 'getAllAppsLibraries'])->name('api.all-apps.libraries');
+Route::get('/api/all-categories/libraries', [BrowseController::class, 'getAllCategoriesLibraries'])->name('api.all-categories.libraries');
+Route::get('/api/all-elements/libraries', [BrowseController::class, 'getAllElementsLibraries'])->name('api.all-elements.libraries');
+
 // Route::get('/challenges', [LibraryController::class, 'challenges'])->name('challenges');
 Route::get('/curators', [CuratorController::class, 'index'])->middleware('verified')->name('curators');
 Route::get('/contact-us', [ContactController::class, 'index'])->middleware('verified')->name('contact-us');

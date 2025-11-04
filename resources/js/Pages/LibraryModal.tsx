@@ -224,7 +224,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
     const suggestions: Library[] = [];
     const totalLibraries = allLibraries.length;
 
-    for (let i = 1; i <= 3 && suggestions.length < 3; i++) {
+    for (let i = 1; i <= 6 && suggestions.length < 6; i++) {
       const nextIndex = (currentIndex + i) % totalLibraries;
       if (nextIndex !== currentIndex) {
         suggestions.push(allLibraries[nextIndex]);
@@ -557,7 +557,7 @@ return (
         className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4"
         onClick={handleBackdropClick}
       >
-        <div className="relative max-w-5xl w-full">
+        <div className="relative max-w-7xl w-full">
           {/* Close Button - Just Outside Modal Right Side */}
           <button
             onClick={handleCloseModal}
@@ -748,7 +748,7 @@ return (
                 muted
                 loop
                 playsInline
-                style={{ minHeight: '500px', maxHeight: '700px'}}
+                style={{ minHeight: '400px', maxHeight: '700px'}}
               />
             </div>
 
@@ -834,8 +834,8 @@ return (
         onClose={closeMembershipModal}
         title="Become member to Add collection"
         message="Sign up now to Add Collection, Add more unlimited interactions to your Portal, and share them with your team"
-        buttonText="Become Member Now"
-        redirectUrl="/register"
+        buttonText="Login"
+        redirectUrl="/login"
       />
 
       {/* Library Selection Modal for authenticated users */}

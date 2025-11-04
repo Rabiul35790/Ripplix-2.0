@@ -157,7 +157,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-[#BABABA]">
+              <label htmlFor="name" className="block text-sm font-medium text-[#9D9DA8]">
                 Collection Name
               </label>
               <input
@@ -176,7 +176,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
             </div>
 
             <div>
-              <label htmlFor="visibility" className="block text-sm font-medium text-[#BABABA]">
+              <label htmlFor="visibility" className="block text-sm font-medium text-[#9D9DA8]">
                 Collection Visibility
               </label>
               <select
@@ -205,7 +205,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
           <div className="space-y-3">
             <div className="pt-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-[#BABABA] ">Sharing Options</h4>
+                <h4 className="text-sm font-medium text-[#9D9DA8] ">Sharing Options</h4>
                 {!canShare && (
                   <div className="flex items-center gap-1 px-2 py-1 bg-[#EEE4FF] border border-[#CDA0FA] rounded text-xs">
                     <Crown className="w-3 h-3 text-[#9943EE] fill-current" />
@@ -258,7 +258,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
               {/* Show share link field when share_via_link is enabled and we have a share_url */}
               {showShareLink && (
                 <div className="ml-6 mt-2 p-3 bg-white border border-[#E3E2FF] rounded-md">
-                  <label className="block text-xs font-medium text-[#BABABA] mb-2">
+                  <label className="block text-xs font-medium text-[#9D9DA8] mb-2">
                     Share Link
                   </label>
                   <div className="flex items-center gap-2">
@@ -319,7 +319,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
 
             {canShare && data.share_via_email && (
               <div className="ml-6">
-                <label htmlFor="share_emails" className="block text-sm font-medium text-[#BABABA] mb-1">
+                <label htmlFor="share_emails" className="block text-sm font-medium text-[#9D9DA8] mb-1">
                   Email address to share with
                 </label>
                 <input

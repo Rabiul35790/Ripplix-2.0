@@ -70,13 +70,14 @@ const animationStyles = `
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Hover effects removed */
   .app-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(43, 35, 90, 0.06);
+    transform: none;
+    box-shadow: none;
   }
 
   .app-card:hover .app-image {
-    transform: scale(1.02);
+    transform: none;
   }
 
   .app-image {
@@ -94,6 +95,7 @@ const animationStyles = `
     }
   }
 `;
+
 
 // Inject styles
 if (typeof document !== 'undefined') {
@@ -159,7 +161,7 @@ interface AllAppsProps extends PageProps {
 }
 
 const AllApps: React.FC<AllAppsProps> = ({
-  libraries,
+  libraries: initialLibraries = [],
   categories,
   filters,
   filterType,
@@ -172,32 +174,29 @@ const AllApps: React.FC<AllAppsProps> = ({
 }) => {
   const { url, props } = usePage<PageProps>();
 
-  // Use auth from props if passed directly, otherwise fall back to props.auth from usePage
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState<boolean>(initialLibraries.length === 0 && !!filterValue);
   const [displayedLibraries, setDisplayedLibraries] = useState<Library[]>([]);
   const [itemsToShow, setItemsToShow] = useState(12);
 
-
-    // ADD THIS: State for userLibraryIds
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
-
-  // ADD THIS: State for viewedLibraryIds
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
-    // ADD THIS: Update viewedLibraryIds when props change
+  // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
   }, [initialViewedLibraryIds]);
 
-  // ADD THIS: Update userLibraryIds when props change
+  // Update userLibraryIds when props change
   useEffect(() => {
     setUserLibraryIds(initialUserLibraryIds);
   }, [initialUserLibraryIds]);
 
-  // ADD THIS: Callback to handle when a library is viewed
+  // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
       if (prev.includes(libraryId)) return prev;
@@ -215,8 +214,43 @@ const AllApps: React.FC<AllAppsProps> = ({
     totalCount: categoryTotalCount
   } = useSearch({
     data: categories,
-    searchKey: 'name' // Search by category name
+    searchKey: 'name'
   });
+
+  // NEW: Fetch libraries if filter is applied
+  useEffect(() => {
+    const fetchLibraries = async () => {
+      // Only fetch if we have a filter and no libraries yet
+      if (!filterValue || libraries.length > 0) {
+        setIsLoadingLibraries(false);
+        return;
+      }
+
+      try {
+        setIsLoadingLibraries(true);
+
+        const params = new URLSearchParams();
+        if (filterValue) {
+          params.set('category', filterValue);
+        }
+
+        const response = await fetch(`/api/all-apps/libraries?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch libraries');
+        }
+
+        const data = await response.json();
+        setLibraries(data.libraries);
+      } catch (error) {
+        console.error('Error fetching libraries:', error);
+      } finally {
+        setIsLoadingLibraries(false);
+      }
+    };
+
+    fetchLibraries();
+  }, [filterValue]);
 
   // Filter libraries based on search
   const filteredLibraries = useMemo(() => {
@@ -276,9 +310,8 @@ const AllApps: React.FC<AllAppsProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
-
       >
-        {/* Header Section */}
+        {/* Header Section - Shows immediately */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
             {/* Breadcrumb */}
@@ -336,7 +369,6 @@ const AllApps: React.FC<AllAppsProps> = ({
                   </button>
                 </div>
               ) : (
-                /* Category Links */
                 filteredCategories.map((category, index) => (
                   <Link
                     key={category.id}
@@ -344,7 +376,7 @@ const AllApps: React.FC<AllAppsProps> = ({
                     className={`flex flex-col items-center p-2 sm:p-2 md:p-1.5 rounded-xl focus:!outline-none transition-all duration-200 group app-card ${
                       filterValue === category.slug
                         ? 'bg-[#E3E2FF] dark:bg-blue-900/20'
-                        : 'hover:border-gray-300 dark:hover:border-gray-600 hover:bg-[#F5F5FA] dark:hover:bg-gray-800'
+                        : 'hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-800'
                     }`}
                     style={{
                       animation: `slideInUp 0.5s ease-out ${index * 0.03}s both`
@@ -370,6 +402,22 @@ const AllApps: React.FC<AllAppsProps> = ({
                 ))
               )}
             </div>
+
+            {/* Show loading skeleton for libraries if filter is applied */}
+            {isLoadingLibraries && filterValue && (
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                  Loading {filterName} libraries...
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="bg-gray-200 dark:bg-gray-700 rounded-lg h-48"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Layout>

@@ -108,9 +108,9 @@ const Home: React.FC<HomeProps> = ({
   userPlanLimits,
   filters,
   settings,
-  topLibrariesByCategory = [],
-  topLibrariesByInteraction = [],
-  topLibrariesByIndustry = [],
+  topLibrariesByCategory: initialTopCategory = [],
+  topLibrariesByInteraction: initialTopInteraction = [],
+  topLibrariesByIndustry: initialTopIndustry = [],
   auth,
   isAuthenticated
 }) => {
@@ -130,16 +130,20 @@ const Home: React.FC<HomeProps> = ({
       has_more: false
     }
   );
+
+  // Top libraries state
+  const [topLibrariesByCategory, setTopLibrariesByCategory] = useState<TopLibraryGroup[]>(initialTopCategory);
+  const [topLibrariesByInteraction, setTopLibrariesByInteraction] = useState<TopLibraryGroup[]>(initialTopInteraction);
+  const [topLibrariesByIndustry, setTopLibrariesByIndustry] = useState<TopLibraryGroup[]>(initialTopIndustry);
+  const [isLoadingTopLibraries, setIsLoadingTopLibraries] = useState(initialTopCategory.length === 0 && !isAuthenticated);
+
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState<string>(currentPlatformFilter);
   const [cardsPerRow, setCardsPerRow] = useState(3);
   const [error, setError] = useState<string | null>(null);
 
-  // ADD THIS: State for userLibraryIds
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
-
-  // ADD THIS: State for viewedLibraryIds with real-time updates
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
   // Modal state
@@ -149,28 +153,61 @@ const Home: React.FC<HomeProps> = ({
   // Ref to prevent multiple simultaneous requests
   const loadingRef = useRef(false);
 
-  // ADD THIS: Update viewedLibraryIds when props change
+  // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
   }, [initialViewedLibraryIds]);
 
-  // ADD THIS: Update userLibraryIds when props change
+  // Update userLibraryIds when props change
   useEffect(() => {
     setUserLibraryIds(initialUserLibraryIds);
   }, [initialUserLibraryIds]);
 
-  // ADD THIS: Callback to handle when a library is viewed
+  // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
-      // Avoid duplicates
       if (prev.includes(libraryId)) return prev;
       return [...prev, libraryId];
     });
   }, []);
 
-  // UPDATED: Check URL for library modal - now checks path instead of query parameter
+  // NEW: Fetch top libraries after page loads (only for unauthenticated users)
   useEffect(() => {
-    // Check if URL matches /library/{slug} pattern
+    const fetchTopLibraries = async () => {
+      // Only fetch if unauthenticated and don't have data yet
+      if (isAuthenticated || topLibrariesByCategory.length > 0) {
+        setIsLoadingTopLibraries(false);
+        return;
+      }
+
+      try {
+        setIsLoadingTopLibraries(true);
+
+        const response = await fetch('/api/home/top-libraries');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch top libraries');
+        }
+
+        const data = await response.json();
+
+        setTopLibrariesByCategory(data.topLibrariesByCategory || []);
+        setTopLibrariesByInteraction(data.topLibrariesByInteraction || []);
+        setTopLibrariesByIndustry(data.topLibrariesByIndustry || []);
+      } catch (error) {
+        console.error('Error fetching top libraries:', error);
+      } finally {
+        setIsLoadingTopLibraries(false);
+      }
+    };
+
+    // Delay fetching top libraries slightly to prioritize main content
+    const timer = setTimeout(fetchTopLibraries, 100);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
+
+  // Check URL for library modal
+  useEffect(() => {
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
     if (pathMatch) {
@@ -179,7 +216,6 @@ const Home: React.FC<HomeProps> = ({
         fetchLibraryForModal(librarySlug);
       }
     } else if (isModalOpen && window.location.pathname === '/') {
-      // Close modal if we're back on home page
       setIsModalOpen(false);
       setModalLibrary(null);
     }
@@ -198,7 +234,6 @@ const Home: React.FC<HomeProps> = ({
       setIsModalOpen(true);
     } catch (error) {
       console.error('Error fetching library for modal:', error);
-      // Redirect to home page if library not found
       window.history.replaceState({}, '', '/');
       setIsModalOpen(false);
       setModalLibrary(null);
@@ -228,7 +263,6 @@ const Home: React.FC<HomeProps> = ({
       setLibraries(data.libraries);
       setPagination(data.pagination);
 
-      // UPDATED: Update viewedLibraryIds from response
       if (data.viewedLibraryIds) {
         setViewedLibraryIds(data.viewedLibraryIds);
       }
@@ -285,7 +319,6 @@ const Home: React.FC<HomeProps> = ({
         setLibraries(prev => [...prev, ...data.libraries]);
         setPagination(data.pagination);
 
-        // UPDATED: Update viewedLibraryIds if provided
         if (data.viewedLibraryIds) {
           setViewedLibraryIds(data.viewedLibraryIds);
         }
@@ -311,24 +344,18 @@ const Home: React.FC<HomeProps> = ({
     setCardsPerRow(count);
   }, []);
 
-  // UPDATED: Handle library card click - now uses /library/{slug} URL
   const handleLibraryCardClick = useCallback((library: Library) => {
     setModalLibrary(library);
     setIsModalOpen(true);
-    // URL update is handled by LibraryCard component
   }, []);
 
-  // UPDATED: Handle modal close - now removes /library/{slug} from URL
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setModalLibrary(null);
-    // URL update is handled by LibraryModal component
   }, []);
 
-  // UPDATED: Handle modal navigation - URL is handled by LibraryModal
   const handleModalNavigation = useCallback((library: Library) => {
     setModalLibrary(library);
-    // URL update is handled by LibraryModal component
   }, []);
 
   const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
@@ -336,14 +363,12 @@ const Home: React.FC<HomeProps> = ({
       console.log('User not authenticated');
       return;
     }
-    // Handle star click logic here
   }, [authData]);
 
   // Modal libraries for authenticated/unauthenticated users
   const modalLibraries = useMemo(() => {
     return isAuthenticated ? filteredLibraries : filteredLibraries.slice(0, 12);
   }, [isAuthenticated, filteredLibraries]);
-
 
   const LayoutComponent = isAuthenticated ? Layout : LayoutUnauth;
 
@@ -369,12 +394,29 @@ const Home: React.FC<HomeProps> = ({
         <>
             {/* <HeroSection settings={settings} /> */}
 
-            {/* Top Libraries Sections for Unauthenticated Users */}
-            <TopLibrariesSection
-            topLibrariesByCategory={topLibrariesByCategory}
-            topLibrariesByInteraction={topLibrariesByInteraction}
-            topLibrariesByIndustry={topLibrariesByIndustry}
-            />
+            {/* Top Libraries Sections - Show skeleton while loading */}
+            {isLoadingTopLibraries ? (
+              <div className="mx-4 sm:mx-6 lg:mx-8 py-8">
+                <div className="animate-pulse space-y-8">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i}>
+                      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[...Array(3)].map((_, j) => (
+                          <div key={j} className="bg-gray-200 dark:bg-gray-700 rounded-lg h-48"></div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <TopLibrariesSection
+                topLibrariesByCategory={topLibrariesByCategory}
+                topLibrariesByInteraction={topLibrariesByInteraction}
+                topLibrariesByIndustry={topLibrariesByIndustry}
+              />
+            )}
         </>
         )}
 
@@ -438,26 +480,6 @@ const Home: React.FC<HomeProps> = ({
             isAuthenticated={isAuthenticated}
           />
         </div>
-
-        <div className="mx-4 sm:mx-6 lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
-          <LibraryGrid
-            libraries={filteredLibraries}
-            onLibraryClick={handleLibraryCardClick}
-            onLoadMore={isAuthenticated ? loadMoreLibraries : undefined}
-            hasMore={isAuthenticated ? (pagination?.has_more || false) : false}
-            isLoadingMore={isLoadingMore}
-            cardsPerRow={cardsPerRow}
-            auth={authData}
-            ziggy={ziggyData}
-            onStarClick={handleStarClick}
-            userPlanLimits={userPlanLimits}
-            userLibraryIds={userLibraryIds}
-            viewedLibraryIds={viewedLibraryIds}
-            onLibraryViewed={handleLibraryViewed}
-            isAuthenticated={isAuthenticated}
-          />
-        </div>
-
 
         <LibraryModal
           library={modalLibrary}

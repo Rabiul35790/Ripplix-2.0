@@ -29,7 +29,7 @@ const MembershipModal: React.FC<MembershipModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-[60] font-sora" onClick={handleBackdropClick}>
-      <div className="bg-[#FFFFFFE5] border border-[#C3C3C9] rounded-[4px] p-6 md:p-16 max-w-5xl w-full h-auto md:h-[35rem] mx-4 relative shadow-2xl flex items-center justify-center">
+      <div className="bg-[#FFFFFFE5] border border-[#C3C3C9] rounded-lg p-6 md:p-16 max-w-5xl w-full h-auto md:h-[35rem] mx-4 relative shadow-2xl flex items-center justify-center">
         <button
           onClick={onClose}
           className="absolute right-4 md:right-6 top-4 md:top-6 text-gray-600 hover:text-[#2B235A] transition-colors duration-500 focus:outline-none focus:ring-0"
@@ -77,16 +77,26 @@ const MembershipModal: React.FC<MembershipModalProps> = ({
             {message}
           </p>
 
-          {/* Button */}
-          <InertiaLink
-            href={redirectUrl || "#"}
-            className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] hover:opacity-95 transition-opacity text-white px-4 md:px-6 py-2 rounded-md font-sora font-semibold inline-block text-sm md:text-base focus:outline-none focus:ring-0"
-            onClick={onClose}
-          >
-            <span className='z-10'>
-            {buttonText}
-            </span>
-          </InertiaLink>
+          {/* Buttons */}
+          <div className="flex items-center justify-center gap-4">
+            <InertiaLink
+              href={redirectUrl || "#"}
+              className="px-4 md:px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-sm md:text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
+              onClick={onClose}
+            >
+              <span className='z-10'>
+                {buttonText}
+              </span>
+            </InertiaLink>
+
+            <InertiaLink
+              href="/register"
+              className="px-4 md:px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-sm md:text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+              onClick={onClose}
+            >
+              <span className="z-10">Join Free</span>
+            </InertiaLink>
+          </div>
         </div>
       </div>
     </div>

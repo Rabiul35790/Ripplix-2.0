@@ -471,85 +471,107 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
                 {/* Unauthenticated User Login Prompt - Exact same as LibraryGrid */}
                 {showLoginPrompt && (
-                  <div className="relative -mt-[300px] sm:-mt-[400px] lg:-mt-[500px] pt-48 sm:pt-60 lg:pt-80 pb-6 sm:pb-10 text-center flex flex-col items-center justify-center px-3 sm:px-4 rounded-2xl" style={{ background: 'linear-gradient(179.63deg, rgba(248, 248, 249, 0) 0%, #FFFFFF 40%, #F6F5FA 85%)' }}>
+                <div
+                    className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl"
+                    style={{
+                    background:
+                        "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.7) 80%, rgba(248, 248, 249, 0.2) 100%)",
+                    }}
+                >
+
+
                     <div className="relative z-10">
-                      <h2 className="text-2xl sm:text-3xl lg:text-4xl pt-6 sm:pt-10 font-bold text-[#BCBCC7] dark:text-white mb-2 font-sora px-2">
-                        You're <span className="text-[#2B235A] dark:text-[#8a7eff] font-extrabold">one click away</span> from
-                      </h2>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-semibold text-[#BCBCC7] dark:text-gray-400 mb-4 sm:mb-6 font-sora px-2">
+                    <h2 className="font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
+                        You're{" "}
+                        <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
+                        one click away{" "}
+                        </span>
+                        from
+                    </h2>
+
+                    <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
                         unlimited inspiration
-                      </p>
+                    </p>
 
-                      <p className="max-w-2xl text-xs sm:text-sm text-[#9D9DA8] dark:text-gray-400 mb-6 sm:mb-8 text-center font-poppins mx-auto px-4">
-                        3,000+ UI animations from 600+ real apps across 200+ categories. <br className="hidden sm:block" />
-                        <span className='font-semibold text-[#9D9DA8]'>Covering web, mobile, smartwatches and even AR/VR.</span>
-                      </p>
+                    <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
+                        Explore thousands of real UI animations, thoughtfully curated for modern
+                        design teams
+                    </p>
 
-                      {/* Buttons */}
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-6 sm:mb-10 px-4">
+                    <div className="flex items-center justify-center gap-4 mb-16">
                         <Link
-                          href="/login"
-                          className="w-full sm:w-auto px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-sm sm:text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0 text-center"
+                        href="/login"
+                        className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
                         >
-                          <span className='z-10'>Log In</span>
+                        <span className="z-10">Log In</span>
                         </Link>
-                        <Link
-                          href="/register"
-                          className="w-full sm:w-auto px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-sm sm:text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0 text-center"
-                        >
-                          <span className='z-10'>
-                            Join Free
-                          </span>
-                        </Link>
-                      </div>
 
-                      <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mb-4 sm:mb-6 font-sora px-4">
+                        <Link
+                        href="/register"
+                        className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+                        >
+                        <span className="z-10">Join Free</span>
+                        </Link>
+                    </div>
+
+                    <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
                         Where designers from the world's leading teams spark interaction ideas
-                      </p>
+                    </p>
 
-                      {/* Brand Logos with automatic scrolling animation */}
-                      <style>{`
+                    {/* === Smooth scrolling logo section === */}
+                    <style>{`
                         @keyframes scroll-infinite {
-                          0% {
+                        0% {
                             transform: translateX(0);
-                          }
-                          100% {
+                        }
+                        100% {
                             transform: translateX(-50%);
-                          }
+                        }
                         }
                         .scroll-container {
-                          animation: scroll-infinite 30s linear infinite;
-                          display: flex;
-                          width: fit-content;
+                        animation: scroll-infinite 30s linear infinite;
+                        display: flex;
+                        width: fit-content;
                         }
                         .scroll-container:hover {
-                          animation-play-state: paused;
+                        animation-play-state: paused;
                         }
-                      `}</style>
-                      <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
+                    `}</style>
+
+                    <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
                         <div className="scroll-container">
-                          {/* First set */}
-                          <div className="flex items-center gap-4 sm:gap-6 shrink-0 px-2 sm:px-3">
-                            <img src="images/brand/git.png" alt="GitHub" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/airbnb.png" alt="Airbnb" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/notion.png" alt="Notion" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/slack.png" alt="Slack" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/atlasian.png" alt="Atlassian" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/spotify.png" alt="Spotify" className="h-4 sm:h-6 grayscale opacity-70" />
-                          </div>
-                          {/* Second set (duplicate) - must be identical */}
-                          <div className="flex items-center gap-4 sm:gap-6 shrink-0 px-2 sm:px-3">
-                            <img src="images/brand/git.png" alt="GitHub" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/airbnb.png" alt="Airbnb" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/notion.png" alt="Notion" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/slack.png" alt="Slack" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/atlasian.png" alt="Atlassian" className="h-4 sm:h-6 grayscale opacity-70" />
-                            <img src="images/brand/spotify.png" alt="Spotify" className="h-4 sm:h-6 grayscale opacity-70" />
-                          </div>
+                        {[...Array(2)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-8 shrink-0 px-3">
+                            {[
+                                { src: "images/brand/atlas.png", alt: "Atlassian" },
+                                { src: "images/brand/air.png", alt: "Airbnb" },
+                                { src: "images/brand/monday.png", alt: "Monday" },
+                                { src: "images/brand/klarna.png", alt: "Klarna" },
+                                { src: "images/brand/spotify.png", alt: "Spotify" },
+                                { src: "images/brand/plaid.png", alt: "Plaid" },
+                                { src: "images/brand/linktree.png", alt: "Linktree" },
+                            ].map((brand, index) => (
+                                <div
+                                key={index}
+                                className="flex items-center justify-center w-24 h-10 bg-transparent"
+                                >
+                                <img
+                                    src={brand.src}
+                                    alt={brand.alt}
+                                    className="max-h-full max-w-full object-contain"
+                                />
+                                </div>
+                            ))}
+                            </div>
+                        ))}
                         </div>
-                      </div>
+
+                        {/* Optional fade edges for premium look */}
+                        <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
                     </div>
-                  </div>
+                    </div>
+                </div>
                 )}
 
                 {/* Loading More Indicator - Only for authenticated users */}

@@ -76,20 +76,21 @@ const animationStyles = `
   }
 
   .group-hover\\:scale-icon:hover .arrow-icon {
-    transform: translateX(2px);
+    transform: none;
   }
 
   .element-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Hover effects removed */
   .element-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(43, 35, 90, 0.06);
+    transform: none;
+    box-shadow: none;
   }
 
   .element-card:hover .arrow-icon {
-    transform: translateX(3px) scale(1.1);
+    transform: none;
   }
 
   .arrow-icon {
@@ -128,7 +129,7 @@ interface Library {
   industries: Array<{ id: number; name: string }>;
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
-  published_date:string;
+  published_date: string;
 }
 
 interface UserPlanLimits {
@@ -171,11 +172,11 @@ interface AllElementsProps extends PageProps {
 }
 
 const AllElements: React.FC<AllElementsProps> = ({
-  libraries,
+  libraries: initialLibraries = [],
   interactions,
   filters,
   filterType,
-   userLibraryIds: initialUserLibraryIds = [],
+  userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   userPlanLimits,
   filterValue,
@@ -184,30 +185,29 @@ const AllElements: React.FC<AllElementsProps> = ({
 }) => {
   const { url, props } = usePage<PageProps>();
 
-  // Use auth from props if passed directly, otherwise fall back to props.auth from usePage
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState<boolean>(initialLibraries.length === 0 && !!filterValue);
   const [displayedLibraries, setDisplayedLibraries] = useState<Library[]>([]);
   const [itemsToShow, setItemsToShow] = useState(12);
 
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
-
-  // ADD THIS: State for viewedLibraryIds
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
-  // ADD THIS: Update viewedLibraryIds when props change
+  // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
   }, [initialViewedLibraryIds]);
 
-  // ADD THIS: Update userLibraryIds when props change
+  // Update userLibraryIds when props change
   useEffect(() => {
     setUserLibraryIds(initialUserLibraryIds);
   }, [initialUserLibraryIds]);
 
-  // ADD THIS: Callback to handle when a library is viewed
+  // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
       if (prev.includes(libraryId)) return prev;
@@ -225,8 +225,43 @@ const AllElements: React.FC<AllElementsProps> = ({
     totalCount: interactionTotalCount
   } = useSearch({
     data: interactions,
-    searchKey: 'name' // Search by interaction name
+    searchKey: 'name'
   });
+
+  // Fetch libraries if filter is applied
+  useEffect(() => {
+    const fetchLibraries = async () => {
+      // Only fetch if we have a filter and no libraries yet
+      if (!filterValue || libraries.length > 0) {
+        setIsLoadingLibraries(false);
+        return;
+      }
+
+      try {
+        setIsLoadingLibraries(true);
+
+        const params = new URLSearchParams();
+        if (filterValue) {
+          params.set('interaction', filterValue);
+        }
+
+        const response = await fetch(`/api/all-elements/libraries?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch libraries');
+        }
+
+        const data = await response.json();
+        setLibraries(data.libraries);
+      } catch (error) {
+        console.error('Error fetching libraries:', error);
+      } finally {
+        setIsLoadingLibraries(false);
+      }
+    };
+
+    fetchLibraries();
+  }, [filterValue]);
 
   // Filter libraries based on search
   const filteredLibraries = useMemo(() => {
@@ -266,17 +301,14 @@ const AllElements: React.FC<AllElementsProps> = ({
   };
 
   const handleStarClick = (library: Library, isStarred: boolean) => {
-    // Updated auth check to match PageProps structure
     if (!authData.user) {
       console.log('User not authenticated');
       return;
     }
 
     if (isStarred) {
-      // Add to collection
       console.log(`Adding library ${library.title} to collection for user ${authData.user.id}`);
     } else {
-      // Remove from collection
       console.log(`Removing library ${library.title} from collection for user ${authData.user.id}`);
     }
   };
@@ -299,7 +331,7 @@ const AllElements: React.FC<AllElementsProps> = ({
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
       >
-        {/* Header Section */}
+        {/* Header Section - Shows immediately */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
             {/* Breadcrumb */}
@@ -357,18 +389,17 @@ const AllElements: React.FC<AllElementsProps> = ({
                   </button>
                 </div>
               ) : (
-                /* Interaction Links */
                 filteredInteractions.map((interaction, index) => (
                   <Link
                     key={interaction.id}
                     href={`/browse?interaction=${interaction.slug}`}
-                    className={`flex items-center p-3 sm:p-4 md:p-3.5 rounded-xl border-[1px] outline-none focus:outline-none transition-all duration-200 group element-card ${
+                    className={`flex items-center p-3 sm:p-4 md:p-3.5 outline-none focus:outline-none transition-all duration-200 group element-card ${
                       filterValue === interaction.slug
                         ? 'border-[#E3E2FF] bg-[#FAFAFC] dark:bg-blue-900/20'
-                        : 'border-[#E3E2FF] dark:border-gray-700 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-500'
+                        : 'border-[#E3E2FF] dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800 transition-colors duration-500'
                     }`}
                     style={{
-                      animation: `slideInUp 0.5s ease-out ${index * 0.05}s both`
+                      animation: `slideInUp 0.5s ease-out ${index * 0.03}s both`
                     }}
                   >
                     <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 mr-2 sm:mr-3 md:mr-2.5 flex items-center justify-center text-lg text-[#CECCFF] group-hover:text-[#2B235A] flex-shrink-0 transition-all duration-500">
@@ -383,6 +414,22 @@ const AllElements: React.FC<AllElementsProps> = ({
                 ))
               )}
             </div>
+
+            {/* Show loading skeleton for libraries if filter is applied */}
+            {isLoadingLibraries && filterValue && (
+              <div className="mt-8">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                  Loading {filterName} libraries...
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="bg-gray-200 dark:bg-gray-700 rounded-lg h-48"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Layout>
