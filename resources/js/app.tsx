@@ -37,7 +37,7 @@ createInertiaApp({
         createRoot(el).render(<AppWithCookies />);
     },
     progress: {
-        color: 'rgba(0,0,0,0)',
+        color: 'white',
     },
 });
 

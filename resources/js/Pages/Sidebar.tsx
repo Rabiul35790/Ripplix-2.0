@@ -270,24 +270,24 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
                 key={item.name}
                 href={getRouteHref(item.route)}
                 onClick={closeMobileMenu}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group focus:outline-none ${
+                className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-all duration-500 ease-in-out ${
                     active
                     ? 'bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:bg-orange-900/20 text-[#443B82] dark:text-white'
-                    : 'text-[#443B82] dark:text-gray-300 hover:bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:hover:bg-gray-800/50'
+                    : 'text-[#443B82] dark:text-gray-300 bg-transparent'
                 }`}
                 >
                 {/* Apply bold only to active text */}
                 <span
-                    className={`font-medium text-sm transition-all duration-200 ${
+                    className={`font-medium text-sm transition-all duration-500 ease-in-out ${
                     active ? '!font-bold' : ''
                     }`}
                 >
                     {item.name}
                 </span>
                 <div
-                    className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0`}
+                    className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-500 ease-in-out`}
                 >
-                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor}`} />
+                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-500 ease-in-out`} />
                 </div>
                 </Link>
             );
@@ -311,21 +311,21 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
                   key={item.name}
                   href={getRouteHref(item.route)}
                   onClick={closeMobileMenu}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group focus:outline-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-all duration-500 ease-in-out ${
                     active
                       ? 'bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:bg-orange-900/20 text-[#443B82] !font-bold dark:text-white'
-                      : 'text-[#443B82] dark:text-gray-300 hover:bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:hover:bg-gray-800/50'
+                      : 'text-[#443B82] dark:text-gray-300 bg-transparent'
                   }`}
                 >
                   <span
-                    className={`font-medium text-sm transition-all duration-200 ${
+                    className={`font-medium text-sm transition-all duration-500 ease-in-out ${
                     active ? '!font-bold' : ''
                     }`}
                 >
                     {item.name}
                 </span>
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0`}>
-                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor}`} />
+                  <div className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-500 ease-in-out`}>
+                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-500 ease-in-out`} />
                   </div>
                 </Link>
               );
@@ -348,21 +348,21 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
                   key={item.name}
                   href={getRouteHref(item.route)}
                   onClick={closeMobileMenu}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 group focus:outline-none ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-all duration-500 ease-in-out ${
                     active
                       ? 'bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:bg-orange-900/20 text-[#443B82] !font-bold dark:text-white'
-                      : 'text-[#443B82] dark:text-gray-300 hover:bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:hover:bg-gray-800/50'
+                      : 'text-[#443B82] dark:text-gray-300 bg-transparent'
                   }`}
                 >
                   <span
-                    className={`font-medium text-sm transition-all duration-200 ${
+                    className={`font-medium text-sm transition-all duration-500 ease-in-out ${
                     active ? '!font-bold' : ''
                     }`}
                 >
                     {item.name}
                 </span>
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0`}>
-                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor}`} />
+                  <div className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-500 ease-in-out`}>
+                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-500 ease-in-out`} />
                   </div>
                 </Link>
               );

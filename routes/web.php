@@ -131,12 +131,31 @@ Route::get('/boards/shared/{token}', [CollectionController::class, 'shared'])->n
 
 
 
-Route::get('/following', [FollowingController::class, 'index'])->middleware('verified')->name('following');
+// Following page route (fast initial render)
+Route::get('/following', [FollowingController::class, 'index'])
+    ->middleware('verified')
+    ->name('following');
+
+// API routes for lazy loading data
+Route::middleware(['auth:sanctum'])->prefix('api/following')->group(function () {
+    // Get followed categories with optional platform filter
+    Route::get('/categories', [FollowingController::class, 'getFollowedCategories'])
+        ->name('api.following.categories');
+
+    // Get all libraries (for layout search - lazy loaded)
+    Route::get('/libraries', [FollowingController::class, 'getAllLibraries'])
+        ->name('api.following.libraries');
+});
 
 // Category follow/unfollow routes
-Route::post('/following/follow', [FollowingController::class, 'followCategory'])->name('following.follow');
-Route::post('/following/unfollow', [FollowingController::class, 'unfollowCategory'])->name('following.unfollow');
-Route::post('/following/status', [FollowingController::class, 'getFollowStatus'])->name('following.status');
+Route::post('/following/follow', [FollowingController::class, 'followCategory'])
+    ->name('following.follow');
+
+Route::post('/following/unfollow', [FollowingController::class, 'unfollowCategory'])
+    ->name('following.unfollow');
+
+Route::post('/following/status', [FollowingController::class, 'getFollowStatus'])
+    ->name('following.status');
 
 /*
 |--------------------------------------------------------------------------

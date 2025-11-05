@@ -18,38 +18,43 @@ export default function CookieManager() {
         }
     }, []);
 
-    const handleAcceptAll = async () => {
+    const handleAcceptAll = () => {
         const allAccepted: CookiePreferences = {
             necessary: true,
             analytics: true,
             marketing: true,
         };
-        await saveCookiePreferences(allAccepted, true);
+        // Hide banner IMMEDIATELY
+        setShowBanner(false);
+        // Save preferences in background
+        saveCookiePreferencesAsync(allAccepted, true);
     };
 
-    const handleRejectAll = async () => {
+    const handleRejectAll = () => {
         const onlyNecessary: CookiePreferences = {
             necessary: true,
             analytics: false,
             marketing: false,
         };
-        await saveCookiePreferences(onlyNecessary, false);
+        // Hide banner IMMEDIATELY
+        setShowBanner(false);
+        // Save preferences in background
+        saveCookiePreferencesAsync(onlyNecessary, false);
     };
 
-    const saveCookiePreferences = async (prefs: CookiePreferences, accepted: boolean) => {
-        try {
-            // Save to backend
-            await axios.post('/api/cookies/store', {
-                preferences: prefs,
-                accepted: accepted,
-            });
+    const saveCookiePreferencesAsync = (prefs: CookiePreferences, accepted: boolean) => {
+        // Save to localStorage immediately (synchronous)
+        localStorage.setItem('cookieConsent', JSON.stringify(prefs));
 
-            // Save to localStorage
-            localStorage.setItem('cookieConsent', JSON.stringify(prefs));
-            setShowBanner(false);
-        } catch (error) {
-            console.error('Failed to save cookie preferences:', error);
-        }
+        // Send to backend asynchronously (fire and forget)
+        axios.post('/api/cookies/store', {
+            preferences: prefs,
+            accepted: accepted,
+        }).catch(error => {
+            console.error('Failed to save cookie preferences to server:', error);
+            // User won't see this error since banner is already gone
+            // Preferences are still saved in localStorage
+        });
     };
 
     if (!showBanner) return null;

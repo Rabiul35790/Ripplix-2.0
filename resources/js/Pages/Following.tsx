@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import Layout from './Layout';
 import LibraryModal from './LibraryModal';
 import LibraryGrid from './LibraryGrid';
-import FilterSection from './Website/Components/FilterSection';
 import { Home, ChevronRight, BookmarkCheck, Star, User } from 'lucide-react';
 import EmptyState from '../Components/EmptyState';
+import FilterSection2 from './Website/Components/FilterSection2';
 
 interface Library {
   id: number;
@@ -21,7 +21,7 @@ interface Library {
   industries: Array<{ id: number; name: string }>;
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
-  published_date:string;
+  published_date: string;
 }
 
 interface UserPlanLimits {
@@ -61,49 +61,57 @@ interface FollowingProps extends PageProps {
     interactions: Filter[];
   };
   followedCategories: FollowedCategory[];
+  initialLoad?: boolean;
 }
 
+// Skeleton loader for categories
+const CategorySkeleton: React.FC = () => (
+  <div className="bg-[#F8F8F9] dark:bg-gray-900 rounded-lg overflow-hidden animate-pulse">
+    <div className="pt-4 sm:pt-6 md:pt-5 pb-2 sm:pb-3 md:pb-2.5 px-4 sm:px-6 md:px-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-7.5 md:h-7.5 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+          <div className="h-6 w-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+        </div>
+        <div className="h-9 w-20 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+      </div>
+    </div>
+    <div className="px-4 sm:px-6 md:px-5 pb-4 sm:pb-6 md:pb-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-64 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 const Following: React.FC<FollowingProps> = ({
-  libraries,
+  libraries: initialLibraries,
   selectedLibrary: initialSelectedLibrary = null,
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   filters,
-  followedCategories,
+  followedCategories: initialFollowedCategories,
   userPlanLimits,
-  auth
+  auth,
+  initialLoad = false,
 }) => {
   const { url, props } = usePage<PageProps>();
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
-  // Search and filter states
+  // State management
   const [searchQuery, setSearchQuery] = useState('');
+  const [followedCategories, setFollowedCategories] = useState<FollowedCategory[]>(initialFollowedCategories || []);
+  const [libraries, setLibraries] = useState<Library[]>(initialLibraries || []);
   const [displayedCategories, setDisplayedCategories] = useState<FollowedCategory[]>([]);
   const [itemsToShow, setItemsToShow] = useState(12);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(initialLoad);
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState(false);
 
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
-
-  // ADD THIS: State for viewedLibraryIds
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
-
-  // ADD THIS: Update viewedLibraryIds when props change
-  useEffect(() => {
-    setViewedLibraryIds(initialViewedLibraryIds);
-  }, [initialViewedLibraryIds]);
-
-  // ADD THIS: Update userLibraryIds when props change
-  useEffect(() => {
-    setUserLibraryIds(initialUserLibraryIds);
-  }, [initialUserLibraryIds]);
-
-  // ADD THIS: Callback to handle when a library is viewed
-  const handleLibraryViewed = useCallback((libraryId: number) => {
-    setViewedLibraryIds(prev => {
-      if (prev.includes(libraryId)) return prev;
-      return [...prev, libraryId];
-    });
-  }, []);
 
   // Filter states
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -112,6 +120,105 @@ const Following: React.FC<FollowingProps> = ({
   // Modal state
   const [modalLibrary, setModalLibrary] = useState<Library | null>(initialSelectedLibrary);
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
+
+  // Refs for debouncing
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch followed categories on mount
+  useEffect(() => {
+    if (authData?.user && initialLoad) {
+      fetchFollowedCategories(selectedPlatform);
+    }
+  }, [authData?.user, initialLoad]);
+
+  // Listen for custom events from CategoryHeader follow/unfollow
+  useEffect(() => {
+    const handleCategoryFollowChange = (event: CustomEvent) => {
+      console.log('Category follow change detected:', event.detail);
+      // Refresh followed categories
+      fetchFollowedCategories(selectedPlatform);
+    };
+
+    window.addEventListener('category-follow-changed' as any, handleCategoryFollowChange);
+
+    return () => {
+      window.removeEventListener('category-follow-changed' as any, handleCategoryFollowChange);
+    };
+  }, [selectedPlatform]);
+
+  // Listen for page focus to refresh data
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && authData?.user) {
+        // Page became visible, refresh data
+        fetchFollowedCategories(selectedPlatform);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [selectedPlatform, authData?.user]);
+
+  // Lazy load libraries for layout search (only when needed)
+  const fetchLibrariesForLayout = useCallback(async () => {
+    if (libraries.length > 0 || isLoadingLibraries) return;
+
+    setIsLoadingLibraries(true);
+    try {
+      const response = await fetch('/api/following/libraries');
+      if (response.ok) {
+        const data = await response.json();
+        setLibraries(data.libraries || []);
+      }
+    } catch (error) {
+      console.error('Error fetching libraries:', error);
+    } finally {
+      setIsLoadingLibraries(false);
+    }
+  }, [libraries.length, isLoadingLibraries]);
+
+  // Fetch followed categories with platform filter
+  const fetchFollowedCategories = async (platform: string = 'all') => {
+    if (!authData?.user) {
+      setIsLoadingCategories(false);
+      return;
+    }
+
+    setIsLoadingCategories(true);
+
+    try {
+      const response = await fetch(`/api/following/categories?platform=${platform}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowedCategories(data.followedCategories || []);
+      }
+    } catch (error) {
+      console.error('Error fetching followed categories:', error);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  // Update effects
+  useEffect(() => {
+    setViewedLibraryIds(initialViewedLibraryIds);
+  }, [initialViewedLibraryIds]);
+
+  useEffect(() => {
+    setUserLibraryIds(initialUserLibraryIds);
+  }, [initialUserLibraryIds]);
+
+  const handleLibraryViewed = useCallback((libraryId: number) => {
+    setViewedLibraryIds(prev => {
+      if (prev.includes(libraryId)) return prev;
+      return [...prev, libraryId];
+    });
+  }, []);
 
   // Check URL for library modal
   useEffect(() => {
@@ -128,7 +235,6 @@ const Following: React.FC<FollowingProps> = ({
     }
   }, [window.location.pathname]);
 
-  // Function to fetch library data for modal
   const fetchLibraryForModal = async (slug: string) => {
     try {
       const response = await fetch(`/api/libraries/${slug}`);
@@ -147,12 +253,12 @@ const Following: React.FC<FollowingProps> = ({
     }
   };
 
-  // Get all libraries from followed categories for filtering
+  // Get all libraries from followed categories
   const allFollowedLibraries = useMemo(() => {
     return followedCategories.flatMap(category => category.libraries);
   }, [followedCategories]);
 
-  // Filter categories and their libraries based on search query
+  // Debounced search filter
   const searchFilteredCategories = useMemo(() => {
     let filteredCategories = followedCategories;
 
@@ -174,52 +280,46 @@ const Following: React.FC<FollowingProps> = ({
     return filteredCategories;
   }, [followedCategories, searchQuery]);
 
-  // Apply platform filter and limit to latest 3 libraries per category
+  // Apply platform filter (already filtered from backend)
   const finalFilteredCategories = useMemo(() => {
-    let filteredCategories = searchFilteredCategories;
+    return searchFilteredCategories;
+  }, [searchFilteredCategories]);
 
-    if (selectedPlatform !== 'all') {
-      filteredCategories = filteredCategories.map(category => ({
-        ...category,
-        libraries: category.libraries.filter(library =>
-          library.platforms.some(platform => {
-            if (!isNaN(Number(selectedPlatform))) {
-              return platform.id.toString() === selectedPlatform;
-            }
-            return platform.name.toLowerCase() === selectedPlatform.toLowerCase();
-          })
-        )
-      })).filter(category => category.libraries.length > 0);
-    }
-
-    // Limit each category to show only the latest 3 libraries
-    filteredCategories = filteredCategories.map(category => ({
-      ...category,
-      libraries: category.libraries.slice(0, 3)
-    }));
-
-    return filteredCategories;
-  }, [searchFilteredCategories, selectedPlatform]);
-
-  // Update displayed categories when finalFilteredCategories or itemsToShow changes
+  // Update displayed categories
   useEffect(() => {
     setDisplayedCategories(finalFilteredCategories.slice(0, itemsToShow));
   }, [finalFilteredCategories, itemsToShow]);
 
+  // Handlers
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setItemsToShow(12);
+    // Debounce search
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchQuery(query);
+      setItemsToShow(12);
+    }, 300);
   };
 
   const handleLoadMore = () => {
     setItemsToShow(prev => prev + 12);
   };
 
-  // Filter handlers
   const handlePlatformChange = (platform: string) => {
-    console.log('Selected platform:', platform);
+    // Clear previous timeout
+    if (filterTimeoutRef.current) {
+      clearTimeout(filterTimeoutRef.current);
+    }
+
     setSelectedPlatform(platform);
     setItemsToShow(12);
+
+    // Debounce API call
+    filterTimeoutRef.current = setTimeout(() => {
+      fetchFollowedCategories(platform);
+    }, 100);
   };
 
   const handleCardsPerRowChange = (count: number) => {
@@ -240,7 +340,6 @@ const Following: React.FC<FollowingProps> = ({
     setModalLibrary(library);
   };
 
-  // Handle star click functionality
   const handleStarClick = (library: Library, isStarred: boolean) => {
     if (!authData.user) {
       console.log('User not authenticated');
@@ -250,6 +349,15 @@ const Following: React.FC<FollowingProps> = ({
   };
 
   const hasMore = displayedCategories.length < finalFilteredCategories.length;
+
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      if (filterTimeoutRef.current) clearTimeout(filterTimeoutRef.current);
+      if (refreshIntervalRef.current) clearTimeout(refreshIntervalRef.current);
+    };
+  }, []);
 
   // If user is not authenticated, show empty state
   if (!authData?.user) {
@@ -270,7 +378,6 @@ const Following: React.FC<FollowingProps> = ({
           userPlanLimits={userPlanLimits}
         >
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
-            {/* Breadcrumb & Heading */}
             <div className="mb-4 sm:mb-6 md:mb-5">
               <div className="flex items-center text-[#BABABA] dark:text-gray-400 text-sm">
                 <Link href="/" className="hover:text-gray-700 dark:hover:text-gray-300 outline-none focus:outline-none">
@@ -281,7 +388,6 @@ const Following: React.FC<FollowingProps> = ({
               <h1 className="text-xl sm:text-[26px] md:text-2xl font-sora !font-semibold mt-2">Following</h1>
             </div>
 
-            {/* Center Content */}
             <div className="flex justify-center">
               <EmptyState
                 icon={Star}
@@ -326,7 +432,23 @@ const Following: React.FC<FollowingProps> = ({
           </div>
 
           {/* Content */}
-          {followedCategories.length === 0 ? (
+          {isLoadingCategories ? (
+            <>
+              {/* Filter Section Skeleton */}
+              <div className="max-w-full mx-auto sticky top-[60px] md:top-[70px] lg:top-[75px] z-10 mb-6">
+                <div className="bg-[#F8F8F9] dark:bg-gray-900 px-4 sm:px-6 py-4 rounded-lg animate-pulse">
+                  <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                </div>
+              </div>
+
+              {/* Categories Skeleton */}
+              <div className="space-y-6 sm:space-y-8 md:space-y-7">
+                {[1, 2, 3].map((i) => (
+                  <CategorySkeleton key={i} />
+                ))}
+              </div>
+            </>
+          ) : followedCategories.length === 0 ? (
             <div className="flex justify-center py-8 sm:py-12 md:py-10">
               <EmptyState
                 icon={Star}
@@ -340,7 +462,7 @@ const Following: React.FC<FollowingProps> = ({
             <>
               {/* Filter Section */}
               <div className="max-w-full mx-auto sticky top-[60px] md:top-[70px] lg:top-[75px] z-10">
-                <FilterSection
+                <FilterSection2
                   filters={filters || { platforms: [], categories: [], industries: [], interactions: [] }}
                   selectedPlatform={selectedPlatform}
                   onPlatformChange={handlePlatformChange}
@@ -421,9 +543,7 @@ const Following: React.FC<FollowingProps> = ({
                           onClick={handleLoadMore}
                           className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-4 sm:px-4 md:px-3.5 py-2 rounded-[4px] !font-sora !font-medium text-sm sm:text-[16px] md:text-[15px] hover:opacity-95 transition-all whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
                         >
-                            <span className='z-10'>
-                                Load More
-                            </span>
+                          <span className='z-10'>Load More</span>
                         </button>
                       </div>
                     )}
@@ -450,12 +570,11 @@ const Following: React.FC<FollowingProps> = ({
                         setSearchQuery('');
                         setSelectedPlatform('all');
                         setItemsToShow(12);
+                        fetchFollowedCategories('all');
                       }}
                       className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-4 sm:px-4 md:px-3.5 py-2 rounded-[4px] !font-sora !font-medium text-sm sm:text-[16px] md:text-[15px] hover:opacity-95 transition-all whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
                     >
-                        <span className='z-10'>
-                            Clear All Filters
-                        </span>
+                      <span className='z-10'>Clear All Filters</span>
                     </button>
                   </div>
                 )}

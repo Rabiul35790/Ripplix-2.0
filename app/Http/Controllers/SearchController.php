@@ -18,14 +18,16 @@ use Illuminate\Http\JsonResponse;
 class SearchController extends Controller
 {
     /**
-     * Show search results page - OPTIMIZED for instant navigation
+     * Show search results page
      */
+
     private function getViewedLibraryIds(Request $request): array
     {
         $userId = auth()->id();
         $sessionId = $request->session()->getId();
         return LibraryView::getViewedLibraryIds($userId, $sessionId);
     }
+
 
     private function getUserPlanLimits(?User $user): ?array
     {
@@ -34,14 +36,16 @@ class SearchController extends Controller
         }
         return $user->getPlanLimits();
     }
-
     public function index(Request $request): Response
     {
         $query = $request->get('q', '');
         $platform = $request->get('platform', '');
         $isAuthenticated = auth()->check();
 
-        // Get filters from database (lightweight)
+        // Different pagination for auth vs unauth users
+        $perPage = $isAuthenticated ? 20 : 18;
+
+        // Get filters from database
         $filters = $this->getFilters();
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
@@ -57,10 +61,25 @@ class SearchController extends Controller
             $userPlanLimits = $this->getUserPlanLimits(auth()->user());
         }
 
-        // Get quick count only (no heavy queries)
-        $totalCount = 0;
-        if (!empty($query)) {
-            $countQuery = Library::where(function ($q) use ($query) {
+        if (empty($query)) {
+            return Inertia::render('SearchResults', [
+                'libraries' => [],
+                'searchQuery' => $query,
+                'selectedPlatform' => $platform,
+                'totalCount' => 0,
+                'hasMore' => false,
+                'currentPage' => 1,
+                'isAuthenticated' => $isAuthenticated,
+                'filters' => $filters,
+                'userLibraryIds' => $userLibraryIds,
+                'viewedLibraryIds' => $viewedLibraryIds,
+                'userPlanLimits' => $userPlanLimits,
+            ]);
+        }
+
+        // Build the search query
+        $searchQuery = Library::with(['platforms', 'categories', 'industries', 'interactions'])
+            ->where(function ($q) use ($query) {
                 $q->where('title', 'LIKE', "%{$query}%")
                   ->orWhere('description', 'LIKE', "%{$query}%")
                   ->orWhereHas('interactions', function ($subQuery) use ($query) {
@@ -74,23 +93,33 @@ class SearchController extends Controller
                   });
             });
 
-            // Filter by platform if specified
-            if (!empty($platform) && $platform !== 'All') {
-                $countQuery->whereHas('platforms', function ($q) use ($platform) {
-                    $q->where('name', $platform);
-                });
-            }
-
-            $totalCount = $countQuery->count();
+        // Filter by platform if specified
+        if (!empty($platform) && $platform !== 'All') {
+            $searchQuery->whereHas('platforms', function ($q) use ($platform) {
+                $q->where('name', $platform);
+            });
         }
 
-        // Return MINIMAL data for instant navigation
+        // Get total count
+        $totalCount = $searchQuery->count();
+
+        // Different logic for authenticated vs unauthenticated users
+        if (!$isAuthenticated) {
+            // For unauthenticated users, limit to 12 results max
+            $libraries = $searchQuery->take(18)->get();
+            $hasMore = false; // Never show "load more" for unauthenticated users
+        } else {
+            // For authenticated users, normal pagination
+            $libraries = $searchQuery->take($perPage)->get();
+            $hasMore = $libraries->count() >= $perPage && $totalCount > $perPage;
+        }
+
         return Inertia::render('SearchResults', [
-            'libraries' => [], // Empty - will be loaded via API
+            'libraries' => $libraries,
             'searchQuery' => $query,
             'selectedPlatform' => $platform,
             'totalCount' => $totalCount,
-            'hasMore' => false,
+            'hasMore' => $hasMore,
             'currentPage' => 1,
             'isAuthenticated' => $isAuthenticated,
             'filters' => $filters,
@@ -101,17 +130,17 @@ class SearchController extends Controller
     }
 
     /**
-     * API Search endpoint - OPTIMIZED with select and pagination
+     * API Search endpoint (for SearchModal) - Updated from previous version
      */
     public function apiSearch(Request $request): JsonResponse
     {
         $query = $request->get('q', '');
         $platform = $request->get('platform', '');
-        $page = (int) $request->get('page', 1);
+        $page = $request->get('page', 1);
         $isAuthenticated = auth()->check();
 
         // Different pagination logic for authenticated vs unauthenticated users
-        $perPage = $isAuthenticated ? 20 : 18;
+        $perPage = $isAuthenticated ? 20 : 18; // 20 for auth users, 12 for unauth
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
@@ -139,24 +168,8 @@ class SearchController extends Controller
             ]);
         }
 
-        // Build the search query with optimized select
-        $searchQuery = Library::select([
-                'libraries.id',
-                'libraries.title',
-                'libraries.slug',
-                'libraries.url',
-                'libraries.video_url',
-                'libraries.description',
-                'libraries.logo',
-                'libraries.created_at',
-                'libraries.published_date'
-            ])
-            ->with([
-                'platforms:id,name',
-                'categories:id,name,slug,image',
-                'industries:id,name,slug',
-                'interactions:id,name,slug'
-            ])
+        // Build the search query
+        $searchQuery = Library::with(['platforms', 'categories', 'industries', 'interactions'])
             ->where(function ($q) use ($query) {
                 $q->where('title', 'LIKE', "%{$query}%")
                 ->orWhere('description', 'LIKE', "%{$query}%")
@@ -172,7 +185,7 @@ class SearchController extends Controller
             });
 
         // Filter by platform if specified
-        if (!empty($platform) && $platform !== 'All' && $platform !== 'all') {
+        if (!empty($platform) && $platform !== 'All') {
             $searchQuery->whereHas('platforms', function ($q) use ($platform) {
                 $q->where('name', $platform);
             });
@@ -181,22 +194,22 @@ class SearchController extends Controller
         // Get total count
         $totalCount = $searchQuery->count();
 
-        // For unauthenticated users, only return the first page with max 18 results
+        // For unauthenticated users, only return the first page with max 12 results
         // For authenticated users, handle normal pagination
         if (!$isAuthenticated) {
-            $libraries = $searchQuery->latest('libraries.created_at')
-                ->take(18)
-                ->get();
-            $hasMore = false;
+            // Always return first 12 results for unauthenticated users
+            $libraries = $searchQuery->take(18)->get();
+            $hasMore = false; // Never show "has more" for unauthenticated users
             $currentPage = 1;
         } else {
-            $libraries = $searchQuery->latest('libraries.created_at')
-                ->skip(($page - 1) * $perPage)
-                ->take($perPage)
-                ->get();
+            // Normal pagination for authenticated users
+            $libraries = $searchQuery->skip(($page - 1) * $perPage)
+                                    ->take($perPage)
+                                    ->get();
 
+            // Calculate if there are more results
             $hasMore = ($page * $perPage) < $totalCount;
-            $currentPage = $page;
+            $currentPage = (int) $page;
         }
 
         return response()->json([
@@ -218,7 +231,7 @@ class SearchController extends Controller
     {
         $query = $request->get('q', '');
         $platform = $request->get('platform', '');
-        $page = (int) $request->get('page', 1);
+        $page = $request->get('page', 1);
         $perPage = 24;
         $isAuthenticated = auth()->check();
 
@@ -249,29 +262,12 @@ class SearchController extends Controller
                 'has_more' => false,
                 'current_page' => 1,
                 'userLibraryIds' => $userLibraryIds,
-                'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => $userPlanLimits,
             ]);
         }
 
-        // Build the search query with optimized select
-        $searchQuery = Library::select([
-                'libraries.id',
-                'libraries.title',
-                'libraries.slug',
-                'libraries.url',
-                'libraries.video_url',
-                'libraries.description',
-                'libraries.logo',
-                'libraries.created_at',
-                'libraries.published_date'
-            ])
-            ->with([
-                'platforms:id,name',
-                'categories:id,name,slug,image',
-                'industries:id,name,slug',
-                'interactions:id,name,slug'
-            ])
+        // Build the search query
+        $searchQuery = Library::with(['platforms', 'categories', 'industries', 'interactions'])
             ->where(function ($q) use ($query) {
                 $q->where('title', 'LIKE', "%{$query}%")
                   ->orWhere('description', 'LIKE', "%{$query}%")
@@ -287,7 +283,7 @@ class SearchController extends Controller
             });
 
         // Filter by platform if specified
-        if (!empty($platform) && $platform !== 'All' && $platform !== 'all') {
+        if (!empty($platform) && $platform !== 'All') {
             $searchQuery->whereHas('platforms', function ($q) use ($platform) {
                 $q->where('name', $platform);
             });
@@ -297,10 +293,9 @@ class SearchController extends Controller
         $totalCount = $searchQuery->count();
 
         // Get paginated results
-        $libraries = $searchQuery->latest('libraries.created_at')
-            ->skip(($page - 1) * $perPage)
-            ->take($perPage)
-            ->get();
+        $libraries = $searchQuery->skip(($page - 1) * $perPage)
+                                ->take($perPage)
+                                ->get();
 
         // Calculate if there are more results
         $hasMore = ($page * $perPage) < $totalCount;
@@ -308,7 +303,7 @@ class SearchController extends Controller
         return response()->json([
             'libraries' => $libraries,
             'has_more' => $hasMore,
-            'current_page' => $page,
+            'current_page' => (int) $page,
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,

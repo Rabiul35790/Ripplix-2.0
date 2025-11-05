@@ -457,7 +457,7 @@ public function getBrowseLibraries(Request $request)
 {
     $isAuthenticated = auth()->check();
     $page = (int) $request->get('page', 1);
-    $perPage = $isAuthenticated ? 50 : 18; // Limit initial load
+    $perPage = $isAuthenticated ? 50 : 18;
 
     // Use select to get only needed columns (reduces data transfer)
     $query = Library::select([
@@ -509,12 +509,7 @@ public function getBrowseLibraries(Request $request)
         }
     }
 
-    // Apply platform filter if provided
-    if ($request->has('platform') && $request->platform !== 'all') {
-        $query->whereHas('platforms', function($q) use ($request) {
-            $q->where('name', 'like', '%' . $request->platform . '%');
-        });
-    }
+    // Platform filtering is removed - will be done on frontend for instant results
 
     // Get paginated results with proper ordering
     $libraries = $query->latest('libraries.created_at')

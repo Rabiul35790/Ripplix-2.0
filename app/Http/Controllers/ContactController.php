@@ -24,9 +24,8 @@ use Illuminate\Support\Facades\Log;
 class ContactController extends Controller
 {
     /**
-     * Show the contact form.
+     * Show the contact form - OPTIMIZED for instant loading.
      */
-
     private function getViewedLibraryIds(Request $request): array
     {
         $userId = auth()->id();
@@ -41,18 +40,14 @@ class ContactController extends Controller
         }
         return $user->getPlanLimits();
     }
+
     public function index(Request $request)
     {
         $settings = Setting::getInstance();
-
-        // Get libraries data similar to BrowseController
-        $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true);
-
-        $libraries = $query->latest()->get();
-        $filters = $this->getFilters();
-
         $isAuthenticated = auth()->check();
+
+        // Get lightweight filters only
+        $filters = $this->getFilters();
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
@@ -66,8 +61,9 @@ class ContactController extends Controller
             $userLibraryIds = Board::getUserLibraryIds(auth()->id());
         }
 
+        // Return MINIMAL data for instant page load - NO LIBRARIES
         return Inertia::render('ContactUs', [
-            'libraries' => $libraries,
+            'libraries' => [], // Empty - contact page doesn't need libraries
             'filters' => $filters,
             'filterType' => null,
             'filterValue' => null,
@@ -102,12 +98,11 @@ class ContactController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Send email to admin
+            // Send email to admin (async queue recommended)
             Mail::to(config('mail.admin_email'))
                 ->send(new ContactFormMail($contact));
 
-
-            // Send confirmation email to user
+            // Send confirmation email to user (async queue recommended)
             Mail::to($contact->email)
                 ->send(new ContactFormMail($contact, true));
 
@@ -121,15 +116,15 @@ class ContactController extends Controller
     }
 
     /**
-     * Get filters data for the Layout component
+     * Get filters data for the Layout component - OPTIMIZED
      */
     private function getFilters()
     {
         return [
-            'platforms' => Platform::where('is_active', true)->get(),
-            'categories' => Category::where('is_active', true)->orderBy('name')->get(),
-            'industries' => Industry::where('is_active', true)->orderBy('name')->get(),
-            'interactions' => Interaction::where('is_active', true)->orderBy('name')->get(),
+            'platforms' => Platform::where('is_active', true)->get(['id', 'name', 'slug']),
+            'categories' => Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug', 'image']),
+            'industries' => Industry::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug']),
+            'interactions' => Interaction::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug']),
         ];
     }
 }

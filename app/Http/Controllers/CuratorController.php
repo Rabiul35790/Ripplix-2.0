@@ -40,10 +40,10 @@ class CuratorController extends Controller
         $settings = Setting::getInstance();
 
         // Get libraries data similar to other pages
-        $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true);
+        // $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
+        //     ->where('is_active', true);
 
-        $libraries = $query->latest()->get();
+        // $libraries = $query->latest()->get();
         $filters = $this->getFilters();
 
         // Get all active curators ordered by sort_order
@@ -79,7 +79,7 @@ class CuratorController extends Controller
         }
 
         return Inertia::render('Curators', [
-            'libraries' => $libraries,
+            'libraries' => [],
             'filters' => $filters,
             'filterType' => null,
             'filterValue' => null,

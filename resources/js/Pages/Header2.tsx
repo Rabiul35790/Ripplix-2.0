@@ -321,7 +321,7 @@ const Header2: React.FC<Header2Props> = ({
           </div>
 
           {/* Logo - Desktop Only */}
-          <div className="hidden lg:flex items-center">
+          <div className="hidden lg:flex items-center md:mr-3">
             <Link href="/" className="flex items-center space-x-2 focus:outline-none">
               {logo ? (
                 <img

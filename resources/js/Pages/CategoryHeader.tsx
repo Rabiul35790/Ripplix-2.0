@@ -67,7 +67,21 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }
       });
 
       if (response.ok) {
-        setIsFollowing(!isFollowing);
+        const newFollowStatus = !isFollowing;
+        setIsFollowing(newFollowStatus);
+
+        // Dispatch custom event to notify Following page
+        const event = new CustomEvent('category-follow-changed', {
+          detail: {
+            categoryId: category.id,
+            categoryName: category.name,
+            isFollowing: newFollowStatus,
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(event);
+
+        console.log(`Category ${category.name} ${newFollowStatus ? 'followed' : 'unfollowed'}`);
       } else {
         const errorData = await response.json();
         console.error('Error:', errorData.error || 'Failed to toggle follow');
@@ -123,13 +137,6 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }
                 isLoading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {/* {isLoading ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : isFollowing ? (
-                <UserMinus className="w-4 h-4" />
-              ) : (
-                <UserPlus className="w-4 h-4" />
-              )} */}
               <span>
                 {isLoading ? 'Loading...' : isFollowing ? 'Followed' : 'Follow App'}
               </span>

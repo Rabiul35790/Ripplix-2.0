@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Auth;
 
 class FollowingController extends Controller
 {
-
     private function getViewedLibraryIds(Request $request): array
     {
         $userId = auth()->id();
@@ -35,20 +34,15 @@ class FollowingController extends Controller
 
     public function index(Request $request)
     {
-        // Get filters for layout
+        // Get filters for layout (lightweight)
         $filters = $this->getFilters();
-
-        // Get all libraries for layout (needed by Layout component)
-        $libraries = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true)
-            ->latest()
-            ->get();
 
         // Get user's library IDs for authenticated users
         $userLibraryIds = [];
         if (auth()->check()) {
             $userLibraryIds = Board::getUserLibraryIds(auth()->id());
         }
+
         $isAuthenticated = auth()->check();
         $userPlanLimits = null;
         if ($isAuthenticated) {
@@ -57,40 +51,77 @@ class FollowingController extends Controller
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
-        // If user is not authenticated, return with empty data
+        // Return minimal data for initial render
+        // Libraries will be loaded on-demand
+        return Inertia::render('Following', [
+            'libraries' => [], // Empty for faster initial load
+            'filters' => $filters,
+            'followedCategories' => [], // Will be loaded via API
+            'userLibraryIds' => $userLibraryIds,
+            'viewedLibraryIds' => $viewedLibraryIds,
+            'userPlanLimits' => $userPlanLimits,
+            'initialLoad' => true, // Flag to trigger API call
+        ]);
+    }
+
+    // New API endpoint for lazy loading followed categories
+    public function getFollowedCategories(Request $request)
+    {
         if (!auth()->check()) {
-            return Inertia::render('Following', [
-                'libraries' => $libraries,
-                'filters' => $filters,
+            return response()->json([
                 'followedCategories' => [],
-                'userLibraryIds' => $userLibraryIds,
-                'viewedLibraryIds' => $viewedLibraryIds,
-                'userPlanLimits' => $userPlanLimits,
+                'success' => true
             ]);
         }
 
+        // Get platform filter if provided
+        $platformFilter = $request->input('platform', 'all');
+
         // Get user's followed categories with their libraries
-        $followedCategories = Category::whereHas('follows', function($query) {
+        $query = Category::whereHas('follows', function($query) {
             $query->where('user_id', auth()->id());
         })
-        ->with(['libraries' => function($query) {
+        ->with(['libraries' => function($query) use ($platformFilter) {
             $query->with(['platforms', 'categories', 'industries', 'interactions'])
                 ->where('is_active', true)
-                ->latest();
+                ->when($platformFilter !== 'all', function($q) use ($platformFilter) {
+                    $q->whereHas('platforms', function($platformQuery) use ($platformFilter) {
+                        $platformQuery->where(function($pq) use ($platformFilter) {
+                            if (!is_numeric($platformFilter)) {
+                                $pq->whereRaw('LOWER(name) = ?', [strtolower($platformFilter)]);
+                            } else {
+                                $pq->where('id', $platformFilter);
+                            }
+                        });
+                    });
+                })
+                ->latest()
+                ->limit(3); // Only get latest 3 per category
         }])
         ->where('is_active', true)
         ->orderBy('name')
         ->get();
 
-        return Inertia::render('Following', [
-            'libraries' => $libraries,
-            'filters' => $filters,
-            'followedCategories' => $followedCategories,
-            'userLibraryIds' => $userLibraryIds,
-            'viewedLibraryIds' => $viewedLibraryIds,
-            'userPlanLimits' => $userPlanLimits,
+        return response()->json([
+            'followedCategories' => $query,
+            'success' => true
         ]);
     }
+
+    // New API endpoint for getting all libraries (for layout search)
+    public function getAllLibraries(Request $request)
+    {
+        $libraries = Library::with(['platforms', 'categories', 'industries', 'interactions'])
+            ->where('is_active', true)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'libraries' => $libraries,
+            'success' => true
+        ]);
+    }
+
     public function followCategory(Request $request)
     {
         if (!auth()->check()) {

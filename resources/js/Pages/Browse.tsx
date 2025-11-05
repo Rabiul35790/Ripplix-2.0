@@ -105,11 +105,11 @@ const Browse: React.FC<BrowseProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
 
   const [pagination, setPagination] = useState({
-  current_page: 1,
-  last_page: 1,
-  total: 0,
-  has_more: false
-});
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    has_more: false
+  });
 
   // Update viewedLibraryIds when props change
   useEffect(() => {
@@ -124,62 +124,19 @@ const Browse: React.FC<BrowseProps> = ({
   // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
-      // Avoid duplicates
       if (prev.includes(libraryId)) return prev;
       return [...prev, libraryId];
     });
   }, []);
 
-  // Fetch libraries after component mounts (NEW - for instant navigation)
+  // Fetch libraries after component mounts (without platform filter)
   useEffect(() => {
-  const fetchLibraries = async () => {
-    if (libraries.length > 0) {
-      setIsLoadingLibraries(false);
-      return;
-    }
-
-    try {
-      setIsLoadingLibraries(true);
-
-      const params = new URLSearchParams();
-
-      if (filterValue) {
-        if (filterType === 'category') params.set('category', filterValue);
-        if (filterType === 'industry') params.set('industry', filterValue);
-        if (filterType === 'interaction') params.set('interaction', filterValue);
+    const fetchLibraries = async () => {
+      if (libraries.length > 0) {
+        setIsLoadingLibraries(false);
+        return;
       }
 
-      if (selectedPlatform !== 'all') {
-        params.set('platform', selectedPlatform);
-      }
-
-      params.set('page', '1'); // Start with page 1
-
-      const response = await fetch(`/api/browse/libraries?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch libraries');
-      }
-
-      const data = await response.json();
-
-      setLibraries(data.libraries);
-      setAllLibraries(data.allLibraries);
-      setPagination(data.pagination); // Store pagination info
-    } catch (error) {
-      console.error('Error fetching libraries:', error);
-    } finally {
-      setIsLoadingLibraries(false);
-    }
-  };
-
-  fetchLibraries();
-}, [filterType, filterValue]);
-  // Re-fetch when platform filter changes
-  useEffect(() => {
-    if (libraries.length === 0) return; // Initial load is handled above
-
-    const fetchFilteredLibraries = async () => {
       try {
         setIsLoadingLibraries(true);
 
@@ -191,9 +148,7 @@ const Browse: React.FC<BrowseProps> = ({
           if (filterType === 'interaction') params.set('interaction', filterValue);
         }
 
-        if (selectedPlatform !== 'all') {
-          params.set('platform', selectedPlatform);
-        }
+        params.set('page', '1');
 
         const response = await fetch(`/api/browse/libraries?${params.toString()}`);
 
@@ -205,6 +160,7 @@ const Browse: React.FC<BrowseProps> = ({
 
         setLibraries(data.libraries);
         setAllLibraries(data.allLibraries);
+        setPagination(data.pagination);
       } catch (error) {
         console.error('Error fetching libraries:', error);
       } finally {
@@ -212,12 +168,11 @@ const Browse: React.FC<BrowseProps> = ({
       }
     };
 
-    fetchFilteredLibraries();
-  }, [selectedPlatform]);
+    fetchLibraries();
+  }, [filterType, filterValue]);
 
-  // Check URL for library modal - now checks path instead of query parameter
+  // Check URL for library modal
   useEffect(() => {
-    // Check if URL matches /library/{slug} pattern
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
     if (pathMatch) {
@@ -226,7 +181,6 @@ const Browse: React.FC<BrowseProps> = ({
         fetchLibraryForModal(librarySlug);
       }
     } else if (isModalOpen && !window.location.pathname.startsWith('/library/')) {
-      // Close modal if we're not on a library URL
       setIsModalOpen(false);
       setModalLibrary(null);
     }
@@ -245,7 +199,6 @@ const Browse: React.FC<BrowseProps> = ({
       setIsModalOpen(true);
     } catch (error) {
       console.error('Error fetching library for modal:', error);
-      // Redirect to browse page if library not found
       const currentPath = window.location.pathname;
       const basePath = currentPath.includes('/browse') ? window.location.pathname.split('?')[0] : '/browse';
       window.history.replaceState({}, '', basePath + window.location.search);
@@ -262,9 +215,18 @@ const Browse: React.FC<BrowseProps> = ({
     return null;
   }, [filterType, filterValue, filters.categories]);
 
-  // Filter libraries based on search and active page filter
+  // Filter libraries based on search, platform (frontend), and active page filter
   const filteredLibraries = useMemo(() => {
     let filtered = libraries;
+
+    // Apply platform filter on frontend (instant filtering)
+    if (selectedPlatform !== 'all') {
+      filtered = filtered.filter(library =>
+        library.platforms.some(platform =>
+          platform.name.toLowerCase() === selectedPlatform.toLowerCase()
+        )
+      );
+    }
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -280,24 +242,16 @@ const Browse: React.FC<BrowseProps> = ({
     }
 
     return filtered;
-  }, [libraries, searchQuery]);
+  }, [libraries, selectedPlatform, searchQuery]);
 
-  // Apply FilterSection's platform filter separately on top of existing filters
-  const finalFilteredLibraries = useMemo(() => {
-    // Platform filtering is now handled by the API, so just return filtered libraries
-    return filteredLibraries;
-  }, [filteredLibraries]);
-
-  // Update displayed libraries when finalFilteredLibraries or itemsToShow changes
+  // Update displayed libraries when filteredLibraries or itemsToShow changes
   useEffect(() => {
     if (isAuthenticated) {
-      // For authenticated users, show normal pagination
-      setDisplayedLibraries(finalFilteredLibraries.slice(0, itemsToShow));
+      setDisplayedLibraries(filteredLibraries.slice(0, itemsToShow));
     } else {
-      // For unauthenticated users, limit to 18 results maximum
-      setDisplayedLibraries(finalFilteredLibraries.slice(0, 18));
+      setDisplayedLibraries(filteredLibraries.slice(0, 18));
     }
-  }, [finalFilteredLibraries, itemsToShow, isAuthenticated]);
+  }, [filteredLibraries, itemsToShow, isAuthenticated]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -310,24 +264,18 @@ const Browse: React.FC<BrowseProps> = ({
     }
   };
 
-  // Handle library click - URL update is handled by LibraryCard
   const handleLibraryClick = (library: Library) => {
     setModalLibrary(library);
     setIsModalOpen(true);
-    // URL update is handled by LibraryCard component
   };
 
-  // Handle close modal - URL update is handled by LibraryModal
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setModalLibrary(null);
-    // URL update is handled by LibraryModal component
   };
 
-  // Handle library navigation - URL is handled by LibraryModal
   const handleLibraryNavigation = (library: Library) => {
     setModalLibrary(library);
-    // URL update is handled by LibraryModal component
   };
 
   const handleStarClick = (library: Library, isStarred: boolean) => {
@@ -338,7 +286,7 @@ const Browse: React.FC<BrowseProps> = ({
     console.log(`Library ${library.title} ${isStarred ? 'starred' : 'unstarred'}`);
   };
 
-  // Filter handlers
+  // Filter handlers - platform filtering happens instantly on frontend
   const handlePlatformChange = (platform: string) => {
     setSelectedPlatform(platform);
     setItemsToShow(isAuthenticated ? 12 : 10);
@@ -348,11 +296,8 @@ const Browse: React.FC<BrowseProps> = ({
     setCardsPerRow(count);
   };
 
-  // For authenticated users, check if there are more results in the filtered set
-  // For unauthenticated users, never show "Load More"
-  const hasMore = isAuthenticated && displayedLibraries.length < finalFilteredLibraries.length;
+  const hasMore = isAuthenticated && displayedLibraries.length < filteredLibraries.length;
 
-  // Get page title based on filter
   const getPageTitle = () => {
     if (filterType && filterName) {
       switch (filterType) {
@@ -369,7 +314,6 @@ const Browse: React.FC<BrowseProps> = ({
     return 'Browse Libraries';
   };
 
-  // Get breadcrumb text
   const getBreadcrumbText = () => {
     if (filterType && filterName) {
       switch (filterType) {
@@ -386,7 +330,6 @@ const Browse: React.FC<BrowseProps> = ({
     return 'All Libraries';
   };
 
-  // Get active filter description for display
   const getActiveFiltersDescription = () => {
     const activeFilters = [];
 
@@ -426,10 +369,9 @@ const Browse: React.FC<BrowseProps> = ({
         onLibraryViewed={handleLibraryViewed}
       >
 
-        {/* Header Section - Shows immediately */}
+        {/* Header Section */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6 font-sora">
-            {/* Breadcrumb */}
             <nav className="flex items-center space-x-1 text-sm text-[#BABABA] dark:text-gray-400 mb-3 sm:mb-4 md:mb-3.5">
               <Link
                 href="/"
@@ -443,7 +385,6 @@ const Browse: React.FC<BrowseProps> = ({
               </span>
             </nav>
 
-            {/* Title and Stats */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
               <div>
                 <h1 className="text-xl sm:text-3xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">
@@ -451,15 +392,14 @@ const Browse: React.FC<BrowseProps> = ({
                 </h1>
               </div>
 
-              {/* Right side - Showing libraries count */}
               <div className="text-left sm:text-right sm:mr-8 md:mr-6">
                 <div className="text-[#BABABA] dark:text-gray-400 text-xs sm:text-xs md:text-[11px]">
                   Showing
                 </div>
                 <div className="text-[#2E241C] dark:text-gray-400 text-sm sm:text-sm md:text-[13px] mt-1 font-semibold">
-                  {!isAuthenticated && totalLibraryCount > 18
-                    ? `18 of ${totalLibraryCount} Results`
-                    : `${totalLibraryCount} ${totalLibraryCount === 1 ? 'Result' : 'Results'}`
+                  {!isAuthenticated && filteredLibraries.length > 18
+                    ? `18 of ${filteredLibraries.length} Results`
+                    : `${filteredLibraries.length} ${filteredLibraries.length === 1 ? 'Result' : 'Results'}`
                   }
                   {searchQuery && ` for "${searchQuery}"`}
                 </div>
@@ -471,7 +411,6 @@ const Browse: React.FC<BrowseProps> = ({
         {/* Loading state or content */}
         {isLoadingLibraries ? (
           <>
-            {/* Category Header Skeleton - Only show for category filter */}
             {currentCategory && filterType === 'category' && (
               <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-6">
@@ -483,7 +422,6 @@ const Browse: React.FC<BrowseProps> = ({
               </div>
             )}
 
-            {/* Filter Section */}
             <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
               <FilterSection
                 filters={filters}
@@ -494,7 +432,6 @@ const Browse: React.FC<BrowseProps> = ({
               />
             </div>
 
-            {/* Skeleton Loader */}
             <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16 pt-4 sm:pt-8 md:pt-6">
               <div className={`grid gap-4 sm:gap-6 md:gap-5 ${
                 cardsPerRow === 2 ? 'grid-cols-1 md:grid-cols-2' :
@@ -513,7 +450,6 @@ const Browse: React.FC<BrowseProps> = ({
           </>
         ) : (
           <>
-            {/* Category Header - Only show for category filter */}
             {currentCategory && filterType === 'category' && categoryData && (
               <CategoryHeader
                 category={categoryData}
@@ -522,7 +458,6 @@ const Browse: React.FC<BrowseProps> = ({
               />
             )}
 
-            {/* Filter Section */}
             <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
               <FilterSection
                 filters={filters}
@@ -533,7 +468,6 @@ const Browse: React.FC<BrowseProps> = ({
               />
             </div>
 
-            {/* Library Grid */}
             <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16 pt-4 sm:pt-8 md:pt-6">
               <LibraryGrid
                 ziggy={ziggyData}
@@ -552,8 +486,7 @@ const Browse: React.FC<BrowseProps> = ({
               />
             </div>
 
-            {/* Empty State */}
-            {finalFilteredLibraries.length === 0 && !isLoadingLibraries && (
+            {filteredLibraries.length === 0 && !isLoadingLibraries && (
               <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 pb-12 sm:pb-20 md:pb-16">
                 <div className="text-center py-8 sm:py-12 md:py-10 font-sora px-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-18 md:h-18 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 md:mb-5">
@@ -586,7 +519,6 @@ const Browse: React.FC<BrowseProps> = ({
           </>
         )}
 
-        {/* Library Modal */}
         <LibraryModal
           library={modalLibrary}
           isOpen={isModalOpen}

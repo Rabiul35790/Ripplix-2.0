@@ -45,10 +45,10 @@ class SponsorController extends Controller
         $settings = Setting::getInstance();
 
         // Get libraries data similar to BrowseController
-        $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true);
+        // $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
+        //     ->where('is_active', true);
 
-        $libraries = $query->latest()->get();
+        // $libraries = $query->latest()->get();
         $filters = $this->getFilters();
 
         $isAuthenticated = auth()->check();
@@ -67,7 +67,7 @@ class SponsorController extends Controller
         }
 
         return Inertia::render('SponsorUs', [
-            'libraries' => $libraries,
+            'libraries' => [],
             'filters' => $filters,
             'filterType' => null,
             'filterValue' => null,

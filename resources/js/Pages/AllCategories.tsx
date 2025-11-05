@@ -91,7 +91,7 @@ const animationStyles = `
   }
 
   .element-card:hover .arrow-icon {
-    transform: none;
+    transform: translateX(3px) scale(1.1);
   }
 
   .arrow-icon {
@@ -370,7 +370,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
             </div>
 
             {/* Industries Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-3.5 mb-8 sm:mb-12 md:mb-10 font-sora">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-3.5 mb-8 sm:mb-12 md:mb-10 font-sora">
               {filteredIndustries.length === 0 && isSearchingIndustries ? (
                 <div className="col-span-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-10 text-center px-4 animate-scale-in">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 sm:mb-4 md:mb-3.5 animate-scale-in" style={{ animationDelay: '0.1s' }}>
@@ -395,7 +395,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
                   <Link
                     key={industry.id}
                     href={`/browse?industry=${industry.slug}`}
-                    className={`flex items-center p-3 sm:p-4 md:p-3.5 outline-none focus:outline-none transition-all duration-200 group category-card ${
+                    className={`flex items-center outline-none focus:outline-none transition-all duration-200 group element-card ${
                       filterValue === industry.slug
                         ? 'border-[#E3E2FF] bg-[#FAFAFC] dark:bg-blue-900/20'
                         : 'border-[#E3E2FF] dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800 transition-colors duration-500'

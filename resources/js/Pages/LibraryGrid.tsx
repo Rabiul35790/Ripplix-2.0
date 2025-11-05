@@ -188,6 +188,46 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
 
   const [isNearBottom, setIsNearBottom] = useState(false);
 
+  // ✅ MOVE ALL HOOKS TO THE TOP - BEFORE ANY CONDITIONALS OR RETURNS
+
+  // Dynamic grid columns based on cardsPerRow prop - memoized
+  const gridCols = useMemo(() => {
+    switch (cardsPerRow) {
+      case 1:
+        return 'grid-cols-1';
+      case 2:
+        return 'grid-cols-1 lg:grid-cols-2';
+      case 3:
+        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+      case 4:
+        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+      default:
+        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    }
+  }, [cardsPerRow]);
+
+  // Dynamic gap based on cardsPerRow for better spacing - memoized
+  const gridGap = useMemo(() => {
+    return cardsPerRow === 2 ? 'gap-8' : 'gap-6';
+  }, [cardsPerRow]);
+
+  // Memoize card size calculation
+  const cardSize = useMemo(() => cardsPerRow === 2 ? 'large' : 'normal', [cardsPerRow]);
+
+  // For unauthenticated users, split the libraries: first 12 normal + rest blurred - memoized
+  const { normalLibraries, blurredLibraries, showLoginPrompt } = useMemo(() => {
+    // Handle null/undefined/invalid libraries array
+    if (!libraries || !Array.isArray(libraries)) {
+      return { normalLibraries: [], blurredLibraries: [], showLoginPrompt: false };
+    }
+
+    const normal = isUserAuthenticated ? libraries : libraries.slice(0, 18);
+    const blurred = isUserAuthenticated ? [] : libraries.slice(15, 18);
+    const showPrompt = !isUserAuthenticated && blurred.length > 0;
+
+    return { normalLibraries: normal, blurredLibraries: blurred, showLoginPrompt: showPrompt };
+  }, [libraries, isUserAuthenticated]);
+
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
     const scrollTop = window.pageYOffset;
@@ -221,29 +261,7 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     };
   }, [handleScroll]);
 
-  // Dynamic grid columns based on cardsPerRow prop - memoized
-  const gridCols = useMemo(() => {
-    switch (cardsPerRow) {
-      case 1:
-        return 'grid-cols-1';
-      case 2:
-        return 'grid-cols-1 lg:grid-cols-2';
-      case 3:
-        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-      case 4:
-        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-      default:
-        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-    }
-  }, [cardsPerRow]);
-
-  // Dynamic gap based on cardsPerRow for better spacing - memoized
-  const gridGap = useMemo(() => {
-    return cardsPerRow === 2 ? 'gap-8' : 'gap-6';
-  }, [cardsPerRow]);
-
-  // Memoize card size calculation
-  const cardSize = useMemo(() => cardsPerRow === 2 ? 'large' : 'normal', [cardsPerRow]);
+  // ✅ NOW ALL HOOKS ARE CALLED - SAFE TO HAVE CONDITIONAL RENDERING BELOW
 
   // Check if libraries is null, undefined, or not an array
   if (!libraries) {
@@ -281,19 +299,10 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   if (libraries.length === 0) {
     return (
       <div className="p-6">
-        {/* Empty state commented out */}
+        {/* Empty state */}
       </div>
     );
   }
-
-  // For unauthenticated users, split the libraries: first 12 normal + rest blurred - memoized
-  const { normalLibraries, blurredLibraries, showLoginPrompt } = useMemo(() => {
-    const normal = isUserAuthenticated ? libraries : libraries.slice(0, 18);
-    const blurred = isUserAuthenticated ? [] : libraries.slice(15, 18);
-    const showPrompt = !isUserAuthenticated && blurred.length > 0;
-
-    return { normalLibraries: normal, blurredLibraries: blurred, showLoginPrompt: showPrompt };
-  }, [libraries, isUserAuthenticated]);
 
   return (
     <div className="p-6">
@@ -321,55 +330,55 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
 
         {/* Login Prompt positioned after visible cards with gradient overlay */}
         {showLoginPrompt && (
-        <div
+          <div
             className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl"
             style={{
-            background:
+              background:
                 "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.7) 80%, rgba(248, 248, 249, 0.2) 100%)",
             }}
-        >
+          >
             <div className="relative z-10">
-            <h2 className="font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
+              <h2 className="font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
                 You're{" "}
                 <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
-                one click away{" "}
+                  one click away{" "}
                 </span>
                 from
-            </h2>
+              </h2>
 
-            <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
+              <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
                 unlimited inspiration
-            </p>
+              </p>
 
-            <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
+              <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
                 Explore thousands of real UI animations, thoughtfully curated for modern
                 design teams
-            </p>
+              </p>
 
-            <div className="flex items-center justify-center gap-4 mb-16">
+              <div className="flex items-center justify-center gap-4 mb-16">
                 <Link
-                href="/login"
-                className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
+                  href="/login"
+                  className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
                 >
-                <span className="z-10">Log In</span>
+                  <span className="z-10">Log In</span>
                 </Link>
 
                 <Link
-                href="/register"
-                className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+                  href="/register"
+                  className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
                 >
-                <span className="z-10">Join Free</span>
+                  <span className="z-10">Join Free</span>
                 </Link>
-            </div>
+              </div>
 
-            <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
+              <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
                 Where designers from the world's leading teams spark interaction ideas
-            </p>
+              </p>
 
-            {/* Optimized scrolling logo section */}
-            <ScrollingBrands />
+              {/* Optimized scrolling logo section */}
+              <ScrollingBrands />
             </div>
-        </div>
+          </div>
         )}
       </div>
 

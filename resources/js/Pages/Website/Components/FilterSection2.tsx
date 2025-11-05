@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Grid3X3, Grid2X2 } from 'lucide-react';
 
 interface Filter {
@@ -7,7 +7,7 @@ interface Filter {
   slug: string;
 }
 
-interface FilterSectionProps {
+interface FilterSection2Props {
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -20,13 +20,15 @@ interface FilterSectionProps {
   onCardsPerRowChange: (count: number) => void;
 }
 
-const FilterSection: React.FC<FilterSectionProps> = ({
+const FilterSection2: React.FC<FilterSection2Props> = ({
   filters,
   selectedPlatform,
   onPlatformChange,
   cardsPerRow,
   onCardsPerRowChange,
 }) => {
+  const [isChanging, setIsChanging] = useState(false);
+
   // Create filter tabs with 'All' option plus platform names
   const filterTabs = [
     { key: 'all', label: 'All' },
@@ -36,9 +38,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({
     })) || [])
   ];
 
-  const handleFilterClick = (platformKey: string) => {
+  const handleFilterClick = async (platformKey: string) => {
     if (platformKey === selectedPlatform) return;
-    onPlatformChange(platformKey);
+
+    setIsChanging(true);
+    await onPlatformChange(platformKey);
+    setIsChanging(false);
   };
 
   const handleGridViewChange = (count: number) => {
@@ -55,12 +60,16 @@ const FilterSection: React.FC<FilterSectionProps> = ({
               <button
                 key={tab.key}
                 onClick={() => handleFilterClick(tab.key)}
+                disabled={isChanging}
                 className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none whitespace-nowrap text-sm sm:text-base ${
                   selectedPlatform === tab.key
                     ? 'bg-[#F5F5FA] dark:bg-gray-500 text-[#0A081B] dark:text-[#FAF9F6] border border-[#E3E2FF]'
                     : 'text-[#3F3868] dark:text-gray-300 hover:bg-[#F5F5FA] dark:hover:bg-gray-800'
-                }`}
+                } ${isChanging ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
+                {isChanging && selectedPlatform === tab.key && (
+                  <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-[#2B235A] rounded-full animate-spin mr-2"></span>
+                )}
                 {tab.label}
               </button>
             ))}
@@ -102,4 +111,4 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   );
 };
 
-export default FilterSection;
+export default FilterSection2;

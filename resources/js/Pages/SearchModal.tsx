@@ -364,7 +364,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md z-50 flex items-start justify-center sm:pt-20 pt-4 focus:outline-none px-2 sm:px-4">
-        <div className="bg-[#F8F8F9] dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[80vh] overflow-hidden flex flex-col focus:outline-none">
+        <div className="bg-[#F8F8F9] dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] sm:max-h-[80vh] overflow-hidden flex flex-col focus:outline-none">
           {/* Header */}
           <div className="p-3 sm:p-4 dark:border-gray-700">
             <form onSubmit={handleSearchSubmit}>

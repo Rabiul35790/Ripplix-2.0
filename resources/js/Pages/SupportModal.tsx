@@ -136,12 +136,12 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
 
     return (
         <div className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center p-4 z-50 font-sora">
-            <div className="bg-[#FFFFFF] border border-[#E0DDE9] dark:bg-gray-900 rounded-lg w-full max-w-6xl h-[80vh] flex flex-col">
+            <div className="bg-white border border-[#E3E2FF] dark:bg-gray-800 rounded-lg w-full max-w-6xl h-[80vh] flex flex-col shadow-xl">
                 {/* Modal Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[#E0DAC8]">
+                <div className="flex items-center justify-between p-6 border-b border-[#E3E2FF]">
                     <div className="flex items-center space-x-2">
-                        <MessageSquare className="w-6 h-6 text-[#564638]" />
-                        <h2 className="text-2xl font-bold text-[#564638] dark:text-white">Support</h2>
+                        <MessageSquare className="w-6 h-6 text-[#2B235A] dark:text-gray-300" />
+                        <h2 className="text-2xl font-bold text-[#2B235A] dark:text-white">Support</h2>
                         {unreadCount > 0 && (
                             <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                                 {unreadCount}
@@ -150,7 +150,7 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-[#564638] bg-[#FAF9F6] hover:text-black focus:outline-none focus:ring-0 dark:hover:text-gray-300 transition-colors"
+                        className="text-[#9D9DA8] bg-[#F7F7FC] focus:outline-none focus:ring-0 hover:text-[#2B235A] dark:hover:text-gray-300 transition-colors duration-500"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -159,20 +159,20 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                 {/* Modal Content */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Tickets List */}
-                    <div className="w-1/3 flex flex-col">
+                    <div className="w-1/3 flex flex-col border-r border-[#E3E2FF]">
                         <div className="p-4">
                             <button
                                 onClick={() => setShowNewTicketForm(true)}
-                                className="w-full bg-[#333333] hover:bg-black focus:outline-none focus:ring-0 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2"
+                                className="w-[100%] md:w-[90%] lg:w-[90%] holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] hover:opacity-90 focus:outline-none focus:ring-0 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2 md:ml-4 lg:ml-5 transition-opacity duration-500"
                             >
-                                <Plus className="w-4 h-4" />
                                 <span>New Ticket</span>
+
                             </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto">
                             {tickets.length === 0 ? (
-                                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                                <div className="p-4 text-center text-[#474750] dark:text-gray-400">
                                     No tickets found
                                 </div>
                             ) : (
@@ -185,12 +185,12 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                                         <div
                                             key={ticket.id}
                                             onClick={() => selectTicket(ticket)}
-                                            className={`p-4 rounded-md shadow-md cursor-pointer hover:bg-white dark:hover:bg-gray-800 transition-colors ${
-                                                selectedTicket?.id === ticket.id ? 'bg-[#FAF9F6] dark:bg-blue-900' : ''
+                                            className={`p-4 rounded-md shadow-md cursor-pointer hover:bg-[#FAFAFC] dark:hover:bg-gray-700 transition-colors ${
+                                                selectedTicket?.id === ticket.id ? 'bg-[#FAFAFC] dark:bg-gray-700' : ''
                                             }`}
                                         >
                                             <div className="flex justify-between items-start mb-2">
-                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate pr-2">
+                                                <h4 className="text-sm font-medium text-[#2B235A] dark:text-white truncate pr-2">
                                                     {ticket.subject}
                                                 </h4>
                                                 <div className="flex items-center space-x-1">
@@ -202,10 +202,10 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                                                     </span>
                                                 </div>
                                             </div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs text-[#474750] dark:text-gray-400">
                                                 {new Date(ticket.created_at).toLocaleDateString()}
                                             </p>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
+                                            <p className="text-xs text-[#474750] dark:text-gray-400 mt-1 truncate">
                                                 {ticket.message}
                                             </p>
                                         </div>
@@ -216,26 +216,26 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                     </div>
 
                     {/* Ticket Details */}
-                    <div className="flex-1 flex flex-col border-l border-[#E0DAC8]">
+                    <div className="flex-1 flex flex-col">
                         {selectedTicket ? (
                             <>
                                 {/* Ticket Header */}
-                                <div className="p-4 shadow-md rounded-sm">
+                                <div className="p-4 shadow-md rounded-sm bg-[#FAFAFC] dark:bg-gray-700">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        <h3 className="text-lg font-semibold text-[#2B235A] dark:text-white">
                                             {selectedTicket.subject}
                                         </h3>
                                         <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(selectedTicket.status)}`}>
                                             {selectedTicket.status.replace('_', ' ')}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    <p className="text-sm text-[#474750] dark:text-gray-400">
                                         Created {new Date(selectedTicket.created_at).toLocaleDateString()}
                                     </p>
                                 </div>
 
                                 {/* Messages */}
-                                <div className="flex-1 overflow-y-auto p-4 ">
+                                <div className="flex-1 overflow-y-auto p-4">
                                     {/* Original Message */}
                                     <div className="mb-4">
                                         <div className="flex items-start space-x-3">
@@ -243,16 +243,16 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                                                 {auth.user.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div className="flex-1">
-                                                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
+                                                <div className="bg-[#FAFAFC] dark:bg-gray-700 rounded-lg p-3 border border-[#E3E2FF] dark:border-gray-600">
                                                     <div className="flex justify-between items-center mb-2">
-                                                        <span className="font-medium text-gray-900 dark:text-white">
+                                                        <span className="font-medium text-[#2B235A] dark:text-white">
                                                             {auth.user.name}
                                                         </span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        <span className="text-xs text-[#474750] dark:text-gray-400">
                                                             {new Date(selectedTicket.created_at).toLocaleString()}
                                                         </span>
                                                     </div>
-                                                    <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">
+                                                    <p className="text-[#2B235A] dark:text-gray-300 text-sm whitespace-pre-wrap">
                                                         {selectedTicket.message}
                                                     </p>
                                                 </div>
@@ -270,20 +270,20 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                                                     {reply.sender_type === 'admin' ? 'T' : auth.user.name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className={`rounded-lg p-3 ${
+                                                    <div className={`rounded-lg p-3 border ${
                                                         reply.sender_type === 'admin'
-                                                            ? 'bg-green-50 dark:bg-green-900'
-                                                            : 'bg-gray-100 dark:bg-gray-700'
+                                                            ? 'bg-green-50 dark:bg-green-900 border-[#E3E2FF] dark:border-green-800'
+                                                            : 'bg-[#FAFAFC] dark:bg-gray-700 border-[#E3E2FF] dark:border-gray-600'
                                                     }`}>
                                                         <div className="flex justify-between items-center mb-2">
-                                                            <span className="font-medium text-gray-900 dark:text-white">
+                                                            <span className="font-medium text-[#2B235A] dark:text-white">
                                                                 {reply.sender_type === 'admin' ? 'Team Ripplix' : auth.user.name}
                                                             </span>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                            <span className="text-xs text-[#474750] dark:text-gray-400">
                                                                 {new Date(reply.created_at).toLocaleString()}
                                                             </span>
                                                         </div>
-                                                        <p className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">
+                                                        <p className="text-[#2B235A] dark:text-gray-300 text-sm whitespace-pre-wrap">
                                                             {reply.message}
                                                         </p>
                                                     </div>
@@ -295,23 +295,24 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
 
                                 {/* Reply Form */}
                                 {selectedTicket.status !== 'closed' && (
-                                    <div className="p-4">
+                                    <div className="p-4 border-t border-[#E3E2FF]">
                                         <form onSubmit={sendReply} className="space-y-3">
                                             <textarea
                                                 value={replyMessage}
                                                 onChange={(e) => setReplyMessage(e.target.value)}
                                                 placeholder="Type your reply..."
                                                 rows={3}
-                                                className="w-full px-3 py-2 rounded-md bg-[#FAF9F6] border border-[#E0DAC8] dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-0 focus:border-[#E0DAC8]"
+                                                className="w-full px-3 py-2 rounded-md bg-[#FAFAFC] border border-[#E3E2FF] dark:bg-gray-700 dark:border-gray-600 text-[#2B235A] dark:text-white resize-none focus:outline-none focus:ring-0 focus:border-[#E3E2FF]"
                                                 required
                                             />
                                             <div className="flex justify-end">
                                                 <button
                                                     type="submit"
                                                     disabled={loading || !replyMessage.trim()}
-                                                    className="bg-[#333333] hover:bg-black text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 transition-colors"
+                                                    className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] hover:opacity-95 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 transition-opacity"
                                                 >
-                                                    {loading ? 'Sending...' : 'Send Reply'}
+                                                    <span>{loading ? 'Sending...' : 'Send Reply'}</span>
+
                                                 </button>
                                             </div>
                                         </form>
@@ -320,58 +321,59 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                             </>
                         ) : (
                             <div className="flex-1 flex items-center justify-center">
-                                <div className="text-center text-gray-400 dark:text-gray-500">
+                                <div className="text-center text-[#474750] dark:text-gray-500">
                                     <MessageSquare className="mx-auto h-12 w-12 mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                    <h3 className="text-lg font-medium text-[#2B235A] dark:text-white mb-2">
                                         Select a ticket
                                     </h3>
-                                    <p className="text-gray-500 dark:text-gray-400">
+                                    <p className="text-[#474750] dark:text-gray-400">
                                         Choose a support ticket from the list to view details and replies.
                                     </p>
                                 </div>
                             </div>
                         )}
+                    </div>
                 </div>
             </div>
 
             {/* New Ticket Form Modal */}
             {showNewTicketForm && (
-                <div className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center p-4 z-60">
-                    <div className="bg-[#FFFFFF] border border-[#E0DDE9] dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+                <div className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center p-4 z-[80]">
+                    <div className="bg-white border border-[#E3E2FF] dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-[#564638] dark:text-white">
+                            <h3 className="text-xl font-bold text-[#2B235A] dark:text-white">
                                 Create New Support Ticket
                             </h3>
                             <button
                                 onClick={() => setShowNewTicketForm(false)}
-                                className="text-[#564638] bg-[#FAF9F6] hover:text-black dark:hover:text-gray-300 focus:outline-none focus:ring-0"
+                                className="text-[#9D9DA8] bg-[#F7F7FC] hover:text-[#2B235A] dark:hover:text-gray-300 focus:outline-none focus:ring-0 transition-colors duration-500"
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
                         <form onSubmit={createTicket} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-[#564638] dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-semibold text-[#2B235A] dark:text-gray-300 mb-1">
                                     Subject
                                 </label>
                                 <input
                                     type="text"
                                     value={newTicket.subject}
                                     onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                                    className="w-full px-3 py-2 rounded-md bg-[#FAF9F6] border border-[#E0DDE9] dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-0 focus:border-[#E0DAC8]"
+                                    className="w-full px-3 py-2 rounded-md bg-[#FAFAFC] border border-[#E3E2FF] dark:bg-gray-700 dark:border-gray-600 text-[#2B235A] dark:text-white focus:outline-none focus:ring-0 focus:border-[#E3E2FF]"
                                     required
                                     placeholder="Subject of your issue"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-[#564638] dark:text-gray-300 mb-1">
+                                <label className="block text-sm font-semibold text-[#2B235A] dark:text-gray-300 mb-1">
                                     Message
                                 </label>
                                 <textarea
                                     value={newTicket.message}
                                     onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
                                     rows={4}
-                                    className="w-full px-3 py-2 rounded-md bg-[#FAF9F6] border border-[#E0DDE9] dark:bg-gray-700 text-gray-900 resize-none dark:text-white focus:outline-none focus:ring-0 focus:border-[#E0DAC8]"
+                                    className="w-full px-3 py-2 rounded-md bg-[#FAFAFC] border border-[#E3E2FF] dark:bg-gray-700 dark:border-gray-600 text-[#2B235A] resize-none dark:text-white focus:outline-none focus:ring-0 focus:border-[#E3E2FF]"
                                     required
                                     placeholder="Please describe your issue in detail..."
                                 />
@@ -380,14 +382,18 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 bg-[#333333] hover:bg-black text-white py-2 rounded-md font-medium disabled:opacity-50 focus:outline-none focus:ring-0 transition-colors"
+                                    className="flex-1 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] hover:opacity-95 text-white py-2 rounded-md font-medium disabled:opacity-50 focus:outline-none focus:ring-0 transition-opacity"
                                 >
-                                    {loading ? 'Creating...' : 'Create Ticket'}
+                                    <span>
+
+                                        {loading ? 'Creating...' : 'Create Ticket'}
+                                    </span>
+
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setShowNewTicketForm(false)}
-                                    className="flex-1 bg-white hover:bg-gray-200 border border-[#E0DDE9] text-gray-700 py-2 rounded-md font-medium focus:outline-none focus:ring-0 transition-colors"
+                                    className="flex-1 bg-white hover:bg-[#FAFAFC] border border-[#E3E2FF] text-[#2B235A] py-2 rounded-md font-medium focus:outline-none focus:ring-0 transition-colors"
                                 >
                                     Cancel
                                 </button>
@@ -396,7 +402,6 @@ const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, auth }) =>
                     </div>
                 </div>
             )}
-        </div>
         </div>
     );
 };
