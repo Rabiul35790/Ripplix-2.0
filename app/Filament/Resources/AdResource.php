@@ -17,14 +17,15 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Radio;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms\Components\Grid;
 use Filament\Support\Enums\FontWeight;
+use Filament\Forms\Get;
 
 class AdResource extends Resource
 {
@@ -52,10 +53,30 @@ class AdResource extends Resource
                             ->columnSpan(2)
                             ->placeholder('Internal title for the advertisement'),
 
-                        FileUpload::make('image')
+                        Radio::make('media_type')
+                            ->label('Media Type')
                             ->required()
+                            ->options([
+                                'image' => 'Image',
+                                'video' => 'Video',
+                            ])
+                            ->default('image')
+                            ->inline()
+                            ->columnSpan(2)
+                            ->live()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Clear the opposite field when switching types
+                                if ($state === 'image') {
+                                    $set('video', null);
+                                } else {
+                                    $set('image', null);
+                                }
+                            }),
+
+                        FileUpload::make('image')
+                            ->label('Image')
                             ->image()
-                            ->directory('ads')
+                            ->directory('ads/images')
                             ->visibility('public')
                             ->imageEditor()
                             ->imageEditorAspectRatios([
@@ -64,7 +85,20 @@ class AdResource extends Resource
                                 '4:3',
                             ])
                             ->columnSpan(2)
-                            ->helperText('Upload an image for the advertisement'),
+                            ->helperText('Upload an image for the advertisement')
+                            ->hidden(fn (Get $get): bool => $get('media_type') === 'video')
+                            ->required(fn (Get $get): bool => $get('media_type') === 'image'),
+
+                        FileUpload::make('video')
+                            ->label('Video')
+                            ->acceptedFileTypes(['video/mp4', 'video/webm', 'video/ogg'])
+                            ->directory('ads/videos')
+                            ->visibility('public')
+                            ->maxSize(51200) // 50MB max
+                            ->columnSpan(2)
+                            ->helperText('Upload a video for the advertisement (MP4, WebM, or OGG format, max 50MB)')
+                            ->hidden(fn (Get $get): bool => $get('media_type') === 'image')
+                            ->required(fn (Get $get): bool => $get('media_type') === 'video'),
 
                         TextInput::make('target_url')
                             ->required()
@@ -103,10 +137,34 @@ class AdResource extends Resource
                                 'sidebar' => 'Sidebar',
                                 'modal' => 'Modal',
                                 'home' => 'Home',
+                                'in-feed' => 'In-Feed',
                             ])
                             ->default('sidebar')
                             ->columnSpan(1)
+                            ->live()
                             ->helperText('Where the ad should appear on the website'),
+
+                        TextInput::make('in_feed_name')
+                            ->label('In-Feed Name')
+                            ->maxLength(255)
+                            ->columnSpan(1)
+                            ->placeholder('e.g., Article Bottom, Post Middle')
+                            ->helperText('Descriptive name for this in-feed ad placement')
+                            ->hidden(fn (Get $get): bool => $get('position') !== 'in-feed')
+                            ->required(fn (Get $get): bool => $get('position') === 'in-feed'),
+
+                        TextInput::make('in_feed_link')
+                            ->label('In-Feed Link Identifier')
+                            ->maxLength(255)
+                            ->columnSpan(1)
+                            ->placeholder('e.g., article-bottom, post-middle')
+                            ->helperText('Unique identifier for frontend integration (use lowercase with hyphens)')
+                            ->hidden(fn (Get $get): bool => $get('position') !== 'in-feed')
+                            ->required(fn (Get $get): bool => $get('position') === 'in-feed')
+                            ->regex('/^[a-z0-9\-]+$/')
+                            ->validationMessages([
+                                'regex' => 'The link identifier must only contain lowercase letters, numbers, and hyphens.',
+                            ]),
                     ])
             ]);
     }
@@ -116,10 +174,14 @@ class AdResource extends Resource
         return $table
             ->columns([
                 ImageColumn::make('image')
+                    ->label('Media')
                     ->circular()
                     ->size(50)
                     ->defaultImageUrl(url('/images/placeholder.png'))
-                    ->extraAttributes(['class' => 'object-cover']),
+                    ->extraAttributes(['class' => 'object-cover'])
+                    ->getStateUsing(function (Ad $record) {
+                        return $record->media_type === 'image' ? $record->image : null;
+                    }),
 
                 TextColumn::make('title')
                     ->searchable()
@@ -127,27 +189,51 @@ class AdResource extends Resource
                     ->weight(FontWeight::Medium)
                     ->description(fn (Ad $record): string => \Str::limit($record->target_url, 40)),
 
-                BadgeColumn::make('status')
-                    ->colors([
-                        'success' => 'active',
-                        'danger' => 'inactive',
-                    ])
-                    ->icons([
-                        'heroicon-m-check-circle' => 'active',
-                        'heroicon-m-x-circle' => 'inactive',
-                    ]),
+                TextColumn::make('media_type')
+                    ->label('Type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'image' => 'info',
+                        'video' => 'warning',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'image' => 'heroicon-m-photo',
+                        'video' => 'heroicon-m-film',
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
 
-                BadgeColumn::make('position')
-                    ->colors([
-                        'primary' => 'sidebar',
-                        'warning' => 'modal',
-                        'success' => 'home',
-                    ])
-                    ->icons([
-                        'heroicon-m-bars-3-center-left' => 'sidebar',
-                        'heroicon-m-window' => 'modal',
-                        'heroicon-m-home' => 'home',
-                    ]),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'active' => 'success',
+                        'inactive' => 'danger',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'active' => 'heroicon-m-check-circle',
+                        'inactive' => 'heroicon-m-x-circle',
+                    }),
+
+                TextColumn::make('position')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'sidebar' => 'primary',
+                        'modal' => 'warning',
+                        'home' => 'success',
+                        'in-feed' => 'info',
+                        default => 'gray',
+                    })
+                    ->icon(fn (string $state): string => match ($state) {
+                        'sidebar' => 'heroicon-m-bars-3-center-left',
+                        'modal' => 'heroicon-m-window',
+                        'home' => 'heroicon-m-home',
+                        'in-feed' => 'heroicon-m-queue-list',
+                        default => 'heroicon-m-question-mark-circle',
+                    })
+                    ->description(fn (Ad $record): ?string =>
+                        $record->position === 'in-feed' && $record->in_feed_name
+                            ? $record->in_feed_name
+                            : null
+                    ),
 
                 TextColumn::make('clicks')
                     ->sortable()
@@ -182,11 +268,19 @@ class AdResource extends Resource
                         'inactive' => 'Inactive',
                     ]),
 
+                SelectFilter::make('media_type')
+                    ->label('Media Type')
+                    ->options([
+                        'image' => 'Image',
+                        'video' => 'Video',
+                    ]),
+
                 SelectFilter::make('position')
                     ->options([
                         'sidebar' => 'Sidebar',
                         'modal' => 'Modal',
-                        'home' => 'Home'
+                        'home' => 'Home',
+                        'in-feed' => 'In-Feed',
                     ]),
 
                 Tables\Filters\Filter::make('currently_active')

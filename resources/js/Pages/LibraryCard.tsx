@@ -406,9 +406,9 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   const getTitleClasses = () => {
     const baseClasses = "text-gray-900 dark:text-white";
     if (cardSize === 'large') {
-      return `${baseClasses} text-base`;
+      return `${baseClasses} text-xl`;
     }
-    return `${baseClasses} text-sm`;
+    return `${baseClasses} text-lg`;
   };
 
   const getCategoryImageSize = () => {

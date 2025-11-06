@@ -462,7 +462,7 @@ const Home: React.FC<HomeProps> = ({
           </div>
         )}
 
-        <div className="mx-4 sm:mx-6 lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
+        <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
           <LibraryGrid
             libraries={filteredLibraries}
             onLibraryClick={handleLibraryCardClick}

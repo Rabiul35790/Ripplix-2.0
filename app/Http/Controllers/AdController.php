@@ -19,7 +19,7 @@ class AdController extends Controller
             ->where('position', 'sidebar')
             ->whereDate('start_date', '<=', $currentDate)
             ->whereDate('end_date', '>=', $currentDate)
-            ->select('id', 'title', 'image', 'target_url')
+            ->select('id', 'title', 'image', 'video', 'media_type', 'target_url')
             ->inRandomOrder()
             ->limit(1)
             ->get()
@@ -27,7 +27,10 @@ class AdController extends Controller
                 return [
                     'id' => $ad->id,
                     'title' => $ad->title,
+                    'media_type' => $ad->media_type,
                     'image_url' => $ad->image_url,
+                    'video_url' => $ad->video_url,
+                    'media_url' => $ad->media_url,
                     'target_url' => $ad->target_url,
                 ];
             });
@@ -49,7 +52,7 @@ class AdController extends Controller
             ->where('position', 'modal')
             ->whereDate('start_date', '<=', $currentDate)
             ->whereDate('end_date', '>=', $currentDate)
-            ->select('id', 'title', 'image', 'target_url')
+            ->select('id', 'title', 'image', 'video', 'media_type', 'target_url')
             ->inRandomOrder()
             ->limit(1)
             ->get()
@@ -57,7 +60,10 @@ class AdController extends Controller
                 return [
                     'id' => $ad->id,
                     'title' => $ad->title,
+                    'media_type' => $ad->media_type,
                     'image_url' => $ad->image_url,
+                    'video_url' => $ad->video_url,
+                    'media_url' => $ad->media_url,
                     'target_url' => $ad->target_url,
                 ];
             });
@@ -68,7 +74,9 @@ class AdController extends Controller
         ]);
     }
 
-
+    /**
+     * Get active home ads
+     */
     public function getHomeAds(): JsonResponse
     {
         $currentDate = now()->format('Y-m-d');
@@ -77,7 +85,7 @@ class AdController extends Controller
             ->where('position', 'home')
             ->whereDate('start_date', '<=', $currentDate)
             ->whereDate('end_date', '>=', $currentDate)
-            ->select('id', 'title', 'image', 'target_url')
+            ->select('id', 'title', 'image', 'video', 'media_type', 'target_url')
             ->inRandomOrder()
             ->limit(1)
             ->get()
@@ -85,7 +93,10 @@ class AdController extends Controller
                 return [
                     'id' => $ad->id,
                     'title' => $ad->title,
+                    'media_type' => $ad->media_type,
                     'image_url' => $ad->image_url,
+                    'video_url' => $ad->video_url,
+                    'media_url' => $ad->media_url,
                     'target_url' => $ad->target_url,
                 ];
             });
@@ -93,6 +104,99 @@ class AdController extends Controller
         return response()->json([
             'success' => true,
             'data' => $ads->first(), // Return single ad or null
+        ]);
+    }
+
+    /**
+     * Get active in-feed ads by link identifier
+     */
+    public function getInFeedAds(Request $request, string $linkIdentifier): JsonResponse
+    {
+        $currentDate = now()->format('Y-m-d');
+
+        $ads = Ad::where('status', 'active')
+            ->where('position', 'in-feed')
+            ->where('in_feed_link', $linkIdentifier)
+            ->whereDate('start_date', '<=', $currentDate)
+            ->whereDate('end_date', '>=', $currentDate)
+            ->select('id', 'title', 'image', 'video', 'media_type', 'target_url', 'in_feed_name', 'in_feed_link')
+            ->inRandomOrder()
+            ->limit(1)
+            ->get()
+            ->map(function ($ad) {
+                return [
+                    'id' => $ad->id,
+                    'title' => $ad->title,
+                    'media_type' => $ad->media_type,
+                    'image_url' => $ad->image_url,
+                    'video_url' => $ad->video_url,
+                    'media_url' => $ad->media_url,
+                    'target_url' => $ad->target_url,
+                    'in_feed_name' => $ad->in_feed_name,
+                    'in_feed_link' => $ad->in_feed_link,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $ads->first(), // Return single ad or null
+        ]);
+    }
+
+    /**
+     * Get all available in-feed ad placements (for developers)
+     */
+    public function getInFeedPlacements(): JsonResponse
+    {
+        $placements = Ad::where('position', 'in-feed')
+            ->active()
+            ->select('in_feed_name', 'in_feed_link')
+            ->distinct()
+            ->get()
+            ->map(function ($ad) {
+                return [
+                    'name' => $ad->in_feed_name,
+                    'link' => $ad->in_feed_link,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $placements,
+        ]);
+    }
+
+    /**
+     * Get all active in-feed ads
+     */
+    public function getAllInFeedAds(): JsonResponse
+    {
+        $currentDate = now()->format('Y-m-d');
+
+        $ads = Ad::where('status', 'active')
+            ->where('position', 'in-feed')
+            ->whereDate('start_date', '<=', $currentDate)
+            ->whereDate('end_date', '>=', $currentDate)
+            ->select('id', 'title', 'image', 'video', 'media_type', 'target_url', 'in_feed_name', 'in_feed_link')
+            ->inRandomOrder()
+            ->get()
+            ->map(function ($ad) {
+                return [
+                    'id' => $ad->id,
+                    'title' => $ad->title,
+                    'media_type' => $ad->media_type,
+                    'image_url' => $ad->image_url,
+                    'video_url' => $ad->video_url,
+                    'media_url' => $ad->media_url,
+                    'target_url' => $ad->target_url,
+                    'in_feed_name' => $ad->in_feed_name,
+                    'in_feed_link' => $ad->in_feed_link,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $ads,
         ]);
     }
 
@@ -139,6 +243,9 @@ class AdController extends Controller
             'sidebar_ads' => Ad::sidebar()->active()->count(),
             'modal_ads' => Ad::modal()->active()->count(),
             'home_ads' => Ad::home()->active()->count(),
+            'in_feed_ads' => Ad::inFeed()->active()->count(),
+            'image_ads' => Ad::where('media_type', 'image')->active()->count(),
+            'video_ads' => Ad::where('media_type', 'video')->active()->count(),
         ];
 
         return response()->json([

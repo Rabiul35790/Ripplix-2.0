@@ -3,6 +3,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\LibraryStatsWidget;
+use App\Filament\Widgets\MostViewedLibrariesWidget;
 use App\Filament\Widgets\SupportNotificationWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -47,6 +49,8 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
                 SupportNotificationWidget::class,
+                MostViewedLibrariesWidget::class,
+                LibraryStatsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

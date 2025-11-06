@@ -73,7 +73,10 @@ interface Board {
 interface Ad {
   id: number;
   title: string;
-  image_url: string;
+  media_type: 'image' | 'video';
+  image_url: string | null;
+  video_url: string | null;
+  media_url: string;
   target_url: string;
 }
 
@@ -136,8 +139,8 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
   const [localUserLibraryIds, setLocalUserLibraryIds] = useState<number[]>(userLibraryIds);
 
   // Modal ad states
-  const [modalAd, setModalAd] = useState<Ad | null>(null);
-  const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
+const [modalAd, setModalAd] = useState<Ad | null>(null);
+const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
 
   // Update local state when props change
   useEffect(() => {
@@ -163,54 +166,49 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
   };
 
   // Fetch modal ad for all users when modal opens
-  useEffect(() => {
+    useEffect(() => {
     if (isOpen) {
-      fetchModalAd();
+        fetchModalAd();
     }
-  }, [isOpen]);
+    }, [isOpen]);
 
-  const fetchModalAd = async () => {
+    const fetchModalAd = async () => {
     try {
-      setIsLoadingModalAd(true);
-      const response = await fetch(`/ads/modal?t=${Date.now()}`);
-      const result = await response.json();
+        setIsLoadingModalAd(true);
+        const response = await fetch(`/ads/modal?t=${Date.now()}`);
+        const result = await response.json();
 
-      console.log('Modal ad fetch result:', result); // Debug log
-
-      // Check if result is successful AND data exists AND is not null
-      if (result.success && result.data && result.data !== null) {
+        if (result.success && result.data && result.data !== null) {
         setModalAd(result.data);
-      } else {
-        // No active modal ads available
+        } else {
         setModalAd(null);
-      }
+        }
     } catch (error) {
-      console.error('Failed to fetch modal ad:', error);
-      setModalAd(null);
+        console.error('Failed to fetch modal ad:', error);
+        setModalAd(null);
     } finally {
-      setIsLoadingModalAd(false);
+        setIsLoadingModalAd(false);
     }
-  };
+    };
 
-  // Track modal ad click
-  const trackModalAdClick = async (adId: number) => {
+    const trackModalAdClick = async (adId: number) => {
     try {
-      await fetch(`/ads/${adId}/click`, {
+        await fetch(`/ads/${adId}/click`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
-      });
+        });
     } catch (error) {
-      console.error('Failed to track modal ad click:', error);
+        console.error('Failed to track modal ad click:', error);
     }
-  };
+    };
 
-  const handleModalAdClick = (ad: Ad) => {
+    const handleModalAdClick = (ad: Ad) => {
     trackModalAdClick(ad.id);
     window.open(ad.target_url, '_blank');
-  };
+    };
 
   // Find current library index for navigation
   const currentIndex = allLibraries.findIndex(lib => lib.id === library?.id);
@@ -752,52 +750,75 @@ return (
               />
             </div>
 
-            {/* Bottom Section - Ad and Suggested Libraries */}
             <div className="p-4 sm:p-6">
-              {/* Advertisement Section - Shows for all users */}
-              <div className="w-full mb-6">
+            <div className="w-full mb-6">
                 {isLoadingModalAd ? (
-                  <div className="w-full h-48 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
-                    <div className="w-3/4 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                  </div>
+                <div className="w-full h-80 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
+                    <div className="w-3/4 h-60 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                </div>
                 ) : modalAd ? (
-                  <button
+                <button
                     onClick={() => handleModalAdClick(modalAd)}
-                    className="w-full block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg"
-                  >
-                    <img
-                      src={modalAd.image_url}
-                      alt={modalAd.title}
-                      className="w-full h-48 object-cover rounded-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
+                    className="relative w-full block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg overflow-hidden"
+                >
+                    {/* Sponsor label */}
+                    <span className="absolute top-2 left-2 bg-[#2B235A]/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+                    Sponsor
+                    </span>
+
+                    {modalAd.media_type === 'video' ? (
+                    <video
+                        src={modalAd.video_url || ''}
+                        className="w-full h-80 object-cover rounded-lg"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        onError={(e) => {
+                        const target = e.target as HTMLVideoElement
+                        target.style.display = 'none'
+                        }}
                     />
-                  </button>
+                    ) : (
+                    <img
+                        src={modalAd.image_url || ''}
+                        alt={modalAd.title}
+                        className="w-full h-48 object-cover rounded-lg"
+                        onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        }}
+                    />
+                    )}
+                </button>
                 ) : (
-                  <div className="w-full h-48 bg-[#FAF9F6] dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-[#E0DAC8] dark:border-orange-800 flex items-center justify-center">
+                <div className="w-full h-48 bg-[#FAF9F6] dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-[#E0DAC8] dark:border-orange-800 flex items-center justify-center relative">
+                    {/* Sponsor label (optional placeholder) */}
+                    <span className="absolute top-2 left-2 bg-[#2B235A]/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+                    Sponsor
+                    </span>
+
                     <div className="text-center pb-2">
-                      <div className="w-10 h-10 bg-white dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-[12px]">
+                    <div className="w-10 h-10 bg-white dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-[12px]">
                         <Heart className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <h3 className="text-lg !font-bold text-gray-900 dark:text-white mb-2 font-sora">
+                    </div>
+                    <h3 className="text-lg !font-bold text-gray-900 dark:text-white mb-2 font-sora">
                         Want to advertise here?
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 font-sora !font-semibold">
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 font-sora !font-semibold">
                         Reach thousands of design enthusiasts and professionals
-                      </p>
-                      <Link
+                    </p>
+                    <Link
                         href="/contact-us"
                         className="inline-flex items-center space-x-2 px-4 py-2 bg-[#333333] hover:bg-black text-white rounded-lg transition-colors font-sora !font-semibold focus:outline-none outline-none"
-                      >
+                    >
                         <Phone className="w-4 h-4" />
                         <span>Contact Us</span>
-                      </Link>
+                    </Link>
                     </div>
-                  </div>
+                </div>
                 )}
-              </div>
+            </div>
 
               {/* Suggested Libraries Section - Shows for all users */}
               {suggestedLibraries.length > 0 && (

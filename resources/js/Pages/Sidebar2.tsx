@@ -18,10 +18,14 @@ interface ExtendedPageProps extends PageProps {
   settings?: Settings;
 }
 
+
 interface Ad {
   id: number;
   title: string;
-  image_url: string;
+  media_type: 'image' | 'video';
+  image_url: string | null;
+  video_url: string | null;
+  media_url: string;
   target_url: string;
 }
 
@@ -35,54 +39,54 @@ interface MenuItem {
 }
 
 const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
-  const [sidebarAd, setSidebarAd] = useState<Ad | null>(null);
-  const [isLoadingAd, setIsLoadingAd] = useState(true);
+const [sidebarAd, setSidebarAd] = useState<Ad | null>(null);
+const [isLoadingAd, setIsLoadingAd] = useState(true);
   const { url, props } = usePage<ExtendedPageProps>();
 
   const copyright_text = props?.settings?.copyright_text || null;
   const logo = props?.settings?.logo || null;
 
   useEffect(() => {
-    const fetchSidebarAd = async () => {
-      try {
-        setIsLoadingAd(true);
-        const response = await fetch(`/ads/sidebar?t=${Date.now()}`);
-        const result = await response.json();
-
-        if (result.success && result.data && result.data !== null) {
-          setSidebarAd(result.data);
-        } else {
-          setSidebarAd(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch sidebar ad:', error);
-        setSidebarAd(null);
-      } finally {
-        setIsLoadingAd(false);
-      }
-    };
-
-    fetchSidebarAd();
-  }, []);
-
-  const trackAdClick = async (adId: number) => {
+  const fetchSidebarAd = async () => {
     try {
-      await fetch(`/ads/${adId}/click`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-      });
+      setIsLoadingAd(true);
+      const response = await fetch(`/ads/sidebar?t=${Date.now()}`);
+      const result = await response.json();
+
+      if (result.success && result.data && result.data !== null) {
+        setSidebarAd(result.data);
+      } else {
+        setSidebarAd(null);
+      }
     } catch (error) {
-      console.error('Failed to track ad click:', error);
+      console.error('Failed to fetch sidebar ad:', error);
+      setSidebarAd(null);
+    } finally {
+      setIsLoadingAd(false);
     }
   };
 
-  const handleAdClick = (ad: Ad) => {
-    trackAdClick(ad.id);
-    window.open(ad.target_url, '_blank');
-  };
+  fetchSidebarAd();
+}, []);
+
+const trackAdClick = async (adId: number) => {
+  try {
+    await fetch(`/ads/${adId}/click`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track ad click:', error);
+  }
+};
+
+const handleAdClick = (ad: Ad) => {
+  trackAdClick(ad.id);
+  window.open(ad.target_url, '_blank');
+};
 
   const menuItems: MenuItem[] = [
     {
@@ -328,45 +332,71 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
           </div>
 
           {/* Dynamic Advertisement Section */}
-          <div className="mt-10 font-sora">
-            {isLoadingAd ? (
-              <div className="max-h-[193px] max-w-[192px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
-                <div className="h-[193px] w-[192px] bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-              </div>
-            ) : sidebarAd ? (
-              <button
-                onClick={() => handleAdClick(sidebarAd)}
-                className="max-h-[193px] max-w-[192px] block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg"
-              >
-                <img
-                  src={sidebarAd.image_url}
-                  alt={sidebarAd.title}
-                  className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-              </button>
-            ) : (
-              <div className="max-h-[193px] max-w-[192px] dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border border-[#CECCFF] dark:border-orange-800">
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-[#CECCFF] dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Heart className="w-4 h-4 text-[#2B235A] dark:text-orange-400" />
-                  </div>
-                  <p className="text-xs text-[#2B235A] opacity-75 dark:text-gray-300 mb-2 font-medium">
-                    Want to advertise here?
-                  </p>
-                  <Link
-                    href="/contact-us"
-                    className="text-xs font-semibold text-[#2B235A] hover:font-bold dark:text-orange-400 dark:hover:text-orange-300 outline-none focus:outline-none underline transition duration-500"
-                  >
-                    Contact us
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
+<div className="px-5 mt-10 font-sora">
+  {isLoadingAd ? (
+    <div className="max-h-[193px] max-w-[192px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
+      <div className="h-[193px] w-[192px] bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+    </div>
+  ) : sidebarAd ? (
+    <button
+      onClick={() => handleAdClick(sidebarAd)}
+      className="relative max-h-[193px] max-w-[192px] block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg overflow-hidden"
+    >
+      {/* Sponsor label */}
+      <span className="absolute top-2 left-2 bg-[#2B235A] text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+        Sponsor
+      </span>
+
+      {sidebarAd.media_type === 'video' ? (
+        <video
+          src={sidebarAd.video_url || ''}
+          className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
+          autoPlay
+          loop
+          muted
+          playsInline
+          onError={(e) => {
+            const target = e.target as HTMLVideoElement
+            target.style.display = 'none'
+          }}
+        />
+      ) : (
+        <img
+          src={sidebarAd.image_url || ''}
+          alt={sidebarAd.title}
+          className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+          }}
+        />
+      )}
+    </button>
+  ) : (
+    <div className="max-h-[193px] max-w-[192px] dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border border-[#CECCFF] dark:border-orange-800 relative">
+      {/* Sponsor label (optional for placeholder too) */}
+      {/* <span className="absolute top-2 left-2 bg-[#2B235A] text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+        Sponsor
+      </span> */}
+
+      <div className="text-center">
+        <div className="w-8 h-8 bg-[#CECCFF] dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
+          <Heart className="w-4 h-4 text-[#2B235A] dark:text-orange-400" />
+        </div>
+        <p className="text-xs text-[#2B235A] opacity-75 dark:text-gray-300 mb-2 font-medium">
+          Want to advertise here?
+        </p>
+        <Link
+          href="/contact-us"
+          className="text-xs font-semibold text-[#2B235A] hover:font-bold dark:text-orange-400 dark:hover:text-orange-300 outline-none focus:outline-none underline transition duration-500"
+        >
+          Contact us
+        </Link>
+      </div>
+    </div>
+  )}
+</div>
+
         </div>
 
         {/* Footer Space for Copyright and Terms/Privacy Links */}

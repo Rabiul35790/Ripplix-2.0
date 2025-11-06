@@ -175,7 +175,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
         }
       `}</style>
 
-      <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 w-full">
+      <div className="relative z-10 max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 w-full">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-0 items-center lg:min-h-[70vh]">
           {/* Left Content */}
           <div className="text-left lg:text-left flex flex-col space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8 items-start font-sora order-1 lg:order-1">
@@ -193,15 +193,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
             {/* Heading */}
             <div className='space-y-3 sm:space-y-4 lg:space-y-5'>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] xl:text-[64px] font-bold leading-tight sm:leading-[1.2] md:leading-[1.2] lg:leading-[68px] xl:leading-[78px] bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
-                    Your Creative Partner<br />
-                    in Motion Design
+                <h1 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-[54px] font-bold leading-tight sm:leading-[1.2] md:leading-[1.2] lg:leading-[68px] xl:leading-[78px] bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
+                    Your Netflix for UI Animation <br/>
+                    & Micro-Interaction Design
                 </h1>
 
                 {/* Description */}
                 <p className="font-inter text-sm sm:text-base md:text-lg text-white/85 leading-relaxed max-w-xl font-light">
-                    Curated, inspiring, and evolving — Ripplix helps designers discover
-                    and save the best motion patterns.
+                    A curated, evolving library of the world's best UI animations. Stream inspiration, study motion systems, and design experiences users feel.
                 </p>
             </div>
 

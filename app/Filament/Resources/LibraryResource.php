@@ -354,6 +354,14 @@ class LibraryResource extends Resource
                     ->badge()
                     ->separator(','),
 
+                Tables\Columns\TextColumn::make('views_count')
+                    ->label('Views')
+                    ->counts('views')
+                    ->sortable()
+                    ->badge()
+                    ->color('info')
+                    ->icon('heroicon-o-eye'),
+
                 Tables\Columns\TextColumn::make('seo_score')
                     ->badge()
                     ->color(fn (string $state): string => match (true) {
@@ -742,6 +750,7 @@ class LibraryResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->withCount('views') // NEW: Added to load view counts
             ->with(['categories', 'platforms', 'industries', 'interactions']);
     }
 

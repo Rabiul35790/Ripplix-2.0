@@ -111,13 +111,13 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@ripplix.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
 
 
-    'admin_email' => env('ADMIN_EMAIL', 'admin@ripplix.com'),
+    'admin_email' => env('ADMIN_EMAIL', 'hasan@ripplix.com'),
 
 
 ];

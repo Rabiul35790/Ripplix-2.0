@@ -27,7 +27,10 @@ interface Interaction {
 interface Ad {
   id: number;
   title: string;
-  image_url: string;
+  media_type: 'image' | 'video';
+  image_url: string | null;
+  video_url: string | null;
+  media_url: string;
   target_url: string;
 }
 
@@ -283,50 +286,50 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
   topLibrariesByInteraction = [],
   topLibrariesByIndustry = []
 }) => {
-  const [homeAd, setHomeAd] = useState<Ad | null>(null);
-  const [isLoadingAd, setIsLoadingAd] = useState(true);
+const [homeAd, setHomeAd] = useState<Ad | null>(null);
+const [isLoadingAd, setIsLoadingAd] = useState(true);
 
-  useEffect(() => {
-    const fetchHomeAd = async () => {
-      try {
-        setIsLoadingAd(true);
-        const response = await fetch(`/ads/home?t=${Date.now()}`);
-        const result = await response.json();
-
-        if (result.success && result.data && result.data !== null) {
-          setHomeAd(result.data);
-        } else {
-          setHomeAd(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch sidebar ad:', error);
-        setHomeAd(null);
-      } finally {
-        setIsLoadingAd(false);
-      }
-    };
-
-    fetchHomeAd();
-  }, []);
-
-  const trackAdClick = async (adId: number) => {
+useEffect(() => {
+  const fetchHomeAd = async () => {
     try {
-      await fetch(`/ads/${adId}/click`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-      });
+      setIsLoadingAd(true);
+      const response = await fetch(`/ads/home?t=${Date.now()}`);
+      const result = await response.json();
+
+      if (result.success && result.data && result.data !== null) {
+        setHomeAd(result.data);
+      } else {
+        setHomeAd(null);
+      }
     } catch (error) {
-      console.error('Failed to track ad click:', error);
+      console.error('Failed to fetch home ad:', error);
+      setHomeAd(null);
+    } finally {
+      setIsLoadingAd(false);
     }
   };
 
-  const handleAdClick = (ad: Ad) => {
-    trackAdClick(ad.id);
-    window.open(ad.target_url, '_blank');
-  };
+  fetchHomeAd();
+}, []);
+
+const trackAdClick = async (adId: number) => {
+  try {
+    await fetch(`/ads/${adId}/click`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track ad click:', error);
+  }
+};
+
+const handleAdClick = (ad: Ad) => {
+  trackAdClick(ad.id);
+  window.open(ad.target_url, '_blank');
+};
 
   return (
     <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-14 mt-12 sm:mt-16 lg:mt-12 pb-8 sm:pb-10 lg:pb-12 space-y-12 sm:space-y-16 lg:space-y-16 font-sora">
@@ -373,44 +376,70 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
 
       {/* Home Ad Section - Full Width */}
       <div className="w-full">
-        {isLoadingAd ? (
-          <div className="w-full h-40 sm:h-48 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
-            <div className="w-full h-full px-1 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-          </div>
-        ) : homeAd ? (
-          <button
-            onClick={() => handleAdClick(homeAd)}
-            className="w-full px-1 block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg overflow-hidden bg-white"
-          >
-            <img
-              src={homeAd.image_url}
-              alt={homeAd.title}
-              className="w-full h-auto max-h-64 sm:max-h-72 md:max-h-80 lg:max-h-96 object-contain mx-auto rounded-lg"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          </button>
-        ) : (
-          <div className="w-full h-40 sm:h-48 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-6 sm:p-8 border border-[#CECCFF] dark:border-orange-800">
-            <div className="text-center h-full flex flex-col items-center justify-center">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#CECCFF] dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#2B235A] dark:text-orange-400" />
-              </div>
-              <p className="text-sm sm:text-base text-[#2B235A] opacity-75 dark:text-gray-300 mb-3 font-medium">
-                Want to advertise here?
-              </p>
-              <Link
-                href="/contact-us"
-                className="text-sm sm:text-base font-semibold text-[#2B235A] hover:font-bold dark:text-orange-400 dark:hover:text-orange-300 outline-none focus:outline-none underline transition duration-500"
-              >
-                Contact us
-              </Link>
-            </div>
-          </div>
-        )}
+  {isLoadingAd ? (
+    <div className="w-full h-40 sm:h-48 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
+      <div className="w-full h-full px-1 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+    </div>
+  ) : homeAd ? (
+    <button
+      onClick={() => handleAdClick(homeAd)}
+      className="relative w-full px-1 block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg overflow-hidden bg-white"
+    >
+      {/* Sponsor label */}
+      <span className="absolute top-2 left-2 bg-[#2B235A]/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+        Sponsor
+      </span>
+
+      {homeAd.media_type === 'video' ? (
+        <video
+          src={homeAd.video_url || ''}
+          className="w-full h-auto max-h-64 sm:max-h-72 md:max-h-80 lg:max-h-96 object-contain mx-auto rounded-lg"
+          autoPlay
+          loop
+          muted
+          playsInline
+          onError={(e) => {
+            const target = e.target as HTMLVideoElement
+            target.style.display = 'none'
+          }}
+        />
+      ) : (
+        <img
+          src={homeAd.image_url || ''}
+          alt={homeAd.title}
+          className="w-full h-auto max-h-64 sm:max-h-72 md:max-h-80 lg:max-h-96 object-contain mx-auto rounded-lg"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+          }}
+        />
+      )}
+    </button>
+  ) : (
+    <div className="relative w-full h-40 sm:h-48 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-6 sm:p-8 border border-[#CECCFF] dark:border-orange-800">
+      {/* Sponsor label (optional placeholder) */}
+      <span className="absolute top-2 left-2 bg-[#2B235A]/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+        Sponsor
+      </span>
+
+      <div className="text-center h-full flex flex-col items-center justify-center">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#CECCFF] dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#2B235A] dark:text-orange-400" />
+        </div>
+        <p className="text-sm sm:text-base text-[#2B235A] opacity-75 dark:text-gray-300 mb-3 font-medium">
+          Want to advertise here?
+        </p>
+        <Link
+          href="/contact-us"
+          className="text-sm sm:text-base font-semibold text-[#2B235A] hover:font-bold dark:text-orange-400 dark:hover:text-orange-300 outline-none focus:outline-none underline transition duration-500"
+        >
+          Contact us
+        </Link>
       </div>
+    </div>
+  )}
+</div>
+
 
       {/* Top Elements Section */}
       {topLibrariesByInteraction.length > 0 && (

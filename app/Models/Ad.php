@@ -14,11 +14,15 @@ class Ad extends Model
     protected $fillable = [
         'title',
         'image',
+        'video',
+        'media_type',
         'target_url',
         'start_date',
         'end_date',
         'status',
         'position',
+        'in_feed_name',
+        'in_feed_link',
         'clicks',
     ];
 
@@ -56,9 +60,20 @@ class Ad extends Model
         return $query->where('position', 'modal');
     }
 
+    /**
+     * Scope to get home ads
+     */
     public function scopeHome($query)
     {
         return $query->where('position', 'home');
+    }
+
+    /**
+     * Scope to get in-feed ads
+     */
+    public function scopeInFeed($query)
+    {
+        return $query->where('position', 'in-feed');
     }
 
     /**
@@ -91,5 +106,41 @@ class Ad extends Model
         return Attribute::make(
             get: fn () => $this->image ? asset('storage/' . $this->image) : null,
         );
+    }
+
+    /**
+     * Get the full video URL
+     */
+    protected function videoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->video ? asset('storage/' . $this->video) : null,
+        );
+    }
+
+    /**
+     * Get the media URL (either image or video)
+     */
+    protected function mediaUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->media_type === 'video' ? $this->video_url : $this->image_url,
+        );
+    }
+
+    /**
+     * Check if this is a video ad
+     */
+    public function isVideo(): bool
+    {
+        return $this->media_type === 'video';
+    }
+
+    /**
+     * Check if this is an image ad
+     */
+    public function isImage(): bool
+    {
+        return $this->media_type === 'image';
     }
 }

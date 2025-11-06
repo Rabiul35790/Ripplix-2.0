@@ -252,11 +252,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 // Advertisement routes
+
 Route::middleware(['web'])->prefix('ads')->group(function () {
+    // Existing routes
     Route::get('/sidebar', [AdController::class, 'getSidebarAds']);
     Route::get('/modal', [AdController::class, 'getModalAds']);
     Route::get('/home', [AdController::class, 'getHomeAds']);
+
+    // New in-feed routes
+    Route::get('/in-feed/{linkIdentifier}', [AdController::class, 'getInFeedAds']);
+    Route::get('/in-feed-placements', [AdController::class, 'getInFeedPlacements']);
+    Route::get('/in-feed-all', [AdController::class, 'getAllInFeedAds']);
+
+    // Track click
     Route::post('/{ad}/click', [AdController::class, 'trackClick']);
+
+    // Stats (protected by auth)
     Route::get('/stats', [AdController::class, 'getStats'])->middleware('auth');
 });
 

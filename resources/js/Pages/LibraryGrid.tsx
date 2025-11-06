@@ -3,6 +3,7 @@ import { usePage, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
 import { Infinity } from 'lucide-react';
+import InFeedAdCard from './InFeedAdCard';
 
 interface UserPlanLimits {
   isFree: boolean;
@@ -28,6 +29,16 @@ interface Library {
   created_at: string;
 }
 
+interface InFeedAd {
+  id: number;
+  title: string;
+  media_type: 'image' | 'video';
+  image_url: string | null;
+  video_url: string | null;
+  media_url: string;
+  target_url: string;
+}
+
 interface LibraryGridProps extends PageProps {
   libraries: Library[];
   onLibraryClick: (library: Library) => void;
@@ -43,7 +54,7 @@ interface LibraryGridProps extends PageProps {
   isAuthenticated?: boolean;
 }
 
-// Memoized library card for better performance
+// Memoized library card
 const MemoizedLibraryCard = memo<{
   library: Library;
   onLibraryClick: (library: Library) => void;
@@ -77,7 +88,7 @@ const MemoizedLibraryCard = memo<{
 
 MemoizedLibraryCard.displayName = 'MemoizedLibraryCard';
 
-// Memoized brand logo component with lazy loading
+// Memoized brand logo component
 const BrandLogo = memo<{ src: string; alt: string }>(({ src, alt }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -110,7 +121,7 @@ const BrandLogo = memo<{ src: string; alt: string }>(({ src, alt }) => {
 
 BrandLogo.displayName = 'BrandLogo';
 
-// Memoized scrolling brands section
+// Scrolling brands section
 const ScrollingBrands = memo(() => {
   const brands = useMemo(() => [
     { src: "images/brand/atlas.png", alt: "Atlassian" },
@@ -126,12 +137,8 @@ const ScrollingBrands = memo(() => {
     <>
       <style>{`
         @keyframes scroll-infinite {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
         .scroll-container {
           animation: scroll-infinite 30s linear infinite;
@@ -153,8 +160,6 @@ const ScrollingBrands = memo(() => {
             </div>
           ))}
         </div>
-
-        {/* Optional fade edges for premium look */}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
         <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
       </div>
@@ -180,43 +185,60 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   isAuthenticated,
 }) => {
   const { props } = usePage<PageProps>();
-
-  // Use auth from props if passed directly, otherwise fall back to props.auth from usePage
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
   const isUserAuthenticated = isAuthenticated ?? !!authData?.user;
 
   const [isNearBottom, setIsNearBottom] = useState(false);
+  const [inFeedAds, setInFeedAds] = useState<InFeedAd[]>([]);
+  const [isLoadingAds, setIsLoadingAds] = useState(true);
 
-  // ✅ MOVE ALL HOOKS TO THE TOP - BEFORE ANY CONDITIONALS OR RETURNS
+  // Fetch in-feed ads
+  useEffect(() => {
+    const fetchInFeedAds = async () => {
+      try {
+        setIsLoadingAds(true);
+        const response = await fetch('/ads/in-feed-placements');
+        const result = await response.json();
 
-  // Dynamic grid columns based on cardsPerRow prop - memoized
+        if (result.success && result.data) {
+          // Fetch each ad placement
+          const adPromises = result.data.map(async (placement: { link: string }) => {
+            const adResponse = await fetch(`/ads/in-feed/${placement.link}?t=${Date.now()}`);
+            const adResult = await adResponse.json();
+            return adResult.success && adResult.data ? adResult.data : null;
+          });
+
+          const ads = await Promise.all(adPromises);
+          const validAds = ads.filter(ad => ad !== null);
+          setInFeedAds(validAds);
+        }
+      } catch (error) {
+        console.error('Failed to fetch in-feed ads:', error);
+      } finally {
+        setIsLoadingAds(false);
+      }
+    };
+
+    fetchInFeedAds();
+  }, []);
+
+  // Grid columns
   const gridCols = useMemo(() => {
     switch (cardsPerRow) {
-      case 1:
-        return 'grid-cols-1';
-      case 2:
-        return 'grid-cols-1 lg:grid-cols-2';
-      case 3:
-        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-      case 4:
-        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-      default:
-        return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+      case 1: return 'grid-cols-1';
+      case 2: return 'grid-cols-1 lg:grid-cols-2';
+      case 3: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+      case 4: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+      default: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
     }
   }, [cardsPerRow]);
 
-  // Dynamic gap based on cardsPerRow for better spacing - memoized
-  const gridGap = useMemo(() => {
-    return cardsPerRow === 2 ? 'gap-8' : 'gap-6';
-  }, [cardsPerRow]);
-
-  // Memoize card size calculation
+  const gridGap = useMemo(() => cardsPerRow === 2 ? 'gap-8' : 'gap-6', [cardsPerRow]);
   const cardSize = useMemo(() => cardsPerRow === 2 ? 'large' : 'normal', [cardsPerRow]);
 
-  // For unauthenticated users, split the libraries: first 12 normal + rest blurred - memoized
+  // Split libraries for unauthenticated users
   const { normalLibraries, blurredLibraries, showLoginPrompt } = useMemo(() => {
-    // Handle null/undefined/invalid libraries array
     if (!libraries || !Array.isArray(libraries)) {
       return { normalLibraries: [], blurredLibraries: [], showLoginPrompt: false };
     }
@@ -228,29 +250,70 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     return { normalLibraries: normal, blurredLibraries: blurred, showLoginPrompt: showPrompt };
   }, [libraries, isUserAuthenticated]);
 
+  // Merge libraries with ads at specific positions
+  const mergedItems = useMemo(() => {
+    const items: Array<{ type: 'library' | 'ad'; data: Library | InFeedAd; key: string }> = [];
+
+    // No ads if we don't have any
+    if (inFeedAds.length === 0) {
+      normalLibraries.forEach((library) => {
+        items.push({
+          type: 'library',
+          data: library,
+          key: `library-${library.id}`
+        });
+      });
+      return items;
+    }
+
+    let adIndex = 0;
+
+    normalLibraries.forEach((library, index) => {
+      items.push({
+        type: 'library',
+        data: library,
+        key: `library-${library.id}`
+      });
+
+      // Check if we should insert an ad after this library
+      // Ad positions: 3rd (index 2), 13th (index 12), 23rd (index 22), etc.
+      // Pattern: index 2, then every 10 thereafter (2, 12, 22, 32, 42...)
+      // Formula: (index - 2) % 10 === 0 and index >= 2
+      if (index >= 2 && (index - 2) % 10 === 0) {
+        const ad = inFeedAds[adIndex % inFeedAds.length];
+        items.push({
+          type: 'ad',
+          data: ad,
+          key: `ad-${index}-${ad.id}-1`
+        });
+        adIndex++;
+      }
+    });
+
+    return items;
+  }, [normalLibraries, inFeedAds]);
+
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
     const scrollTop = window.pageYOffset;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
 
-    // Check if user is near bottom (within 800px)
     const isNear = scrollTop + windowHeight >= documentHeight - 800;
     setIsNearBottom(isNear);
 
-    // Trigger load more if near bottom, has more content, not already loading, and user is authenticated
     if (isNear && hasMore && !isLoadingMore && onLoadMore && isUserAuthenticated) {
       onLoadMore();
     }
   }, [hasMore, isLoadingMore, onLoadMore, isUserAuthenticated]);
 
-  // Throttled scroll event listener
+  // Throttled scroll event
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
     const throttledScroll = () => {
       if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 150); // Throttle to every 150ms
+      timeoutId = setTimeout(handleScroll, 150);
     };
 
     window.addEventListener('scroll', throttledScroll, { passive: true });
@@ -261,9 +324,7 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     };
   }, [handleScroll]);
 
-  // ✅ NOW ALL HOOKS ARE CALLED - SAFE TO HAVE CONDITIONAL RENDERING BELOW
-
-  // Check if libraries is null, undefined, or not an array
+  // Loading state
   if (!libraries) {
     return (
       <div className="p-6">
@@ -271,9 +332,7 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <div className="w-8 h-8 border-2 border-gray-300 border-t-[#564638] rounded-full animate-spin"></div>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
-            Loading libraries...
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">Loading libraries...</p>
         </div>
       </div>
     );
@@ -297,38 +356,46 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   }
 
   if (libraries.length === 0) {
-    return (
-      <div className="p-6">
-        {/* Empty state */}
-      </div>
-    );
+    return <div className="p-6">{/* Empty state */}</div>;
   }
 
   return (
     <div className="p-6">
-      {/* Container for grid and overlay */}
       <div className="relative">
-        {/* Grid */}
+        {/* Grid with merged libraries and ads */}
         <div className={`grid ${gridCols} ${gridGap}`}>
-          {/* Normal libraries */}
-          {normalLibraries.map((library) => (
-            <MemoizedLibraryCard
-              key={library.id}
-              library={library}
-              onLibraryClick={onLibraryClick}
-              cardSize={cardSize}
-              auth={authData}
-              ziggy={ziggyData}
-              onStarClick={onStarClick}
-              userLibraryIds={userLibraryIds}
-              viewedLibraryIds={viewedLibraryIds}
-              onLibraryViewed={onLibraryViewed}
-              userPlanLimits={userPlanLimits}
-            />
-          ))}
+          {mergedItems.map((item) => {
+            if (item.type === 'library') {
+              const library = item.data as Library;
+              return (
+                <MemoizedLibraryCard
+                  key={item.key}
+                  library={library}
+                  onLibraryClick={onLibraryClick}
+                  cardSize={cardSize}
+                  auth={authData}
+                  ziggy={ziggyData}
+                  onStarClick={onStarClick}
+                  userLibraryIds={userLibraryIds}
+                  viewedLibraryIds={viewedLibraryIds}
+                  onLibraryViewed={onLibraryViewed}
+                  userPlanLimits={userPlanLimits}
+                />
+              );
+            } else {
+              const ad = item.data as InFeedAd;
+              return (
+                <InFeedAdCard
+                  key={item.key}
+                  ad={ad}
+                  cardSize={cardSize}
+                />
+              );
+            }
+          })}
         </div>
 
-        {/* Login Prompt positioned after visible cards with gradient overlay */}
+        {/* Login Prompt */}
         {showLoginPrompt && (
           <div
             className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl"
@@ -375,7 +442,6 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
                 Where designers from the world's leading teams spark interaction ideas
               </p>
 
-              {/* Optimized scrolling logo section */}
               <ScrollingBrands />
             </div>
           </div>
@@ -390,7 +456,7 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         </div>
       )}
 
-      {/* End message when no more content */}
+      {/* End message */}
       {isUserAuthenticated && !hasMore && libraries.length > 20 && (
         <div className="text-center py-8">
           <p className="text-gray-600 dark:text-gray-400 font-medium">
