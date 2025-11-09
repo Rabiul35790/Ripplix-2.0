@@ -124,6 +124,7 @@ public function index(Request $request)
         return Inertia::render('Home', [
             'libraries' => $libraries,
             'filters' => $filters,
+            'total' => $total,
             'selectedLibrary' => null,
             'allLibraries' => $allLibraries,
             'userLibraryIds' => $userLibraryIds,

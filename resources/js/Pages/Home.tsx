@@ -9,6 +9,9 @@ import LibraryGrid from './LibraryGrid';
 import BoardCard from '../Components/BoardCard';
 import TopLibrariesSection from '../Components/TopLibrariesSection';
 import LayoutUnauth from './LayoutUnauth';
+import Overview from '../Components/Overview';
+import Testimonials from './Testimonial';
+
 
 interface Category {
   id: number;
@@ -78,6 +81,7 @@ interface HomeProps extends PageProps {
   selectedLibrary?: Library | null;
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
+  total: number,
   pagination: Pagination;
   userPlanLimits?: UserPlanLimits | null;
   currentPlatformFilter?: string;
@@ -107,6 +111,7 @@ const Home: React.FC<HomeProps> = ({
   currentPlatformFilter = 'all',
   userPlanLimits,
   filters,
+  total,
   settings,
   topLibrariesByCategory: initialTopCategory = [],
   topLibrariesByInteraction: initialTopInteraction = [],
@@ -480,6 +485,21 @@ const Home: React.FC<HomeProps> = ({
             isAuthenticated={isAuthenticated}
           />
         </div>
+
+
+        {!isAuthenticated && (
+            <>
+            <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
+                <Overview
+                    filters={filters}
+                    total={total}
+                />
+            </div>
+            <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
+            <Testimonials />
+            </div>
+            </>
+        )}
 
         <LibraryModal
           library={modalLibrary}

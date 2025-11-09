@@ -46,16 +46,16 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   };
 
   return (
-    <div className="bg-[#F8F8F9] dark:bg-gray-900 px-4 sm:px-6 py-4 font-sora">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="bg-[#F8F8F9] dark:bg-gray-900 px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-sora">
+      <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
         {/* Filter Tabs */}
-        <div className="flex items-center bg-white flex-wrap border rounded-lg p-1 border-[#E3E2FF] dark:border-gray-300 overflow-x-auto">
-          <div className="flex space-x-1 sm:space-x-3 min-w-max">
+        <div className="flex items-center bg-white border rounded-lg p-1 border-[#E3E2FF] dark:border-gray-300 overflow-x-auto max-w-full">
+          <div className="flex space-x-1 sm:space-x-2 md:space-x-3 min-w-max">
             {filterTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => handleFilterClick(tab.key)}
-                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none whitespace-nowrap text-sm sm:text-base ${
+                className={`px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors focus:outline-none whitespace-nowrap text-xs sm:text-sm md:text-base ${
                   selectedPlatform === tab.key
                     ? 'bg-[#F5F5FA] dark:bg-gray-500 text-[#0A081B] dark:text-[#FAF9F6] border border-[#E3E2FF]'
                     : 'text-[#3F3868] dark:text-gray-300 hover:bg-[#F5F5FA] dark:hover:bg-gray-800'
@@ -67,33 +67,33 @@ const FilterSection: React.FC<FilterSectionProps> = ({
           </div>
         </div>
 
-        {/* View Options - Hidden on mobile (sm and below) */}
-        <div className="hidden md:flex items-center space-x-4">
-          <div className="flex items-center bg-white space-x-2 border rounded-lg p-1 border-[#E3E2FF] dark:border-gray-300">
+        {/* View Options - Hidden on mobile (md and below) */}
+        <div className="hidden lg:flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center bg-white space-x-1 sm:space-x-2 border rounded-lg p-1 border-[#E3E2FF] dark:border-gray-300">
             {/* 3 Cards per Row */}
             <button
               onClick={() => handleGridViewChange(3)}
-              className={`p-2 rounded-lg transition-colors focus:outline-none ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-colors focus:outline-none ${
                 cardsPerRow === 3
                   ? 'bg-[#F5F5FA] dark:bg-gray-500 text-[#0A081B] dark:text-[#FAF9F6] border border-[#E3E2FF]'
                   : 'text-[#3F3868] dark:text-gray-400 hover:bg-[#F5F5FA] dark:hover:bg-gray-800'
               }`}
               title="3 cards per row"
             >
-              <Grid3X3 className="w-5 h-5" />
+              <Grid3X3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* 2 Cards per Row */}
             <button
               onClick={() => handleGridViewChange(2)}
-              className={`p-2 rounded-lg transition-colors focus:outline-none ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-colors focus:outline-none ${
                 cardsPerRow === 2
                   ? 'bg-[#F5F5FA] dark:bg-gray-500 text-[#0A081B] dark:text-[#FAF9F6] border border-[#E3E2FF]'
                   : 'text-[#3F3868] dark:text-gray-400 hover:bg-[#F5F5FA] dark:hover:bg-gray-800'
               }`}
               title="2 cards per row"
             >
-              <Grid2X2 className="w-5 h-5" />
+              <Grid2X2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>

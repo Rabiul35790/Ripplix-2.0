@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from 'react';
 import { usePage, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
@@ -189,9 +189,23 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   const ziggyData = props.ziggy;
   const isUserAuthenticated = isAuthenticated ?? !!authData?.user;
 
-  const [isNearBottom, setIsNearBottom] = useState(false);
   const [inFeedAds, setInFeedAds] = useState<InFeedAd[]>([]);
   const [isLoadingAds, setIsLoadingAds] = useState(true);
+
+  // Smooth scroll management
+  const loadMoreTriggered = useRef(false);
+  const lastScrollY = useRef(0);
+  const scrollDirection = useRef<'up' | 'down'>('down');
+
+  // Add smooth scrolling behavior to the entire page
+  useEffect(() => {
+    // Enable smooth scrolling
+    document.documentElement.style.scrollBehavior = 'smooth';
+
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
 
   // Fetch in-feed ads
   useEffect(() => {
@@ -202,7 +216,6 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         const result = await response.json();
 
         if (result.success && result.data) {
-          // Fetch each ad placement
           const adPromises = result.data.map(async (placement: { link: string }) => {
             const adResponse = await fetch(`/ads/in-feed/${placement.link}?t=${Date.now()}`);
             const adResult = await adResponse.json();
@@ -254,7 +267,6 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   const mergedItems = useMemo(() => {
     const items: Array<{ type: 'library' | 'ad'; data: Library | InFeedAd; key: string }> = [];
 
-    // No ads if we don't have any
     if (inFeedAds.length === 0) {
       normalLibraries.forEach((library) => {
         items.push({
@@ -275,10 +287,6 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         key: `library-${library.id}`
       });
 
-      // Check if we should insert an ad after this library
-      // Ad positions: 3rd (index 2), 13th (index 12), 23rd (index 22), etc.
-      // Pattern: index 2, then every 10 thereafter (2, 12, 22, 32, 42...)
-      // Formula: (index - 2) % 10 === 0 and index >= 2
       if (index >= 2 && (index - 2) % 10 === 0) {
         const ad = inFeedAds[adIndex % inFeedAds.length];
         items.push({
@@ -293,34 +301,60 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     return items;
   }, [normalLibraries, inFeedAds]);
 
-  // Infinite scroll handler
+  // IMPROVED: Smoother infinite scroll with debouncing and throttling
   const handleScroll = useCallback(() => {
-    const scrollTop = window.pageYOffset;
+    const currentScrollY = window.pageYOffset;
+
+    // Detect scroll direction
+    if (currentScrollY > lastScrollY.current) {
+      scrollDirection.current = 'down';
+    } else {
+      scrollDirection.current = 'up';
+    }
+    lastScrollY.current = currentScrollY;
+
+    // Only trigger load more when scrolling down
+    if (scrollDirection.current !== 'down') {
+      return;
+    }
+
+    const scrollTop = currentScrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
 
-    const isNear = scrollTop + windowHeight >= documentHeight - 800;
-    setIsNearBottom(isNear);
+    // Trigger earlier (1500px before bottom instead of 800px) for smoother experience
+    const triggerPoint = documentHeight - windowHeight - 1500;
 
-    if (isNear && hasMore && !isLoadingMore && onLoadMore && isUserAuthenticated) {
+    if (scrollTop >= triggerPoint && hasMore && !isLoadingMore && !loadMoreTriggered.current && onLoadMore && isUserAuthenticated) {
+      loadMoreTriggered.current = true;
       onLoadMore();
+
+      // Reset trigger after a delay to allow next batch
+      setTimeout(() => {
+        loadMoreTriggered.current = false;
+      }, 1000);
     }
   }, [hasMore, isLoadingMore, onLoadMore, isUserAuthenticated]);
 
-  // Throttled scroll event
+  // Throttled scroll event with requestAnimationFrame for best performance
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let ticking = false;
 
     const throttledScroll = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 150);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
+    // Use passive event listener for better scroll performance
     window.addEventListener('scroll', throttledScroll, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', throttledScroll);
-      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [handleScroll]);
 
@@ -361,35 +395,66 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
 
   return (
     <div className="p-6">
+      <style>{`
+        /* Smooth scrolling optimization */
+        * {
+          scroll-behavior: smooth;
+        }
+
+        /* Optimize card animations for smoother scrolling */
+        .library-card-wrapper {
+          will-change: transform;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+        }
+
+        /* Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+
+        /* Optimize grid rendering */
+        .library-grid {
+          contain: layout style paint;
+        }
+      `}</style>
+
       <div className="relative">
         {/* Grid with merged libraries and ads */}
-        <div className={`grid ${gridCols} ${gridGap}`}>
+        <div className={`library-grid grid ${gridCols} ${gridGap}`}>
           {mergedItems.map((item) => {
             if (item.type === 'library') {
               const library = item.data as Library;
               return (
-                <MemoizedLibraryCard
-                  key={item.key}
-                  library={library}
-                  onLibraryClick={onLibraryClick}
-                  cardSize={cardSize}
-                  auth={authData}
-                  ziggy={ziggyData}
-                  onStarClick={onStarClick}
-                  userLibraryIds={userLibraryIds}
-                  viewedLibraryIds={viewedLibraryIds}
-                  onLibraryViewed={onLibraryViewed}
-                  userPlanLimits={userPlanLimits}
-                />
+                <div key={item.key} className="library-card-wrapper">
+                  <MemoizedLibraryCard
+                    library={library}
+                    onLibraryClick={onLibraryClick}
+                    cardSize={cardSize}
+                    auth={authData}
+                    ziggy={ziggyData}
+                    onStarClick={onStarClick}
+                    userLibraryIds={userLibraryIds}
+                    viewedLibraryIds={viewedLibraryIds}
+                    onLibraryViewed={onLibraryViewed}
+                    userPlanLimits={userPlanLimits}
+                  />
+                </div>
               );
             } else {
               const ad = item.data as InFeedAd;
               return (
-                <InFeedAdCard
-                  key={item.key}
-                  ad={ad}
-                  cardSize={cardSize}
-                />
+                <div key={item.key} className="library-card-wrapper">
+                  <InFeedAdCard
+                    ad={ad}
+                    cardSize={cardSize}
+                  />
+                </div>
               );
             }
           })}
@@ -398,14 +463,14 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         {/* Login Prompt */}
         {showLoginPrompt && (
           <div
-            className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl"
+            className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl max-w-full overflow-hidden"
             style={{
               background:
                 "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.7) 80%, rgba(248, 248, 249, 0.2) 100%)",
             }}
           >
-            <div className="relative z-10">
-              <h2 className="font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
+            <div className="relative z-10 max-w-full w-full">
+              <h2 className="font-sora text-2xl sm:text-3xl md:text-4xl pt-10 font-normal text-[#77778F] dark:text-white mb-2 px-4">
                 You're{" "}
                 <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
                   one click away{" "}
@@ -413,32 +478,32 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
                 from
               </h2>
 
-              <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
+              <p className="font-sora text-xl sm:text-2xl md:text-3xl font-normal text-[#77778F] dark:text-gray-400 mb-6 px-4">
                 unlimited inspiration
               </p>
 
-              <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
+              <p className="max-w-sm text-sm sm:text-base text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto px-4">
                 Explore thousands of real UI animations, thoughtfully curated for modern
                 design teams
               </p>
 
-              <div className="flex items-center justify-center gap-4 mb-16">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 px-4">
                 <Link
                   href="/login"
-                  className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
+                  className="w-full sm:w-auto px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
                 >
                   <span className="z-10">Log In</span>
                 </Link>
 
                 <Link
                   href="/register"
-                  className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+                  className="w-full sm:w-auto px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
                 >
                   <span className="z-10">Join Free</span>
                 </Link>
               </div>
 
-              <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
+              <p className="text-sm sm:text-base text-[#878787] dark:text-gray-500 mb-6 font-sora px-4">
                 Where designers from the world's leading teams spark interaction ideas
               </p>
 
@@ -448,25 +513,50 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         )}
       </div>
 
-      {/* Loading State */}
+      {/* Optimized Loading State with Smooth Appearance */}
       {isLoadingMore && (
-        <div className="text-center py-8">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-[#564638] rounded-full animate-spin mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Loading more libraries...</p>
+        <div className="text-center py-12 animate-fadeIn">
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-white dark:bg-gray-800 rounded-full shadow-lg">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-[#564638] rounded-full animate-spin"></div>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Loading more libraries...</p>
+          </div>
         </div>
       )}
 
       {/* End message */}
       {isUserAuthenticated && !hasMore && libraries.length > 20 && (
-        <div className="text-center py-8">
-          <p className="text-gray-600 dark:text-gray-400 font-medium">
-            You've reached the end!
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-            {libraries.length} libraries loaded
-          </p>
+        <div className="text-center py-12 animate-fadeIn">
+          <div className="inline-flex flex-col items-center gap-2 px-8 py-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-sm">
+            <div className="w-12 h-12 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center mb-2">
+              <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 font-semibold text-lg">
+              You've reached the end!
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              {libraries.length} libraries loaded
+            </p>
+          </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

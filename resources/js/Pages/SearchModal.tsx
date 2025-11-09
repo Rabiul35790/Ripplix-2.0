@@ -469,80 +469,74 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   ))}
                 </div>
 
-                {/* Unauthenticated User Login Prompt - Exact same as LibraryGrid */}
+                {/* Unauthenticated User Login Prompt - Responsive */}
                 {showLoginPrompt && (
-                <div
-                    className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl"
+                  <div
+                    className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl max-w-full overflow-hidden"
                     style={{
-                    background:
+                      background:
                         "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.7) 80%, rgba(248, 248, 249, 0.2) 100%)",
                     }}
-                >
-
-
-                    <div className="relative z-10">
-                    <h2 className="font-sora !text-3xl sm:!text-4xl pt-10 !font-normal text-[#77778F] dark:text-white mb-2">
+                  >
+                    <div className="relative z-10 max-w-full w-full">
+                      <h2 className="font-sora text-2xl sm:text-3xl md:text-4xl pt-10 font-normal text-[#77778F] dark:text-white mb-2 px-4">
                         You're{" "}
                         <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
-                        one click away{" "}
+                          one click away{" "}
                         </span>
                         from
-                    </h2>
+                      </h2>
 
-                    <p className="font-sora text-2xl sm:text-3xl !font-normal text-[#77778F] dark:text-gray-400 mb-6">
+                      <p className="font-sora text-xl sm:text-2xl md:text-3xl font-normal text-[#77778F] dark:text-gray-400 mb-6 px-4">
                         unlimited inspiration
-                    </p>
+                      </p>
 
-                    <p className="max-w-sm text-sm sm:text-sm text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto">
+                      <p className="max-w-sm text-sm sm:text-base text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto px-4">
                         Explore thousands of real UI animations, thoughtfully curated for modern
                         design teams
-                    </p>
+                      </p>
 
-                    <div className="flex items-center justify-center gap-4 mb-16">
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 px-4">
                         <Link
-                        href="/login"
-                        className="px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base !font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
+                          href="/login"
+                          className="w-full sm:w-auto px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
                         >
-                        <span className="z-10">Log In</span>
+                          <span className="z-10">Log In</span>
                         </Link>
 
                         <Link
-                        href="/register"
-                        className="px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] !font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+                          href="/register"
+                          className="w-full sm:w-auto px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
                         >
-                        <span className="z-10">Join Free</span>
+                          <span className="z-10">Join Free</span>
                         </Link>
-                    </div>
+                      </div>
 
-                    <p className="text-base text-[#878787] dark:text-gray-500 mb-6 font-sora">
+                      <p className="text-sm sm:text-base text-[#878787] dark:text-gray-500 mb-6 font-sora px-4">
                         Where designers from the world's leading teams spark interaction ideas
-                    </p>
+                      </p>
 
-                    {/* === Smooth scrolling logo section === */}
-                    <style>{`
+                      {/* Smooth scrolling logo section */}
+                      <style>{`
                         @keyframes scroll-infinite {
-                        0% {
-                            transform: translateX(0);
-                        }
-                        100% {
-                            transform: translateX(-50%);
-                        }
+                          0% { transform: translateX(0); }
+                          100% { transform: translateX(-50%); }
                         }
                         .scroll-container {
-                        animation: scroll-infinite 30s linear infinite;
-                        display: flex;
-                        width: fit-content;
+                          animation: scroll-infinite 30s linear infinite;
+                          display: flex;
+                          width: fit-content;
                         }
                         .scroll-container:hover {
-                        animation-play-state: paused;
+                          animation-play-state: paused;
                         }
-                    `}</style>
+                      `}</style>
 
-                    <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
+                      <div className="overflow-hidden w-full max-w-4xl mx-auto relative">
                         <div className="scroll-container">
-                        {[...Array(2)].map((_, i) => (
+                          {[...Array(2)].map((_, i) => (
                             <div key={i} className="flex items-center gap-8 shrink-0 px-3">
-                            {[
+                              {[
                                 { src: "images/brand/atlas.png", alt: "Atlassian" },
                                 { src: "images/brand/air.png", alt: "Airbnb" },
                                 { src: "images/brand/monday.png", alt: "Monday" },
@@ -550,28 +544,28 @@ const SearchModal: React.FC<SearchModalProps> = ({
                                 { src: "images/brand/spotify.png", alt: "Spotify" },
                                 { src: "images/brand/plaid.png", alt: "Plaid" },
                                 { src: "images/brand/linktree.png", alt: "Linktree" },
-                            ].map((brand, index) => (
+                              ].map((brand, index) => (
                                 <div
-                                key={index}
-                                className="flex items-center justify-center w-24 h-10 bg-transparent"
+                                  key={index}
+                                  className="flex items-center justify-center w-24 h-10 bg-transparent"
                                 >
-                                <img
+                                  <img
                                     src={brand.src}
                                     alt={brand.alt}
                                     className="max-h-full max-w-full object-contain"
-                                />
+                                  />
                                 </div>
-                            ))}
+                              ))}
                             </div>
-                        ))}
+                          ))}
                         </div>
 
-                        {/* Optional fade edges for premium look */}
-                        <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#F6F5FA] dark:from-gray-900 to-transparent"></div>
+                        {/* Fade edges */}
+                        <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#F8F8F9] dark:from-gray-900 to-transparent"></div>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#F8F8F9] dark:from-gray-900 to-transparent"></div>
+                      </div>
                     </div>
-                    </div>
-                </div>
+                  </div>
                 )}
 
                 {/* Loading More Indicator - Only for authenticated users */}
