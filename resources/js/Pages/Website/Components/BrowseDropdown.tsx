@@ -88,7 +88,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
       {/* Dropdown */}
       <div
         ref={dropdownRef}
-        className="absolute left-0 top-16 bg-[#F7F7FCE5] dark:bg-gray-900 border border-[#B7B3FF] dark:border-gray-700 rounded-lg shadow-xl z-50
+        className="absolute left-0 top-16 bg-[#F7F7FC] dark:bg-gray-900 border border-[#B7B3FF] dark:border-gray-700 rounded-lg shadow-xl z-50
                    /* Mobile styles */
                    w-[calc(100vw-2rem)] max-w-[380px] mx-4
                    /* Tablet styles */

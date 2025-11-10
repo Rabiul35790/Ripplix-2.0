@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoreVertical, Share2, Edit2, Trash2, Link as LinkIcon, Crown, Lock, Infinity, Atom } from 'lucide-react';
+import { MoreVertical, Share2, Edit2, Trash2, Link as LinkIcon, Crown, Lock, Infinity, Atom, FolderOpen } from 'lucide-react';
 import { router, Link } from '@inertiajs/react';
 
 interface Category {
@@ -32,10 +32,10 @@ interface Board {
   share_emails?: string[];
   share_url?: string | null;
   created_at: string;
-  libraries_count?: number; // Make this optional
+  libraries_count?: number;
   libraries?: Library[];
   is_blurred?: boolean;
-  creator_name?: string; // Add this for SharedBoard compatibility
+  creator_name?: string;
 }
 
 interface UserPlanLimits {
@@ -50,6 +50,7 @@ interface UserPlanLimits {
 interface BoardCardProps {
   board: Board;
   onEdit: (board: Board) => void;
+  onDelete: (board: Board) => void;
   userPlanLimits?: UserPlanLimits | null;
   isBlurred?: boolean;
 }
@@ -57,15 +58,15 @@ interface BoardCardProps {
 const BoardCard: React.FC<BoardCardProps> = ({
   board,
   onEdit,
+  onDelete,
   userPlanLimits,
   isBlurred = false
 }) => {
   const [showMenu, setShowMenu] = React.useState(false);
 
-  const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this board?')) {
-      router.delete(`/boards/${board.id}`);
-    }
+  const openDeleteModal = () => {
+    onDelete(board);
+    setShowMenu(false);
   };
 
   const copyShareLink = () => {
@@ -143,7 +144,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
                   ) : null}
 
                   <button
-                    onClick={(e) => handleMenuItemClick(e, handleDelete)}
+                    onClick={(e) => handleMenuItemClick(e, openDeleteModal)}
                     className="flex items-center px-3 sm:px-4 md:px-3.5 py-2 text-sm sm:text-base md:text-[15px] text-red-600 hover:bg-[#E3E2FF] w-full text-left rounded-md focus:outline-none focus:ring-0"
                   >
                     <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-3.5 md:h-3.5 mr-2" />
@@ -239,7 +240,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
             </div>
           ) : (
             <div className="min-h-[250px] sm:min-h-[300px] md:min-h-[280px] rounded-lg flex items-center justify-center">
-              <Atom className="w-5 h-5 sm:w-6 sm:h-6 md:w-5.5 md:h-5.5 text-[#CECCFF]" />
+              <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-[#CECCFF]" />
             </div>
           )}
         </div>

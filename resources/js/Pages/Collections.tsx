@@ -9,6 +9,7 @@ import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
 import { PageProps } from '@/types';
 import PricingModal from './PricingModal';
+import DeleteBoardModal from '../Components/DeleteBoardModal';
 
 interface Library {
   id: number;
@@ -107,6 +108,9 @@ const Collections: React.FC<CollectionProps> = ({
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
+  const [deletingBoard, setDeletingBoard] = useState<Board | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
 
   // ADD THIS: State for viewedLibraryIds
@@ -169,6 +173,16 @@ const Collections: React.FC<CollectionProps> = ({
   const handlePricingModalClose = () => {
     setIsPricingModalOpen(false);
   };
+
+  const handleDeleteBoard = (board: Board) => {
+  setDeletingBoard(board);
+  setIsDeleteModalOpen(true);
+};
+
+const handleCloseDeleteModal = () => {
+  setIsDeleteModalOpen(false);
+  setDeletingBoard(null);
+};
 
   const visibleBoards = filteredBoards.filter(board => !board.is_blurred);
   const blurredBoards = filteredBoards.filter(board => board.is_blurred);
@@ -329,6 +343,7 @@ const Collections: React.FC<CollectionProps> = ({
                       key={board.id}
                       board={board}
                       onEdit={handleEditBoard}
+                      onDelete={handleDeleteBoard}
                       userPlanLimits={userPlanLimits}
                     />
                   ))}
@@ -373,6 +388,7 @@ const Collections: React.FC<CollectionProps> = ({
                         board={board}
                         onEdit={handleEditBoard}
                         userPlanLimits={userPlanLimits}
+                        onDelete={handleDeleteBoard}
                         isBlurred={true}
                       />
                     </div>
@@ -410,6 +426,12 @@ const Collections: React.FC<CollectionProps> = ({
             board={editingBoard}
             userEmail={authData.user.email}
             userPlanLimits={userPlanLimits}
+          />
+
+          <DeleteBoardModal
+            isOpen={isDeleteModalOpen}
+            onClose={handleCloseDeleteModal}
+            board={deletingBoard}
           />
 
           <PricingModal

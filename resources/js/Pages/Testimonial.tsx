@@ -85,26 +85,26 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   ];
 
   return (
-    <div className="w-full py-16 px-4">
+    <div className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
       {/* Header Section */}
-      <div className="text-center mb-12">
-        <h2 className="font-sora text-3xl sm:text-4xl md:text-5xl !font-bold text-[#251C64] mb-3 md:mb-4">
-          1,200+ Creatives<br/> Can't Be Wrong
+      <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+        <h2 className="font-sora text-2xl sm:text-3xl md:text-4xl lg:text-5xl !font-bold text-[#251C64] mb-3 md:mb-4 leading-tight">
+          1,200+ Creatives Can't Be Wrong
         </h2>
-        <p className="font-poppins text-[#828287] text-sm sm:text-base md:text-lg">
-          Trusted by designers and studios who use Ripplix to explore<br/> and organize motion inspiration
+        <p className="font-poppins text-[#828287] text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-4">
+          Trusted by designers and studios who use Ripplix to explore and organize motion inspiration
         </p>
       </div>
 
       {/* Testimonials Masonry Grid */}
       <div className="max-w-7xl mx-auto relative">
-        <div className="columns-1 md:columns-3 gap-6">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 sm:gap-5 lg:gap-6">
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="bg-white rounded-2xl p-6 break-inside-avoid mb-6 border border-[#F2F2FF]"
+              className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 break-inside-avoid mb-4 sm:mb-5 lg:mb-6 border border-[#F2F2FF]"
             >
-              <p className="font-poppins text-gray-700 text-sm leading-relaxed mb-6">
+              <p className="font-poppins text-[#2B235A] text-sm sm:text-base leading-relaxed mb-4 sm:mb-5 lg:mb-6">
                 {testimonial.text}
               </p>
 
@@ -112,13 +112,13 @@ const Testimonials: React.FC<TestimonialsProps> = ({
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.author}
-                  className="w-10 h-10 rounded-full object-cover bg-gray-200"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-md object-cover bg-gray-200 flex-shrink-0"
                 />
-                <div>
-                  <p className="font-sora font-semibold text-gray-900 text-sm">
+                <div className="min-w-0">
+                  <p className="font-sora !font-semibold text-gray-900 text-sm sm:text-base truncate">
                     {testimonial.author}
                   </p>
-                  <p className="font-poppins text-gray-500 text-xs">
+                  <p className="font-poppins text-[#2D2D35] text-xs sm:text-sm truncate">
                     {testimonial.role}
                   </p>
                 </div>
@@ -129,7 +129,7 @@ const Testimonials: React.FC<TestimonialsProps> = ({
 
         {/* Bottom Gradient Overlay */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-64 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 h-48 sm:h-56 lg:h-64 pointer-events-none"
           style={{
             background: 'linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 0.7) 60%, rgba(248, 248, 249, 0.4) 80%, rgba(248, 248, 249, 0.2) 100%)'
           }}

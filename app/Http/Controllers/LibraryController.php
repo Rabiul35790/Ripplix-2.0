@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class LibraryController extends Controller
 {
@@ -80,7 +81,8 @@ public function index(Request $request)
         });
     }
 
-    $query->latest('libraries.created_at');
+    // Changed from latest() to inRandomOrder()
+    $query->inRandomOrder();
 
     // Get total count for pagination
     $total = $query->count();
@@ -115,7 +117,7 @@ public function index(Request $request)
     if ($isAuthenticated) {
         $allLibraries = Library::select(['id', 'slug', 'title'])
             ->where('is_active', true)
-            ->latest('created_at')
+            ->inRandomOrder()
             ->get();
     }
 
@@ -193,7 +195,7 @@ public function getTopLibraries(Request $request)
                     $q->where('categories.id', $category->id);
                 })
                 ->where('is_active', true)
-                ->latest('created_at')
+                ->inRandomOrder()
                 ->limit(3)
                 ->get()
         ];
@@ -224,7 +226,7 @@ public function getTopLibraries(Request $request)
                     $q->where('interactions.id', $interaction->id);
                 })
                 ->where('is_active', true)
-                ->latest('created_at')
+                ->inRandomOrder()
                 ->limit(3)
                 ->get()
         ];
@@ -255,7 +257,7 @@ public function getTopLibraries(Request $request)
                     $q->where('industries.id', $industry->id);
                 })
                 ->where('is_active', true)
-                ->latest('created_at')
+                ->inRandomOrder()
                 ->limit(3)
                 ->get()
         ];
@@ -311,7 +313,8 @@ public function getTopLibraries(Request $request)
             });
         }
 
-        $query->latest('libraries.created_at');
+        // Changed from latest() to inRandomOrder()
+        $query->inRandomOrder();
 
         $total = $query->count();
         $offset = ($page - 1) * $perPage;
@@ -512,14 +515,14 @@ public function getBrowseLibraries(Request $request)
 
     // Platform filtering is removed - will be done on frontend for instant results
 
-    // Get paginated results with proper ordering
-    $libraries = $query->latest('libraries.created_at')
+    // Changed from latest() to inRandomOrder() for random ordering
+    $libraries = $query->inRandomOrder()
         ->paginate($perPage);
 
     // Get all libraries for modal navigation (optimized - only essential fields)
     $allLibraries = Library::select(['id', 'slug', 'title'])
         ->where('is_active', true)
-        ->latest('created_at')
+        ->inRandomOrder()
         ->get();
 
     return response()->json([
@@ -744,7 +747,8 @@ public function getBrowseLibraries(Request $request)
             });
         }
 
-        $libraries = $query->latest()->get();
+        // Changed from latest() to inRandomOrder()
+        $libraries = $query->inRandomOrder()->get();
 
         $userLibraryIds = [];
         if (auth()->check()) {
@@ -790,10 +794,10 @@ public function getBrowseLibraries(Request $request)
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
-        // Get all libraries for navigation
+        // Get all libraries for navigation - random order
         $allLibraries = Library::with(['platforms', 'categories', 'industries', 'interactions'])
             ->where('is_active', true)
-            ->latest()
+            ->inRandomOrder()
             ->get();
 
         $filters = $this->getFilters();
@@ -812,7 +816,7 @@ public function getBrowseLibraries(Request $request)
         return Inertia::render('Home', [
             'libraries' => Library::with(['platforms', 'categories', 'industries', 'interactions'])
                 ->where('is_active', true)
-                ->latest()
+                ->inRandomOrder()
                 ->take(18)
                 ->get(),
             'filters' => $filters,

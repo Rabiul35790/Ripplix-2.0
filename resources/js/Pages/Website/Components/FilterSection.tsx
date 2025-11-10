@@ -46,7 +46,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   };
 
   return (
-    <div className="bg-[#F8F8F9] dark:bg-gray-900 px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-sora">
+    <div className="bg-[#F8F8F9] dark:bg-gray-900 px-3 sm:px-4 md:px-6 py-1 font-sora">
       <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
         {/* Filter Tabs */}
         <div className="flex items-center bg-white border rounded-lg p-1 border-[#E3E2FF] dark:border-gray-300 overflow-x-auto max-w-full">

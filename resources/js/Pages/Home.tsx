@@ -11,6 +11,7 @@ import TopLibrariesSection from '../Components/TopLibrariesSection';
 import LayoutUnauth from './LayoutUnauth';
 import Overview from '../Components/Overview';
 import Testimonials from './Testimonial';
+import FAQ from '../Components/Faq';
 
 
 interface Category {
@@ -158,6 +159,15 @@ const Home: React.FC<HomeProps> = ({
   // Ref to prevent multiple simultaneous requests
   const loadingRef = useRef(false);
 
+  // NEW: Use requestIdleCallback for non-critical updates
+  const scheduleUpdate = useCallback((callback: () => void) => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 1);
+    }
+  }, []);
+
   // Update viewedLibraryIds when props change
   useEffect(() => {
     setViewedLibraryIds(initialViewedLibraryIds);
@@ -170,11 +180,13 @@ const Home: React.FC<HomeProps> = ({
 
   // Callback to handle when a library is viewed
   const handleLibraryViewed = useCallback((libraryId: number) => {
-    setViewedLibraryIds(prev => {
-      if (prev.includes(libraryId)) return prev;
-      return [...prev, libraryId];
+    scheduleUpdate(() => {
+      setViewedLibraryIds(prev => {
+        if (prev.includes(libraryId)) return prev;
+        return [...prev, libraryId];
+      });
     });
-  }, []);
+  }, [scheduleUpdate]);
 
   // NEW: Fetch top libraries after page loads (only for unauthenticated users)
   useEffect(() => {
@@ -196,9 +208,12 @@ const Home: React.FC<HomeProps> = ({
 
         const data = await response.json();
 
-        setTopLibrariesByCategory(data.topLibrariesByCategory || []);
-        setTopLibrariesByInteraction(data.topLibrariesByInteraction || []);
-        setTopLibrariesByIndustry(data.topLibrariesByIndustry || []);
+        // Use requestAnimationFrame for smooth state updates
+        requestAnimationFrame(() => {
+          setTopLibrariesByCategory(data.topLibrariesByCategory || []);
+          setTopLibrariesByInteraction(data.topLibrariesByInteraction || []);
+          setTopLibrariesByIndustry(data.topLibrariesByIndustry || []);
+        });
       } catch (error) {
         console.error('Error fetching top libraries:', error);
       } finally {
@@ -265,12 +280,15 @@ const Home: React.FC<HomeProps> = ({
 
       const data = await response.json();
 
-      setLibraries(data.libraries);
-      setPagination(data.pagination);
+      // Use requestAnimationFrame for smooth updates
+      requestAnimationFrame(() => {
+        setLibraries(data.libraries);
+        setPagination(data.pagination);
 
-      if (data.viewedLibraryIds) {
-        setViewedLibraryIds(data.viewedLibraryIds);
-      }
+        if (data.viewedLibraryIds) {
+          setViewedLibraryIds(data.viewedLibraryIds);
+        }
+      });
 
     } catch (error) {
       console.error('Failed to load libraries:', error);
@@ -321,12 +339,15 @@ const Home: React.FC<HomeProps> = ({
       const data = await response.json();
 
       if (data.libraries && data.libraries.length > 0) {
-        setLibraries(prev => [...prev, ...data.libraries]);
-        setPagination(data.pagination);
+        // Use requestAnimationFrame for smooth append
+        requestAnimationFrame(() => {
+          setLibraries(prev => [...prev, ...data.libraries]);
+          setPagination(data.pagination);
 
-        if (data.viewedLibraryIds) {
-          setViewedLibraryIds(data.viewedLibraryIds);
-        }
+          if (data.viewedLibraryIds) {
+            setViewedLibraryIds(data.viewedLibraryIds);
+          }
+        });
       } else {
         setPagination(prev => ({ ...prev, has_more: false }));
       }
@@ -340,9 +361,15 @@ const Home: React.FC<HomeProps> = ({
     }
   }, [pagination, isLoadingMore, selectedPlatform]);
 
-  // Event handlers
+  // Event handlers with debouncing for search
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchQuery(query);
+    }, 150); // Debounce search by 150ms
   }, []);
 
   const handleCardsPerRowChange = useCallback((count: number) => {
@@ -425,8 +452,8 @@ const Home: React.FC<HomeProps> = ({
         </>
         )}
 
-        {/* Sticky Filter */}
-        <div className="sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
+        {/* Sticky Filter - Add containment */}
+        <div className="sticky top-[60px] md:top-[68px] lg:top-[68px] z-10" style={{ contain: 'layout style paint' }}>
           <FilterWrapper
             filters={filters}
             selectedPlatform={selectedPlatform}
@@ -467,7 +494,7 @@ const Home: React.FC<HomeProps> = ({
           </div>
         )}
 
-        <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
+        <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12">
           <LibraryGrid
             libraries={filteredLibraries}
             onLibraryClick={handleLibraryCardClick}
@@ -497,6 +524,9 @@ const Home: React.FC<HomeProps> = ({
             </div>
             <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
             <Testimonials />
+            </div>
+            <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
+                <FAQ/>
             </div>
             </>
         )}

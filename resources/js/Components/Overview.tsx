@@ -124,7 +124,7 @@ const Overview: React.FC<OverviewProps> = ({
               by theme, and share boards with your
             </p>
 
-            <div className="flex flex-wrap gap-2 relative z-10">
+            <div className="flex flex-wrap gap-2 relative z-[1]">
               {displayIndustries.map((industry) => (
                 <span
                   key={industry.id}
@@ -136,7 +136,7 @@ const Overview: React.FC<OverviewProps> = ({
             </div>
 
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-50 via-transparent to-transparent pointer-events-none z-20"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-blue-50 via-transparent to-transparent pointer-events-none z-[2]"></div>
           </div>
 
           {/* Interactions Section */}
@@ -149,7 +149,7 @@ const Overview: React.FC<OverviewProps> = ({
               by theme, and share boards with your
             </p>
 
-            <div className="flex flex-wrap gap-2 relative z-10">
+            <div className="flex flex-wrap gap-2 relative z-[1]">
               {displayInteractions.map((interaction) => (
                 <span
                   key={interaction.id}
@@ -161,7 +161,7 @@ const Overview: React.FC<OverviewProps> = ({
             </div>
 
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-purple-50 via-transparent to-transparent pointer-events-none z-20"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-purple-50 via-transparent to-transparent pointer-events-none z-[2]"></div>
           </div>
 
           {/* Platforms Section */}

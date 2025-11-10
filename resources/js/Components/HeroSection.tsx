@@ -14,19 +14,19 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
-  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+  const [videoErrors, setVideoErrors] = useState<Record<number, boolean>>({});
+  const [loadedVideos, setLoadedVideos] = useState<Record<number, boolean>>({});
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  const gifs = useMemo(() => [
-    '/images/Gif/amoweb.gif',
-    '/images/Gif/dayweb.gif',
-    '/images/Gif/mobday.gif',
-    '/images/Gif/rainmob.gif',
-    '/images/Gif/scrollwatch.gif',
-    '/images/Gif/shopmob.gif',
-    '/images/Gif/squarewapp.gif'
+  const videos = useMemo(() => [
+    '/images/Gif/amoweb.webm',
+    '/images/Gif/dayweb.webm',
+    '/images/Gif/mobday.webm',
+    '/images/Gif/rainmob.webm',
+    '/images/Gif/scrollwatch.webm',
+    '/images/Gif/shopmob.webm',
+    '/images/Gif/squarewapp.webm'
   ], []);
 
   const avats = useMemo(() => [
@@ -45,41 +45,58 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     'from-yellow-200 to-yellow-300'
   ], []);
 
-  // Preload critical images (first 3 cards)
+  // Preload and autoplay critical videos (first 3 cards)
   useEffect(() => {
-    const preloadImages = gifs.slice(0, 3);
-    preloadImages.forEach((src, idx) => {
-      const img = new Image();
-      img.onload = () => {
-        setLoadedImages(prev => ({ ...prev, [idx]: true }));
-      };
-      img.onerror = () => {
-        setImageErrors(prev => ({ ...prev, [idx]: true }));
-      };
-      img.src = src;
-    });
-  }, [gifs]);
+    const preloadVideos = videos.slice(0, 3);
+    preloadVideos.forEach((src, idx) => {
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.loop = true;
 
-  // Lazy load remaining images with intersection observer
+      video.onloadeddata = () => {
+        setLoadedVideos(prev => ({ ...prev, [idx]: true }));
+        video.play().catch(err => console.log('Autoplay prevented:', err));
+      };
+
+      video.onerror = () => {
+        setVideoErrors(prev => ({ ...prev, [idx]: true }));
+      };
+
+      video.src = src;
+      video.load();
+    });
+  }, [videos]);
+
+  // Lazy load remaining videos with intersection observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const img = entry.target as HTMLImageElement;
-            const idx = parseInt(img.dataset.index || '0');
+            const video = entry.target as HTMLVideoElement;
+            const idx = parseInt(video.dataset.index || '0');
 
-            if (idx >= 3 && !loadedImages[idx] && !imageErrors[idx]) {
-              const src = img.dataset.src;
+            if (idx >= 3 && !loadedVideos[idx] && !videoErrors[idx]) {
+              const src = video.dataset.src;
               if (src) {
-                img.onload = () => {
-                  setLoadedImages(prev => ({ ...prev, [idx]: true }));
+                video.onloadeddata = () => {
+                  setLoadedVideos(prev => ({ ...prev, [idx]: true }));
+                  video.play().catch(err => console.log('Autoplay prevented:', err));
                 };
-                img.onerror = () => {
-                  setImageErrors(prev => ({ ...prev, [idx]: true }));
+                video.onerror = () => {
+                  setVideoErrors(prev => ({ ...prev, [idx]: true }));
                 };
-                img.src = src;
+                video.src = src;
+                video.load();
               }
+            } else if (loadedVideos[idx] && video.paused) {
+              video.play().catch(err => console.log('Autoplay prevented:', err));
+            }
+          } else {
+            const video = entry.target as HTMLVideoElement;
+            if (!video.paused) {
+              video.pause();
             }
           }
         });
@@ -87,16 +104,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       { rootMargin: '50px' }
     );
 
-    imageRefs.current.forEach((img) => {
-      if (img) observer.observe(img);
+    videoRefs.current.forEach((video) => {
+      if (video) observer.observe(video);
     });
 
     return () => observer.disconnect();
-  }, [loadedImages, imageErrors]);
+  }, [loadedVideos, videoErrors]);
 
   useEffect(() => {
     intervalRef.current = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % gifs.length);
+      setActiveIndex((prev) => (prev + 1) % videos.length);
     }, 3000);
 
     return () => {
@@ -104,14 +121,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [gifs.length]);
+  }, [videos.length]);
 
-  const handleImageError = useCallback((index: number) => {
-    setImageErrors(prev => ({ ...prev, [index]: true }));
+  const handleVideoError = useCallback((index: number) => {
+    setVideoErrors(prev => ({ ...prev, [index]: true }));
   }, []);
 
   const getCardStyle = useCallback((index: number, activeIdx: number) => {
-    const position = (index - activeIdx + gifs.length) % gifs.length;
+    const position = (index - activeIdx + videos.length) % videos.length;
 
     const positions = {
       0: { y: -50, x: -50, scale: 1, opacity: 1, z: 50 },
@@ -130,7 +147,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       opacity: pos.opacity,
       zIndex: pos.z
     };
-  }, [gifs.length]);
+  }, [videos.length]);
 
   const handleBookmark = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -239,11 +256,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           {/* Right - Animated Card Stack */}
           <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[520px] xl:h-[550px] flex items-center justify-center lg:justify-end order-2 lg:order-2">
             <div className="relative w-full h-full lg:ml-8 xl:ml-24 xl:mr-[-8rem]">
-              {gifs.map((gif, idx) => {
+              {videos.map((videoSrc, idx) => {
                 const style = getCardStyle(idx, activeIndex);
                 const colorIndex = idx % colors.length;
-                const hasError = imageErrors[idx];
-                const isLoaded = loadedImages[idx];
+                const hasError = videoErrors[idx];
+                const isLoaded = loadedVideos[idx];
                 const shouldPreload = idx < 3;
 
                 return (
@@ -258,15 +275,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
                           {!isLoaded && (
                             <div className="skeleton-shimmer w-full h-full" />
                           )}
-                          <img
-                            ref={el => imageRefs.current[idx] = el}
-                            src={shouldPreload ? gif : undefined}
-                            data-src={!shouldPreload ? gif : undefined}
+                          <video
+                            ref={el => videoRefs.current[idx] = el}
+                            src={shouldPreload ? videoSrc : undefined}
+                            data-src={!shouldPreload ? videoSrc : undefined}
                             data-index={idx}
-                            alt={`Motion pattern ${idx + 1}`}
                             className={`w-full h-full object-cover ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-                            onError={() => handleImageError(idx)}
-                            loading="lazy"
+                            onError={() => handleVideoError(idx)}
+                            muted
+                            playsInline
+                            loop
+                            autoPlay={shouldPreload}
+                            preload={shouldPreload ? "auto" : "none"}
                           />
                         </>
                       ) : (
