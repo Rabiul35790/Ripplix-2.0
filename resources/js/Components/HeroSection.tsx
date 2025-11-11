@@ -53,10 +53,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       video.muted = true;
       video.playsInline = true;
       video.loop = true;
+      video.preload = 'auto';
 
       video.onloadeddata = () => {
         setLoadedVideos(prev => ({ ...prev, [idx]: true }));
-        video.play().catch(err => console.log('Autoplay prevented:', err));
+        // Small delay to ensure smooth transition
+        setTimeout(() => {
+          video.play().catch(err => console.log('Autoplay prevented:', err));
+        }, 50);
       };
 
       video.onerror = () => {
@@ -82,7 +86,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
               if (src) {
                 video.onloadeddata = () => {
                   setLoadedVideos(prev => ({ ...prev, [idx]: true }));
-                  video.play().catch(err => console.log('Autoplay prevented:', err));
+                  setTimeout(() => {
+                    video.play().catch(err => console.log('Autoplay prevented:', err));
+                  }, 50);
                 };
                 video.onerror = () => {
                   setVideoErrors(prev => ({ ...prev, [idx]: true }));
@@ -190,10 +196,23 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
+        .video-fade-in {
+          animation: fadeInVideo 0.4s ease-out forwards;
+        }
+        @keyframes fadeInVideo {
+          from {
+            opacity: 0;
+            transform: scale(0.98);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
       `}</style>
 
       <div className="relative z-10 max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 w-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-0 items-center lg:min-h-[70vh]">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-4 xl:gap-8 items-center lg:min-h-[70vh]">
           {/* Left Content */}
           <div className="text-left lg:text-left flex flex-col space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8 items-start font-sora order-1 lg:order-1">
             {/* Badge */}
@@ -254,8 +273,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           </div>
 
           {/* Right - Animated Card Stack */}
-          <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[520px] xl:h-[550px] flex items-center justify-center lg:justify-end order-2 lg:order-2">
-            <div className="relative w-full h-full lg:ml-8 xl:ml-24 xl:mr-[-8rem]">
+          <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[520px] xl:h-[550px] flex items-center justify-center lg:justify-end order-2 lg:order-2 overflow-visible">
+            <div className="relative w-full h-full lg:ml-8 xl:ml-16 2xl:ml-20 lg:mr-4 xl:mr-8">
               {videos.map((videoSrc, idx) => {
                 const style = getCardStyle(idx, activeIndex);
                 const colorIndex = idx % colors.length;
@@ -266,21 +285,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
                 return (
                   <div
                     key={idx}
-                    className="card-transition absolute left-1/2 top-1/2 w-[85%] sm:w-[75%] md:w-[70%] lg:w-[85%] max-w-[240px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] xl:max-w-[420px] rounded-lg sm:rounded-xl shadow-2xl overflow-hidden"
+                    className="card-transition absolute left-1/2 top-1/2 w-[85%] sm:w-[75%] md:w-[70%] lg:w-[85%] xl:w-[82%] max-w-[240px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] xl:max-w-[420px] rounded-lg sm:rounded-xl shadow-2xl overflow-hidden"
                     style={style}
                   >
                     <div className="w-full aspect-[4/3] sm:aspect-[20/15] rounded-lg sm:rounded-xl overflow-hidden bg-gray-900">
                       {!hasError ? (
                         <>
                           {!isLoaded && (
-                            <div className="skeleton-shimmer w-full h-full" />
+                            <div className="skeleton-shimmer w-full h-full absolute inset-0" />
                           )}
                           <video
                             ref={el => videoRefs.current[idx] = el}
                             src={shouldPreload ? videoSrc : undefined}
                             data-src={!shouldPreload ? videoSrc : undefined}
                             data-index={idx}
-                            className={`w-full h-full object-cover ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+                            className={`w-full h-full object-cover ${isLoaded ? 'video-fade-in' : 'opacity-0'}`}
                             onError={() => handleVideoError(idx)}
                             muted
                             playsInline
