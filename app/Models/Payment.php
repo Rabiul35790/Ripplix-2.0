@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Mail\PlanPurchaseConfirmation;
+use Illuminate\Support\Facades\Mail;
 
 class Payment extends Model
 {
@@ -147,6 +149,25 @@ class Payment extends Model
                 // Update user's subscription immediately
                 $user->upgradeSubscription($plan);
 
+                // Send confirmation email
+                $transactionType = $isRenewal ? 'renewal' : 'purchase';
+
+                try {
+                    Mail::to($user->email)->send(
+                        new PlanPurchaseConfirmation(
+                            user: $user,
+                            plan: $plan,
+                            transactionType: $transactionType,
+                            transactionId: $this->transaction_id
+                        )
+                    );
+
+                    Log::info("Confirmation email sent: User {$user->id}, Payment {$this->id}, Type: {$transactionType}, Plan: {$plan->name}");
+                } catch (\Exception $e) {
+                    Log::error("Failed to send confirmation email for payment {$this->id}: " . $e->getMessage());
+                    // Don't fail the payment if email fails
+                }
+
                 Log::info("Payment {$this->id} completed automatically - User {$user->id} subscription " . ($isRenewal ? 'renewed' : 'upgraded') . " to plan {$plan->slug}");
             });
         } catch (\Exception $e) {
@@ -154,6 +175,7 @@ class Payment extends Model
             throw $e;
         }
     }
+
 
     /**
      * Calculate subscription period for this payment
