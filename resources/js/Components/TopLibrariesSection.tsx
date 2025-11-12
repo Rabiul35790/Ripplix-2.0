@@ -123,7 +123,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
       {/* Stacked Video Section */}
       <div className="px-4 pb-4 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6">
         <div className="relative w-full" style={{
-          paddingTop: '56.25%', // 16:9 aspect ratio base
+          paddingTop: '60%', // 16:9 aspect ratio base
           marginTop: '4rem' // Space for stacking
         }}>
           {libraryVideos.length > 0 ? (
@@ -136,7 +136,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
                 {libraryVideos.map((videoUrl, index) => {
                   // Calculate scale and offset for each card
                   const scale = 1 - (index * 0.08); // Each card 8% smaller
-                  const offsetY = -index * 1.5; // Offset in rem units
+                  const offsetY = -index * 2; // Offset in rem units
                   const zIndex = libraryVideos.length - index;
 
                   return (

@@ -287,7 +287,7 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
         key: `library-${library.id}`
       });
 
-      if (index >= 2 && (index - 2) % 10 === 0) {
+      if (index >= 3 && (index - 3) % 10 === 0) {
         const ad = inFeedAds[adIndex % inFeedAds.length];
         items.push({
           type: 'ad',

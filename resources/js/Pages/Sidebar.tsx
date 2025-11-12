@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { Menu, X, BookOpen, Users, Target, Smartphone, Zap, FolderOpen, User, Phone, Heart, Command, Star } from 'lucide-react';
+import { Menu, X, BookOpen, Users, Target, Smartphone, Zap, FolderOpen, User, Phone, Heart, Command, Star, Layers, Navigation, SquareMousePointer, Building2 } from 'lucide-react';
 
 interface SidebarProps {
   currentRoute: string;
   auth: PageProps['auth'];
   ziggy?: PageProps['ziggy'];
 }
-
 
 interface Ad {
   id: number;
@@ -29,17 +28,13 @@ interface ExtendedPageProps extends PageProps {
   settings?: Settings;
 }
 
-
-
-
-// Define interface for menu items
 interface MenuItem {
   name: string;
   route: string;
   icon: React.ComponentType<any>;
   iconBg: string;
   iconColor: string;
-  authRequired?: boolean; // Make this optional
+  authRequired?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
@@ -49,11 +44,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
   const [isLoadingAd, setIsLoadingAd] = useState(true);
   const { url, props } = usePage<ExtendedPageProps>();
 
-  // Get logo from settings
+  // Sliding indicator state
+  const [activeIndicatorStyle, setActiveIndicatorStyle] = useState<React.CSSProperties>({});
+  const workspaceNavRef = useRef<HTMLDivElement>(null);
+  const quickLinksNavRef = useRef<HTMLDivElement>(null);
+  const aboutLinksNavRef = useRef<HTMLDivElement>(null);
+
   const logo = props?.settings?.logo || null;
   const copyright_text = props?.settings?.copyright_text || null;
 
-  // Get dark mode from localStorage (same as dashboard)
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
     setDarkMode(savedDarkMode);
@@ -62,61 +61,94 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
     }
   }, []);
 
-  // Fetch sidebar ad
   useEffect(() => {
-  const fetchSidebarAd = async () => {
-    try {
-      setIsLoadingAd(true);
-      const response = await fetch(`/ads/sidebar?t=${Date.now()}`);
-      const result = await response.json();
+    const fetchSidebarAd = async () => {
+      try {
+        setIsLoadingAd(true);
+        const response = await fetch(`/ads/sidebar?t=${Date.now()}`);
+        const result = await response.json();
 
-      if (result.success && result.data && result.data !== null) {
-        setSidebarAd(result.data);
-      } else {
+        if (result.success && result.data && result.data !== null) {
+          setSidebarAd(result.data);
+        } else {
+          setSidebarAd(null);
+        }
+      } catch (error) {
+        console.error('Failed to fetch sidebar ad:', error);
         setSidebarAd(null);
+      } finally {
+        setIsLoadingAd(false);
       }
+    };
+
+    fetchSidebarAd();
+  }, []);
+
+  // Update sliding indicator position
+  useEffect(() => {
+    const updateIndicatorPosition = () => {
+      // Find the active link across all navigation sections
+      const allNavs = [workspaceNavRef.current, quickLinksNavRef.current, aboutLinksNavRef.current];
+
+      for (const navRef of allNavs) {
+        if (!navRef) continue;
+
+        const activeLink = navRef.querySelector('[data-active="true"]') as HTMLElement;
+        if (activeLink) {
+          const navRect = navRef.getBoundingClientRect();
+          const linkRect = activeLink.getBoundingClientRect();
+
+          setActiveIndicatorStyle({
+            opacity: 1,
+            top: `${activeLink.offsetTop}px`,
+            height: `${linkRect.height}px`,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          });
+          return;
+        }
+      }
+
+      // No active link found
+      setActiveIndicatorStyle({ opacity: 0 });
+    };
+
+    // Update position after component renders
+    const timeoutId = setTimeout(updateIndicatorPosition, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [url, currentRoute]);
+
+  const trackAdClick = async (adId: number) => {
+    try {
+      await fetch(`/ads/${adId}/click`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+      });
     } catch (error) {
-      console.error('Failed to fetch sidebar ad:', error);
-      setSidebarAd(null);
-    } finally {
-      setIsLoadingAd(false);
+      console.error('Failed to track ad click:', error);
     }
   };
 
-  fetchSidebarAd();
-}, []);
-
-const trackAdClick = async (adId: number) => {
-  try {
-    await fetch(`/ads/${adId}/click`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-      },
-    });
-  } catch (error) {
-    console.error('Failed to track ad click:', error);
-  }
-};
-
-const handleAdClick = (ad: Ad) => {
-  trackAdClick(ad.id);
-  window.open(ad.target_url, '_blank');
-};
+  const handleAdClick = (ad: Ad) => {
+    trackAdClick(ad.id);
+    window.open(ad.target_url, '_blank');
+  };
 
   const menuItems: MenuItem[] = [
     {
       name: 'Explore',
       route: 'explore',
-      icon: Command,
+      icon: Navigation,
       iconBg: 'bg-orange-100 dark:bg-orange-900/30',
       iconColor: 'text-orange-600 dark:text-orange-400'
     },
     {
       name: 'Collections',
       route: 'collections',
-      icon: BookOpen,
+      icon: FolderOpen,
       iconBg: 'bg-blue-100 dark:bg-blue-900/30',
       iconColor: 'text-blue-600 dark:text-blue-400'
     },
@@ -126,36 +158,28 @@ const handleAdClick = (ad: Ad) => {
       icon: Star,
       iconBg: 'bg-purple-100 dark:bg-purple-900/30',
       iconColor: 'text-purple-600 dark:text-purple-400',
-    //   authRequired: true // Uncommented and properly typed
     },
-    // {
-    //   name: 'Challenges',
-    //   route: 'challenges',
-    //   icon: Target,
-    //   iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
-    //   iconColor: 'text-cyan-600 dark:text-cyan-400'
-    // },
   ];
 
   const quickLinks: MenuItem[] = [
     {
       name: 'All Apps',
       route: 'all-apps',
-      icon: Smartphone,
+      icon: Command,
       iconBg: 'bg-orange-100 dark:bg-orange-900/30',
       iconColor: 'text-orange-600 dark:text-orange-400'
     },
     {
       name: 'All Elements',
       route: 'all-elements',
-      icon: Zap,
+      icon: SquareMousePointer,
       iconBg: 'bg-purple-100 dark:bg-purple-900/30',
       iconColor: 'text-purple-600 dark:text-purple-400'
     },
     {
-      name: 'All Categories',
+      name: 'All Industries',
       route: 'all-categories',
-      icon: FolderOpen,
+      icon: Building2,
       iconBg: 'bg-blue-100 dark:bg-blue-900/30',
       iconColor: 'text-blue-600 dark:text-blue-400'
     },
@@ -185,7 +209,6 @@ const handleAdClick = (ad: Ad) => {
     },
   ];
 
-  // Filter menu items based on authentication status
   const filteredMenuItems = menuItems.filter(item => {
     if (item.authRequired && !auth.user) {
       return false;
@@ -194,7 +217,6 @@ const handleAdClick = (ad: Ad) => {
   });
 
   const isActive = (route: string) => {
-    // Handle root/explore route - both point to the same content
     if (route === '' || route === '/' || route === 'explore') {
       return url === '/' ||
              currentRoute === '/' ||
@@ -203,7 +225,6 @@ const handleAdClick = (ad: Ad) => {
              url === '/explore';
     }
 
-    // Check if current route matches (with or without leading slash)
     const routeWithSlash = route.startsWith('/') ? route : `/${route}`;
     const routeWithoutSlash = route.startsWith('/') ? route.substring(1) : route;
 
@@ -222,20 +243,69 @@ const handleAdClick = (ad: Ad) => {
   };
 
   const getRouteHref = (route: string) => {
-    // For explore route, return root '/' since that's where explore content is served
     if (route === 'explore') {
       return '/';
     }
-    // For root/empty route, return '/'
     if (route === '' || route === '/') {
       return '/';
     }
     return `/${route}`;
   };
 
+  const renderNavSection = (
+    items: MenuItem[],
+    navRef: React.RefObject<HTMLDivElement>,
+    sectionKey: string
+  ) => (
+    <div className="relative" ref={navRef}>
+      {/* Sliding Active Indicator */}
+      <div
+        className="absolute left-0 w-full pointer-events-none z-0"
+        style={{
+          ...activeIndicatorStyle,
+          background: '',
+          borderRadius: '0.5rem',
+        }}
+      />
+
+      <nav className="space-y-1 relative z-10">
+        {items.map((item) => {
+          const IconComponent = item.icon;
+          const active = isActive(item.route);
+
+          return (
+            <Link
+              key={item.name}
+              href={getRouteHref(item.route)}
+              onClick={closeMobileMenu}
+              data-active={active}
+              className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-colors duration-200 ${
+                active
+                  ? 'text-[#443B82] dark:text-white !bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)]'
+                  : 'text-[#443B82] dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+              }`}
+            >
+              <span
+                className={`font-medium text-sm transition-all duration-200 ${
+                  active ? '!font-bold' : ''
+                }`}
+              >
+                {item.name}
+              </span>
+              <div
+                className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-200`}
+              >
+                <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-200`} />
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Main Content */}
       <div className="flex-1">
         {/* Logo */}
         <div className="p-8">
@@ -246,7 +316,6 @@ const handleAdClick = (ad: Ad) => {
                 alt="RippliX Logo"
                 className="h-8 max-w-[120px] object-contain"
                 onError={(e) => {
-                  // Fallback to default logo if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   target.nextElementSibling?.classList.remove('hidden');
@@ -261,80 +330,18 @@ const handleAdClick = (ad: Ad) => {
 
         {/* Workspace */}
         <div className="px-5 mb-4 mt-2 font-sora">
-        <div className="text-xs text-[#BCBDC8] dark:text-gray-400 uppercase !font-medium mb-2 tracking-wide">
+          <div className="text-xs text-[#BCBDC8] dark:text-gray-400 uppercase !font-medium mb-2 tracking-wide">
             Workspace
+          </div>
+          {renderNavSection(filteredMenuItems, workspaceNavRef, 'workspace')}
         </div>
-        <nav className="space-y-1">
-            {filteredMenuItems.map((item) => {
-            const IconComponent = item.icon;
-            const active = isActive(item.route);
-
-            return (
-                <Link
-                key={item.name}
-                href={getRouteHref(item.route)}
-                onClick={closeMobileMenu}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-all duration-500 ease-in-out ${
-                    active
-                    ? 'bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:bg-orange-900/20 text-[#443B82] dark:text-white'
-                    : 'text-[#443B82] dark:text-gray-300 bg-transparent'
-                }`}
-                >
-                {/* Apply bold only to active text */}
-                <span
-                    className={`font-medium text-sm transition-all duration-500 ease-in-out ${
-                    active ? '!font-bold' : ''
-                    }`}
-                >
-                    {item.name}
-                </span>
-                <div
-                    className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-500 ease-in-out`}
-                >
-                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-500 ease-in-out`} />
-                </div>
-                </Link>
-            );
-            })}
-        </nav>
-        </div>
-
 
         {/* Quick Links */}
         <div className="px-5 mb-4 font-sora">
           <div className="text-xs text-[#BCBDC8] dark:text-gray-400 uppercase !font-medium mb-2 tracking-wide">
             Quick Links
           </div>
-          <nav className="space-y-1">
-            {quickLinks.map((item) => {
-              const IconComponent = item.icon;
-              const active = isActive(item.route);
-
-              return (
-                <Link
-                  key={item.name}
-                  href={getRouteHref(item.route)}
-                  onClick={closeMobileMenu}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-all duration-500 ease-in-out ${
-                    active
-                      ? 'bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:bg-orange-900/20 text-[#443B82] !font-bold dark:text-white'
-                      : 'text-[#443B82] dark:text-gray-300 bg-transparent'
-                  }`}
-                >
-                  <span
-                    className={`font-medium text-sm transition-all duration-500 ease-in-out ${
-                    active ? '!font-bold' : ''
-                    }`}
-                >
-                    {item.name}
-                </span>
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-500 ease-in-out`}>
-                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-500 ease-in-out`} />
-                  </div>
-                </Link>
-              );
-            })}
-          </nav>
+          {renderNavSection(quickLinks, quickLinksNavRef, 'quicklinks')}
         </div>
 
         {/* About */}
@@ -342,102 +349,71 @@ const handleAdClick = (ad: Ad) => {
           <div className="text-xs text-[#BCBDC8] dark:text-gray-400 uppercase !font-medium mb-2 tracking-wide">
             About
           </div>
-          <nav className="space-y-1">
-            {aboutLinks.map((item) => {
-              const IconComponent = item.icon;
-              const active = isActive(item.route);
-
-              return (
-                <Link
-                  key={item.name}
-                  href={getRouteHref(item.route)}
-                  onClick={closeMobileMenu}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-all duration-500 ease-in-out ${
-                    active
-                      ? 'bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)] dark:bg-orange-900/20 text-[#443B82] !font-bold dark:text-white'
-                      : 'text-[#443B82] dark:text-gray-300 bg-transparent'
-                  }`}
-                >
-                  <span
-                    className={`font-medium text-sm transition-all duration-500 ease-in-out ${
-                    active ? '!font-bold' : ''
-                    }`}
-                >
-                    {item.name}
-                </span>
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center ${item.iconBg} flex-shrink-0 transition-all duration-500 ease-in-out`}>
-                    <IconComponent className={`w-3.5 h-3.5 ${item.iconColor} transition-all duration-500 ease-in-out`} />
-                  </div>
-                </Link>
-              );
-            })}
-          </nav>
+          {renderNavSection(aboutLinks, aboutLinksNavRef, 'about')}
         </div>
 
         {/* Dynamic Advertisement Section */}
         <div className="px-5 mt-10 font-sora">
-  {isLoadingAd ? (
-    <div className="max-h-[193px] max-w-[192px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
-      <div className="h-[193px] w-[192px] bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-    </div>
-  ) : sidebarAd ? (
-    <button
-      onClick={() => handleAdClick(sidebarAd)}
-      className="relative max-h-[193px] max-w-[192px] block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg overflow-hidden"
-    >
-      {/* Sponsor label */}
-      <span className="absolute top-2 left-2 bg-[#2B235A]/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
-        Sponsor
-      </span>
+          {isLoadingAd ? (
+            <div className="max-h-[193px] max-w-[192px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
+              <div className="h-[193px] w-[192px] bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            </div>
+          ) : sidebarAd ? (
+            <button
+              onClick={() => handleAdClick(sidebarAd)}
+              className="relative max-h-[193px] max-w-[192px] block hover:opacity-90 transition-opacity focus:outline-none outline-none rounded-lg overflow-hidden"
+            >
+              <span className="absolute top-2 left-2 bg-[#2B235A]/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md dark:bg-orange-500/80">
+                Sponsor
+              </span>
 
-      {sidebarAd.media_type === 'video' ? (
-        <video
-          src={sidebarAd.video_url || ''}
-          className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
-          autoPlay
-          loop
-          muted
-          playsInline
-          onError={(e) => {
-            const target = e.target as HTMLVideoElement
-            target.style.display = 'none'
-          }}
-        />
-      ) : (
-        <img
-          src={sidebarAd.image_url || ''}
-          alt={sidebarAd.title}
-          className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement
-            target.style.display = 'none'
-          }}
-        />
-      )}
-    </button>
-  ) : (
-    <div className="max-h-[193px] max-w-[192px] dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border border-[#CECCFF] dark:border-orange-800">
-      <div className="text-center">
-        <div className="w-8 h-8 bg-[#CECCFF] dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
-          <Heart className="w-4 h-4 text-[#2B235A] dark:text-orange-400" />
+              {sidebarAd.media_type === 'video' ? (
+                <video
+                  src={sidebarAd.video_url || ''}
+                  className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  onError={(e) => {
+                    const target = e.target as HTMLVideoElement
+                    target.style.display = 'none'
+                  }}
+                />
+              ) : (
+                <img
+                  src={sidebarAd.image_url || ''}
+                  alt={sidebarAd.title}
+                  className="rounded-lg max-h-[193px] max-w-[192px] object-cover w-full h-full"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                  }}
+                />
+              )}
+            </button>
+          ) : (
+            <div className="max-h-[193px] max-w-[192px] dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 border border-[#CECCFF] dark:border-orange-800">
+              <div className="text-center">
+                <div className="w-8 h-8 bg-[#CECCFF] dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Heart className="w-4 h-4 text-[#2B235A] dark:text-orange-400" />
+                </div>
+                <p className="text-xs text-[#2B235A] opacity-75 dark:text-gray-300 mb-2 font-medium">
+                  Want to advertise here?
+                </p>
+                <Link
+                  href="/contact-us"
+                  className="text-xs font-semibold text-[#2B235A] hover:font-bold dark:text-orange-400 dark:hover:text-orange-300 outline-none focus:outline-none underline transition duration-500"
+                >
+                  Contact us
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
-        <p className="text-xs text-[#2B235A] opacity-75 dark:text-gray-300 mb-2 font-medium">
-          Want to advertise here?
-        </p>
-        <Link
-          href="/contact-us"
-          className="text-xs font-semibold text-[#2B235A] hover:font-bold dark:text-orange-400 dark:hover:text-orange-300 outline-none focus:outline-none underline transition duration-500"
-        >
-          Contact us
-        </Link>
-      </div>
-    </div>
-  )}
-</div>
-
       </div>
 
-      {/* Footer Space for Copyright and Terms/Privacy Links */}
+      {/* Footer */}
       <div className="mt-auto p-4 pt-4 font-sora">
         <div className="text-xs text-[#443B82] dark:text-gray-400 space-y-1.5">
           <div className="text-center">
@@ -463,10 +439,10 @@ const handleAdClick = (ad: Ad) => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-off-white dark:bg-gray-800 rounded-lg shadow-md border dark:border-gray-700 focus:outline-none"
+        className="lg:hidden fixed top-4 left-4 p-2 bg-off-white z-[70] dark:bg-gray-800 rounded-lg dark:border-gray-700 focus:outline-none"
       >
         {isMobileMenuOpen ? (
-          <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+          <X className="w-6 h-6 text-gray-600 dark:text-gray-300 left-52 top-9 fixed" />
         ) : (
           <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
         )}

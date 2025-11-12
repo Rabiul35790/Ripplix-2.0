@@ -443,124 +443,257 @@ class LibraryResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-            ->headerActions([
-                Tables\Actions\Action::make('export_csv_by_date')
-                    ->label('Export CSV by Date')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->form([
-                        Forms\Components\DatePicker::make('start_date')
-                            ->label('Start Date')
-                            ->required()
-                            ->native(false),
-                        Forms\Components\DatePicker::make('end_date')
-                            ->label('End Date')
-                            ->required()
-                            ->native(false)
-                            ->afterOrEqual('start_date'),
-                    ])
-                    ->action(function (array $data) {
-                        return static::exportLibrariesByDateRange($data['start_date'], $data['end_date']);
-                    })
-                    ->modalHeading('Export Libraries to CSV')
-                    ->modalDescription('Select the date range to export libraries published within that period as CSV.')
-                    ->modalSubmitActionLabel('Export CSV'),
+// Add this to your LibraryResource headerActions() method
+// Replace the existing headerActions with this updated version
 
-                Tables\Actions\Action::make('export_json_by_date')
-                    ->label('Export JSON by Date')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->color('info')
-                    ->form([
-                        Forms\Components\DatePicker::make('start_date')
-                            ->label('Start Date')
-                            ->required()
-                            ->native(false),
-                        Forms\Components\DatePicker::make('end_date')
-                            ->label('End Date')
-                            ->required()
-                            ->native(false)
-                            ->afterOrEqual('start_date'),
-                    ])
-                    ->action(function (array $data) {
-                        return static::exportLibrariesAsJson($data['start_date'], $data['end_date']);
-                    })
-                    ->modalHeading('Export Libraries to JSON')
-                    ->modalDescription('Select the date range to export libraries published within that period as JSON.')
-                    ->modalSubmitActionLabel('Export JSON'),
+->headerActions([
+    // Download Template Actions
+    Tables\Actions\Action::make('download_csv_template')
+        ->label('Download CSV Template')
+        ->icon('heroicon-o-document-arrow-down')
+        ->color('gray')
+        ->action(function () {
+            $csv = \App\Services\FileImportService::generateCsvTemplate();
+            return response()->streamDownload(function() use ($csv) {
+                echo $csv;
+            }, 'library_import_template.csv', [
+                'Content-Type' => 'text/csv',
+            ]);
+        }),
 
-                Tables\Actions\Action::make('import_from_api')
-    ->label('Import from API')
-    ->icon('heroicon-o-cloud-arrow-down')
-    ->color('success')
-    ->action(function () {
-        try {
-            $importService = new ApiImportService();
-            $stats = $importService->importFromApi();
+    Tables\Actions\Action::make('download_json_template')
+        ->label('Download JSON Template')
+        ->icon('heroicon-o-document-arrow-down')
+        ->color('gray')
+        ->action(function () {
+            $json = \App\Services\FileImportService::generateJsonTemplate();
+            return response()->streamDownload(function() use ($json) {
+                echo $json;
+            }, 'library_import_template.json', [
+                'Content-Type' => 'application/json',
+            ]);
+        }),
 
-            // Build notification message
-            $message = "Imported: {$stats['imported']}, Updated: {$stats['updated']}, Total: {$stats['total']}";
+    // Import from File (CSV/JSON)
+    Tables\Actions\Action::make('import_from_file')
+        ->label('Import from File')
+        ->icon('heroicon-o-arrow-up-tray')
+        ->color('info')
+        ->form([
+            Forms\Components\FileUpload::make('import_file')
+                ->label('Upload CSV or JSON File')
+                ->acceptedFileTypes(['text/csv', 'application/json', 'text/json'])
+                ->maxSize(10240) // 10MB
+                ->required()
+                ->helperText('Upload a CSV or JSON file containing library data. Download a template to see the required format.'),
+        ])
+        ->action(function (array $data) {
+            try {
+                $file = $data['import_file'];
 
-            // Check if there are errors
-            if (!empty($stats['errors'])) {
-                $errorCount = count($stats['errors']);
-                $message .= "\n\nFailed: {$errorCount}";
-
-                // Generate failed items report file
-                $filename = 'failed_imports_' . now()->format('Y-m-d_H-i-s') . '.csv';
-                $filepath = storage_path('app/public/' . $filename);
-
-                $file = fopen($filepath, 'w');
-                fputcsv($file, ['ID', 'Title', 'Error']);
-
-                foreach ($stats['errors'] as $error) {
-                    fputcsv($file, [
-                        $error['id'] ?? 'N/A',
-                        $error['title'] ?? 'N/A',
-                        $error['error'] ?? 'Unknown error'
-                    ]);
-                }
-                fclose($file);
-
-                $message .= "\n\nFailed items report saved: storage/app/public/{$filename}";
-
-                // Show first 3 errors in notification
-                $errorPreview = array_slice($stats['errors'], 0, 3);
-                $message .= "\n\nFirst errors:";
-                foreach ($errorPreview as $err) {
-                    $message .= "\n- ID: {$err['id']}, Title: {$err['title']}";
+                if (!$file) {
+                    throw new \Exception('No file uploaded');
                 }
 
-                if ($errorCount > 3) {
-                    $message .= "\n... and " . ($errorCount - 3) . " more (check the report file)";
+                // Get the uploaded file from storage
+                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                    storage_path('app/public/' . $file),
+                    basename($file)
+                );
+
+                $fileImportService = new \App\Services\FileImportService(
+                    new \App\Services\ApiImportService()
+                );
+
+                $stats = $fileImportService->importFromFile($uploadedFile);
+
+                // Clean up uploaded file
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($file);
+
+                // Build notification message
+                $message = "Total: {$stats['total']}, Imported: {$stats['imported']}, Updated: {$stats['updated']}, Skipped: {$stats['skipped']}";
+
+                // Check if there are errors
+                if (!empty($stats['errors'])) {
+                    $errorCount = count($stats['errors']);
+
+                    // Generate failed items report file
+                    $filename = 'failed_file_imports_' . now()->format('Y-m-d_H-i-s') . '.csv';
+                    $filepath = storage_path('app/public/' . $filename);
+
+                    $reportFile = fopen($filepath, 'w');
+                    fputcsv($reportFile, ['Row', 'ID', 'Title', 'Error']);
+
+                    foreach ($stats['errors'] as $error) {
+                        fputcsv($reportFile, [
+                            $error['row'] ?? 'N/A',
+                            $error['id'] ?? 'N/A',
+                            $error['title'] ?? 'N/A',
+                            $error['error'] ?? 'Unknown error'
+                        ]);
+                    }
+                    fclose($reportFile);
+
+                    $message .= "\n\nFailed items report saved: storage/app/public/{$filename}";
+
+                    // Show first 3 errors in notification
+                    $errorPreview = array_slice($stats['errors'], 0, 3);
+                    $message .= "\n\nFirst errors:";
+                    foreach ($errorPreview as $err) {
+                        $message .= "\n- Row {$err['row']}: {$err['title']}";
+                    }
+
+                    if ($errorCount > 3) {
+                        $message .= "\n... and " . ($errorCount - 3) . " more (check the report file)";
+                    }
+
+                    Notification::make()
+                        ->title('Import Completed with Errors')
+                        ->body($message)
+                        ->warning()
+                        ->duration(15000)
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->title('Import Completed Successfully')
+                        ->body($message)
+                        ->success()
+                        ->send();
                 }
 
+            } catch (\Exception $e) {
                 Notification::make()
-                    ->title('Import Completed with Errors')
-                    ->body($message)
-                    ->warning()
-                    ->duration(15000)
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Import Completed Successfully')
-                    ->body($message)
-                    ->success()
+                    ->title('Import Failed')
+                    ->body($e->getMessage())
+                    ->danger()
                     ->send();
             }
+        })
+        ->modalHeading('Import Libraries from File')
+        ->modalDescription('Upload a CSV or JSON file to import library data. Download the template first to see the required format.')
+        ->modalSubmitActionLabel('Import')
+        ->modalWidth('lg'),
 
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Import Failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    })
-    ->requiresConfirmation()
-    ->modalHeading('Import Libraries from API')
-    ->modalDescription('This will import all libraries from the external API. Existing libraries will be updated.')
-    ->modalSubmitActionLabel('Import'),
-            ])
+    // Export CSV by Date (existing)
+    Tables\Actions\Action::make('export_csv_by_date')
+        ->label('Export CSV by Date')
+        ->icon('heroicon-o-arrow-down-tray')
+        ->color('success')
+        ->form([
+            Forms\Components\DatePicker::make('start_date')
+                ->label('Start Date')
+                ->required()
+                ->native(false),
+            Forms\Components\DatePicker::make('end_date')
+                ->label('End Date')
+                ->required()
+                ->native(false)
+                ->afterOrEqual('start_date'),
+        ])
+        ->action(function (array $data) {
+            return static::exportLibrariesByDateRange($data['start_date'], $data['end_date']);
+        })
+        ->modalHeading('Export Libraries to CSV')
+        ->modalDescription('Select the date range to export libraries published within that period as CSV.')
+        ->modalSubmitActionLabel('Export CSV'),
+
+    // Export JSON by Date (existing)
+    Tables\Actions\Action::make('export_json_by_date')
+        ->label('Export JSON by Date')
+        ->icon('heroicon-o-document-arrow-down')
+        ->color('info')
+        ->form([
+            Forms\Components\DatePicker::make('start_date')
+                ->label('Start Date')
+                ->required()
+                ->native(false),
+            Forms\Components\DatePicker::make('end_date')
+                ->label('End Date')
+                ->required()
+                ->native(false)
+                ->afterOrEqual('start_date'),
+        ])
+        ->action(function (array $data) {
+            return static::exportLibrariesAsJson($data['start_date'], $data['end_date']);
+        })
+        ->modalHeading('Export Libraries to JSON')
+        ->modalDescription('Select the date range to export libraries published within that period as JSON.')
+        ->modalSubmitActionLabel('Export JSON'),
+
+    // Import from API (existing)
+    Tables\Actions\Action::make('import_from_api')
+        ->label('Import from API')
+        ->icon('heroicon-o-cloud-arrow-down')
+        ->color('success')
+        ->action(function () {
+            try {
+                $importService = new ApiImportService();
+                $stats = $importService->importFromApi();
+
+                // Build notification message
+                $message = "Imported: {$stats['imported']}, Updated: {$stats['updated']}, Total: {$stats['total']}";
+
+                // Check if there are errors
+                if (!empty($stats['errors'])) {
+                    $errorCount = count($stats['errors']);
+                    $message .= "\n\nFailed: {$errorCount}";
+
+                    // Generate failed items report file
+                    $filename = 'failed_imports_' . now()->format('Y-m-d_H-i-s') . '.csv';
+                    $filepath = storage_path('app/public/' . $filename);
+
+                    $file = fopen($filepath, 'w');
+                    fputcsv($file, ['ID', 'Title', 'Error']);
+
+                    foreach ($stats['errors'] as $error) {
+                        fputcsv($file, [
+                            $error['id'] ?? 'N/A',
+                            $error['title'] ?? 'N/A',
+                            $error['error'] ?? 'Unknown error'
+                        ]);
+                    }
+                    fclose($file);
+
+                    $message .= "\n\nFailed items report saved: storage/app/public/{$filename}";
+
+                    // Show first 3 errors in notification
+                    $errorPreview = array_slice($stats['errors'], 0, 3);
+                    $message .= "\n\nFirst errors:";
+                    foreach ($errorPreview as $err) {
+                        $message .= "\n- ID: {$err['id']}, Title: {$err['title']}";
+                    }
+
+                    if ($errorCount > 3) {
+                        $message .= "\n... and " . ($errorCount - 3) . " more (check the report file)";
+                    }
+
+                    Notification::make()
+                        ->title('Import Completed with Errors')
+                        ->body($message)
+                        ->warning()
+                        ->duration(15000)
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->title('Import Completed Successfully')
+                        ->body($message)
+                        ->success()
+                        ->send();
+                }
+
+            } catch (\Exception $e) {
+                Notification::make()
+                    ->title('Import Failed')
+                    ->body($e->getMessage())
+                    ->danger()
+                    ->send();
+            }
+        })
+        ->requiresConfirmation()
+        ->modalHeading('Import Libraries from API')
+        ->modalDescription('This will import all libraries from the external API. Existing libraries will be updated.')
+        ->modalSubmitActionLabel('Import'),
+])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('update_seo_scores')
                     ->label('Update SEO Scores')

@@ -13,6 +13,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
+        "league/csv": "^9.27",
         "livewire/livewire": "^3.0",
         "mohamedsabil83/filament-forms-tinyeditor": "^2.4",
         "spatie/laravel-backup": "^9.3",
