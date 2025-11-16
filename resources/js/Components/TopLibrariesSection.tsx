@@ -81,7 +81,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
 
   const getBgColor = (cardIndex: number) => {
     if (type === 'category') {
-      const bgColors = ['bg-[#feffff]', 'bg-[#fdffff]', 'bg-[#eff6f8]'];
+      const bgColors = ['bg-[#ffffff]', 'bg-[#ffffff]', 'bg-[#ffffff]'];
       return bgColors[cardIndex] || 'bg-white';
     }
     return 'bg-white';
@@ -142,7 +142,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
                   return (
                     <div
                       key={index}
-                      className="absolute inset-0 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-md"
+                      className="absolute inset-0 rounded-lg overflow-hidden border border-gray-200 bg-white"
                       style={{
                         transform: `scale(${scale}) translateY(${offsetY}rem)`,
                         transformOrigin: 'center top',

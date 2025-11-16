@@ -242,20 +242,3 @@ body {
 }
 
 
-html {
-  scroll-behavior: smooth;
-}
-
-/* 2. GPU acceleration for better performance */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.grid {
-  contain: layout style paint;
-}
-
-body {
-  -webkit-overflow-scrolling: touch;
-}

@@ -8,16 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
 class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'image', 'is_active', 'is_top'];
+    protected $fillable = ['name', 'slug', 'image', 'product_url', 'is_active', 'is_top'];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'is_top' =>'boolean',
+        'is_top' => 'boolean',
     ];
 
     protected static function boot()
@@ -45,6 +44,14 @@ class Category extends Model
     {
         return $this->belongsToMany(User::class, 'category_follows', 'category_id', 'user_id')
                     ->withTimestamps();
+    }
+
+    public function variants(): BelongsToMany
+    {
+        return $this->belongsToMany(CategoryVariant::class, 'category_category_variant')
+            ->withPivot('order')
+            ->withTimestamps()
+            ->orderByPivot('order');
     }
 
     public function isFollowedBy($userId): bool

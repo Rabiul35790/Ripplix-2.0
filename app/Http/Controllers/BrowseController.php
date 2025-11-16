@@ -12,6 +12,8 @@ use App\Models\Category;
 use App\Models\Industry;
 use App\Models\Interaction;
 use App\Models\CategoryFollow;
+use App\Models\CategoryVariant;
+use App\Models\InteractionVariant;
 use App\Models\User;
 
 class BrowseController extends Controller
@@ -32,7 +34,7 @@ class BrowseController extends Controller
     }
 
     // OPTIMIZED: allApps - instant navigation
-    public function allApps(Request $request)
+public function allApps(Request $request)
     {
         $isAuthenticated = auth()->check();
 
@@ -42,11 +44,57 @@ class BrowseController extends Controller
             $userPlanLimits = $this->getUserPlanLimits(auth()->user());
         }
 
-        // Get all categories (lightweight query)
-        $categories = Category::select(['id', 'name', 'slug', 'image'])
+        // Get ALL categories (not just those in variants)
+        $allCategories = Category::select(['id', 'name', 'slug', 'image', 'product_url'])
             ->where('is_active', true)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'image' => $category->image,
+                    'product_url' => $category->product_url,
+                ];
+            });
+
+        // Get category variants with their categories
+        $categoryVariants = CategoryVariant::with([
+            'categories' => function ($query) {
+                $query->select(['categories.id', 'categories.name', 'categories.slug', 'categories.image', 'categories.product_url'])
+                    ->where('categories.is_active', true)
+                    ->orderBy('category_category_variant.order');
+            }
+        ])
+        ->where('is_active', true)
+        ->orderBy('order')
+        ->get(['id', 'name', 'order'])
+        ->map(function ($variant) {
+            return [
+                'id' => $variant->id,
+                'name' => $variant->name,
+                'categories' => $variant->categories->map(function ($category) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                        'image' => $category->image,
+                        'product_url' => $category->product_url,
+                    ];
+                }),
+            ];
+        });
+
+        // Get IDs of categories that are in variants
+        $categoriesInVariants = $categoryVariants->flatMap(function ($variant) {
+            return $variant['categories'];
+        })->pluck('id')->toArray();
+
+        // Get categories NOT in any variant
+        $categoriesNotInVariants = $allCategories->filter(function ($category) use ($categoriesInVariants) {
+            return !in_array($category['id'], $categoriesInVariants);
+        })->values();
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
@@ -81,8 +129,10 @@ class BrowseController extends Controller
 
         // Return MINIMAL data for instant navigation
         return Inertia::render('AllApps', [
-            'libraries' => [], // Empty - will be loaded via API if needed
-            'categories' => $categories,
+            'libraries' => [],
+            'categoryVariants' => $categoryVariants,
+            'categoriesNotInVariants' => $categoriesNotInVariants,
+            'allCategories' => $allCategories,
             'filters' => $filters,
             'filterType' => $filterType,
             'filterValue' => $filterValue,
@@ -93,6 +143,7 @@ class BrowseController extends Controller
             'userPlanLimits' => $userPlanLimits,
         ]);
     }
+
 
     // NEW: API endpoint to load libraries for allApps
     public function getAllAppsLibraries(Request $request)
@@ -227,58 +278,102 @@ class BrowseController extends Controller
     }
 
     // OPTIMIZED: allElements - instant navigation
-    public function allElements(Request $request)
-    {
-        $isAuthenticated = auth()->check();
+public function allElements(Request $request)
+{
+    $isAuthenticated = auth()->check();
 
-        // Get user plan limits
-        $userPlanLimits = null;
-        if ($isAuthenticated) {
-            $userPlanLimits = $this->getUserPlanLimits(auth()->user());
-        }
-
-        // Get all interactions (lightweight query)
-        $interactions = Interaction::select(['id', 'name', 'slug'])
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        // Get lightweight filters
-        $filters = $this->getFilters();
-
-        $filterType = null;
-        $filterValue = null;
-        $filterName = null;
-
-        if ($request->has('interaction') && $request->interaction !== 'all') {
-            $interaction = Interaction::where('slug', $request->interaction)->first(['id', 'name', 'slug']);
-            if ($interaction) {
-                $filterType = 'interaction';
-                $filterValue = $interaction->slug;
-                $filterName = $interaction->name;
-            }
-        }
-
-        $viewedLibraryIds = $this->getViewedLibraryIds($request);
-
-        $userLibraryIds = [];
-        if ($isAuthenticated) {
-            $userLibraryIds = Board::getUserLibraryIds(auth()->id());
-        }
-
-        // Return MINIMAL data for instant navigation
-        return Inertia::render('AllElements', [
-            'libraries' => [], // Empty - will be loaded via API if needed
-            'interactions' => $interactions,
-            'filters' => $filters,
-            'filterType' => $filterType,
-            'filterValue' => $filterValue,
-            'filterName' => $filterName,
-            'userLibraryIds' => $userLibraryIds,
-            'viewedLibraryIds' => $viewedLibraryIds,
-            'userPlanLimits' => $userPlanLimits,
-        ]);
+    // Get user plan limits
+    $userPlanLimits = null;
+    if ($isAuthenticated) {
+        $userPlanLimits = $this->getUserPlanLimits(auth()->user());
     }
+
+    // Get ALL interactions (not just those in variants)
+    $allInteractions = Interaction::select(['id', 'name', 'slug'])
+        ->where('is_active', true)
+        ->orderBy('name')
+        ->get()
+        ->map(function ($interaction) {
+            return [
+                'id' => $interaction->id,
+                'name' => $interaction->name,
+                'slug' => $interaction->slug,
+            ];
+        });
+
+    // Get interaction variants with their interactions
+    $interactionVariants = InteractionVariant::with([
+        'interactions' => function ($query) {
+            $query->select(['interactions.id', 'interactions.name', 'interactions.slug'])
+                ->where('interactions.is_active', true)
+                ->orderBy('interaction_interaction_variant.order');
+        }
+    ])
+    ->where('is_active', true)
+    ->orderBy('order')
+    ->get(['id', 'name', 'order'])
+    ->map(function ($variant) {
+        return [
+            'id' => $variant->id,
+            'name' => $variant->name,
+            'interactions' => $variant->interactions->map(function ($interaction) {
+                return [
+                    'id' => $interaction->id,
+                    'name' => $interaction->name,
+                    'slug' => $interaction->slug,
+                ];
+            }),
+        ];
+    });
+
+    // Get IDs of interactions that are in variants
+    $interactionsInVariants = $interactionVariants->flatMap(function ($variant) {
+        return $variant['interactions'];
+    })->pluck('id')->toArray();
+
+    // Get interactions NOT in any variant
+    $interactionsNotInVariants = $allInteractions->filter(function ($interaction) use ($interactionsInVariants) {
+        return !in_array($interaction['id'], $interactionsInVariants);
+    })->values();
+
+    // Get lightweight filters
+    $filters = $this->getFilters();
+
+    $filterType = null;
+    $filterValue = null;
+    $filterName = null;
+
+    if ($request->has('interaction') && $request->interaction !== 'all') {
+        $interaction = Interaction::where('slug', $request->interaction)->first(['id', 'name', 'slug']);
+        if ($interaction) {
+            $filterType = 'interaction';
+            $filterValue = $interaction->slug;
+            $filterName = $interaction->name;
+        }
+    }
+
+    $viewedLibraryIds = $this->getViewedLibraryIds($request);
+
+    $userLibraryIds = [];
+    if ($isAuthenticated) {
+        $userLibraryIds = Board::getUserLibraryIds(auth()->id());
+    }
+
+    // Return MINIMAL data for instant navigation
+    return Inertia::render('AllElements', [
+        'libraries' => [], // Empty - will be loaded via API if needed
+        'interactionVariants' => $interactionVariants,
+        'interactionsNotInVariants' => $interactionsNotInVariants,
+        'allInteractions' => $allInteractions,
+        'filters' => $filters,
+        'filterType' => $filterType,
+        'filterValue' => $filterValue,
+        'filterName' => $filterName,
+        'userLibraryIds' => $userLibraryIds,
+        'viewedLibraryIds' => $viewedLibraryIds,
+        'userPlanLimits' => $userPlanLimits,
+    ]);
+}
 
     // NEW: API endpoint to load libraries for allElements
     public function getAllElementsLibraries(Request $request)

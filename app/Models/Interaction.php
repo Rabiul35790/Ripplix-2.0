@@ -33,4 +33,12 @@ class Interaction extends Model
     {
         return $this->belongsToMany(Library::class);
     }
+
+    public function variants(): BelongsToMany
+    {
+        return $this->belongsToMany(InteractionVariant::class, 'interaction_interaction_variant')
+            ->withPivot('order')
+            ->withTimestamps()
+            ->orderByPivot('order');
+    }
 }

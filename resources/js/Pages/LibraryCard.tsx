@@ -400,7 +400,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   };
 
   const getContentPadding = () => {
-    return cardSize === 'large' ? 'px-7 py-8' : 'px-5 py-6';
+    return cardSize === 'large' ? 'px-7 py-6' : 'px-5 py-4';
   };
 
   const getTitleClasses = () => {
@@ -431,6 +431,10 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     return library.categories.length > 0 ? library.categories[0].image : null;
   };
 
+    const getCategoryName = () => {
+    return library.categories.length > 0 ? library.categories[0].name : '';
+  };
+
   const getCategorySlug = () => {
     if (library.categories.length > 0) {
       const category = library.categories[0];
@@ -449,7 +453,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
         <div className="absolute"></div>
 
         {/* Keep the rest of your card content inside this next wrapper */}
-        <div className="relative z-8">
+        <div className="relative z-[8]">
           <div
             className={`${getVideoContainerClasses()}`}
             onClick={handleVideoClick}
@@ -528,7 +532,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
                 {/* Title */}
                 <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
-                  {library.title}
+                {getCategoryName()}
                 </h3>
 
                 {/* Interactions */}

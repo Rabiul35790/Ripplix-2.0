@@ -4,104 +4,56 @@ import { PageProps } from '@/types';
 import Layout from './Layout';
 import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
-import { ChevronRight, Home, Search, ArrowRight } from 'lucide-react';
+import { ChevronRight, Home, Search } from 'lucide-react';
 
-// Add CSS for animations
 const animationStyles = `
   @keyframes slideInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
-
   @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
-
-  .animate-slide-in-down {
-    animation: slideInDown 0.6s ease-out;
-  }
-
-  .animate-slide-in-up {
-    animation: slideInUp 0.5s ease-out;
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.4s ease-out;
-  }
-
-  .app-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Hover effects removed */
-  .app-card:hover {
-    transform: none;
-    box-shadow: none;
-  }
-
-  .app-card:hover .app-image {
-    transform: none;
-  }
-
-  .app-image {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
+  .animate-slide-in-down { animation: slideInDown 0.6s ease-out; }
+  .animate-slide-in-up { animation: slideInUp 0.5s ease-out; }
+  .animate-fade-in { animation: fadeIn 0.8s ease-out; }
+  .animate-scale-in { animation: scaleIn 0.4s ease-out; }
+  .app-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .app-image { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
   @media (prefers-reduced-motion: reduce) {
-    .animate-slide-in-down,
-    .animate-slide-in-up,
-    .animate-fade-in,
-    .animate-scale-in,
-    .app-card {
-      animation: none !important;
-      transition: none !important;
-    }
+    .animate-slide-in-down, .animate-slide-in-up, .animate-fade-in,
+    .animate-scale-in, .app-card { animation: none !important; transition: none !important; }
   }
 `;
 
-
-// Inject styles
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && !document.getElementById('app-animations')) {
   const style = document.createElement('style');
+  style.id = 'app-animations';
   style.textContent = animationStyles;
   document.head.appendChild(style);
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  image?: string;
+  product_url?: string;
+}
+
+interface CategoryVariant {
+  id: number;
+  name: string;
+  categories: Category[];
 }
 
 interface Library {
@@ -117,7 +69,7 @@ interface Library {
   industries: Array<{ id: number; name: string }>;
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
-  published_date:string;
+  published_date: string;
 }
 
 interface UserPlanLimits {
@@ -129,13 +81,6 @@ interface UserPlanLimits {
   planSlug: string;
 }
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  image?: string;
-}
-
 interface Filter {
   id: number;
   name: string;
@@ -145,7 +90,9 @@ interface Filter {
 
 interface AllAppsProps extends PageProps {
   libraries: Library[];
-  categories: Category[];
+  categoryVariants: CategoryVariant[];
+  categoriesNotInVariants: Category[];
+  allCategories: Category[];
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
@@ -162,7 +109,9 @@ interface AllAppsProps extends PageProps {
 
 const AllApps: React.FC<AllAppsProps> = ({
   libraries: initialLibraries = [],
-  categories,
+  categoryVariants = [],
+  categoriesNotInVariants = [],
+  allCategories = [],
   filters,
   filterType,
   userLibraryIds: initialUserLibraryIds = [],
@@ -173,30 +122,63 @@ const AllApps: React.FC<AllAppsProps> = ({
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
-
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
-  const [isLoadingLibraries, setIsLoadingLibraries] = useState<boolean>(initialLibraries.length === 0 && !!filterValue);
-  const [displayedLibraries, setDisplayedLibraries] = useState<Library[]>([]);
-  const [itemsToShow, setItemsToShow] = useState(12);
-
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState<boolean>(false);
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
-  // Update viewedLibraryIds when props change
+  // Console log product URLs on mount
   useEffect(() => {
-    setViewedLibraryIds(initialViewedLibraryIds);
-  }, [initialViewedLibraryIds]);
+    console.log('=== Category Product URLs ===');
+    allCategories.forEach(category => {
+      if (category.product_url) {
+        console.log(`${category.name}: ${category.product_url}`);
+      }
+    });
+  }, [allCategories]);
 
-  // Update userLibraryIds when props change
-  useEffect(() => {
-    setUserLibraryIds(initialUserLibraryIds);
-  }, [initialUserLibraryIds]);
+  const {
+    searchQuery: categorySearchQuery,
+    setSearchQuery: setCategorySearchQuery,
+    filteredData: filteredAllCategories,
+    isSearching: isSearchingCategories,
+  } = useSearch({
+    data: allCategories,
+    searchKey: 'name'
+  });
 
-  // Callback to handle when a library is viewed
+  // Filter categories based on search
+  const filteredCategoriesNotInVariants = useMemo(() => {
+    if (!categorySearchQuery.trim()) {
+      return categoriesNotInVariants;
+    }
+    return categoriesNotInVariants.filter(cat =>
+      filteredAllCategories.some(filtered => filtered.id === cat.id)
+    );
+  }, [categoriesNotInVariants, filteredAllCategories, categorySearchQuery]);
+
+  // Filter variants based on search
+  const filteredVariants = useMemo(() => {
+    if (!categorySearchQuery.trim()) {
+      return categoryVariants;
+    }
+
+    return categoryVariants
+      .map(variant => ({
+        ...variant,
+        categories: variant.categories.filter(cat =>
+          filteredAllCategories.some(filtered => filtered.id === cat.id)
+        )
+      }))
+      .filter(variant => variant.categories.length > 0);
+  }, [categoryVariants, filteredAllCategories, categorySearchQuery]);
+
+  const totalCategoriesCount = allCategories.length;
+
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
       if (prev.includes(libraryId)) return prev;
@@ -204,96 +186,37 @@ const AllApps: React.FC<AllAppsProps> = ({
     });
   }, []);
 
-  // Use the custom search hook for categories
-  const {
-    searchQuery: categorySearchQuery,
-    setSearchQuery: setCategorySearchQuery,
-    filteredData: filteredCategories,
-    isSearching: isSearchingCategories,
-    resultsCount: categoryResultsCount,
-    totalCount: categoryTotalCount
-  } = useSearch({
-    data: categories,
-    searchKey: 'name'
-  });
-
-  // NEW: Fetch libraries if filter is applied
-  useEffect(() => {
-    const fetchLibraries = async () => {
-      // Only fetch if we have a filter and no libraries yet
-      if (!filterValue || libraries.length > 0) {
-        setIsLoadingLibraries(false);
-        return;
-      }
-
-      try {
-        setIsLoadingLibraries(true);
-
-        const params = new URLSearchParams();
-        if (filterValue) {
-          params.set('category', filterValue);
-        }
-
-        const response = await fetch(`/api/all-apps/libraries?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch libraries');
-        }
-
-        const data = await response.json();
-        setLibraries(data.libraries);
-      } catch (error) {
-        console.error('Error fetching libraries:', error);
-      } finally {
-        setIsLoadingLibraries(false);
-      }
-    };
-
-    fetchLibraries();
-  }, [filterValue]);
-
-  // Filter libraries based on search
-  const filteredLibraries = useMemo(() => {
-    let filtered = libraries;
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(library =>
-        library.title.toLowerCase().includes(query) ||
-        library.description?.toLowerCase().includes(query) ||
-        library.platforms.some(platform => platform.name.toLowerCase().includes(query)) ||
-        library.categories.some(category => category.name.toLowerCase().includes(query)) ||
-        library.industries.some(industry => industry.name.toLowerCase().includes(query)) ||
-        library.interactions.some(interaction => interaction.name.toLowerCase().includes(query))
-      );
-    }
-
-    return filtered;
-  }, [libraries, searchQuery]);
-
-  // Update displayed libraries when filteredLibraries or itemsToShow changes
-  useEffect(() => {
-    setDisplayedLibraries(filteredLibraries.slice(0, itemsToShow));
-  }, [filteredLibraries, itemsToShow]);
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setItemsToShow(12);
-  };
-
-  const handleLoadMore = () => {
-    setItemsToShow(prev => prev + 12);
-  };
-
-  const handleLibraryClick = (library: Library) => {
-    window.open(library.url, '_blank');
-  };
-
-  const handleStarClick = (library: Library, isStarred: boolean) => {
-    console.log('Star clicked:', library.title, isStarred);
-  };
-
-  const hasMore = displayedLibraries.length < filteredLibraries.length;
+  const renderCategoryCard = (category: Category, index: number) => (
+    <Link
+      key={category.id}
+      href={`/browse?category=${category.slug}`}
+      className={`flex flex-col items-center justify-center p-3 sm:p-4 md:p-3.5 rounded-xl outline-none focus:outline-none focus:ring-0 active:outline-none transition-all duration-200 group app-card w-full bg-white ${
+        filterValue === category.slug
+          ? 'bg-[#E3E2FF] dark:bg-blue-900/20'
+          : 'dark:hover:border-gray-600 dark:hover:bg-gray-800'
+      }`}
+      style={{
+        animation: `slideInUp 0.5s ease-out ${index * 0.03}s both`
+      }}
+    >
+      {category.image ? (
+        <img
+          src={category.image}
+          alt={category.name}
+          className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 rounded-xl object-cover mb-2 sm:mb-3 md:mb-2.5 app-image mx-auto"
+        />
+      ) : (
+        <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-gradient-to-br from-[#2B235A] to-[#564638] rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-2.5 app-image transition-transform duration-300 mx-auto">
+          <span className="text-white text-base sm:text-xl md:text-lg font-bold">
+            {category.name.charAt(0)}
+          </span>
+        </div>
+      )}
+      <span className="text-xs sm:text-sm md:text-[13px] font-medium text-[#2B235A] dark:text-white text-center leading-tight w-full">
+        {category.name}
+      </span>
+    </Link>
+  );
 
   return (
     <>
@@ -301,7 +224,7 @@ const AllApps: React.FC<AllAppsProps> = ({
       <Layout
         libraries={libraries}
         currentRoute={url}
-        onSearch={handleSearch}
+        onSearch={() => {}}
         searchQuery={searchQuery}
         filters={filters}
         auth={authData}
@@ -311,7 +234,6 @@ const AllApps: React.FC<AllAppsProps> = ({
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
       >
-        {/* Header Section - Shows immediately */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
             {/* Breadcrumb */}
@@ -328,14 +250,13 @@ const AllApps: React.FC<AllAppsProps> = ({
             {/* Header with search */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 md:mb-7 gap-3 sm:gap-4 md:gap-3">
               <h3 className="text-xl sm:text-[26px] md:text-2xl font-semibold text-gray-900 focus:outline-none outline-none dark:text-white animate-slide-in-down">
-                {categories.length} + {filterName ? `${filterName} Apps` : 'Products'}
+                {totalCategoriesCount} + {filterName ? `${filterName} Apps` : 'Products'}
               </h3>
 
-              {/* Universal Search Component */}
               <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <UniversalSearch
                   className='mr-0 sm:mr-10 md:mr-8'
-                  data={categories}
+                  data={allCategories}
                   searchQuery={categorySearchQuery}
                   onSearchChange={setCategorySearchQuery}
                   searchKey="name"
@@ -347,63 +268,58 @@ const AllApps: React.FC<AllAppsProps> = ({
               </div>
             </div>
 
-            {/* Categories Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-3 sm:gap-4 md:gap-3.5 mb-8 sm:mb-12 md:mb-10 font-sora">
-              {filteredCategories.length === 0 && isSearchingCategories ? (
-                <div className="col-span-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-10 text-center px-4 animate-scale-in">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 sm:mb-4 md:mb-3.5 animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                    <Search className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 text-[#2B235A] dark:text-gray-500 animate-pulse" />
-                  </div>
-                  <h3 className="text-base sm:text-lg md:text-[17px] font-medium text-[#2B235A] dark:text-white mb-2 animate-slide-in-up">
-                    No categories found
-                  </h3>
-                  <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 mb-3 sm:mb-4 md:mb-3.5 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
-                    Try searching with different keywords
-                  </p>
-                  <button
-                    onClick={() => setCategorySearchQuery('')}
-                    className="text-white opacity-95 bg-[#2B235A] px-3 sm:px-4 md:px-3.5 py-2 rounded-md hover:opacity-100 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm sm:text-base md:text-[15px] transition-all duration-300 hover:scale-105 active:scale-95 animate-slide-in-up"
-                    style={{ animationDelay: '0.2s' }}
-                  >
-                    Clear search
-                  </button>
+            {/* No Results State */}
+            {filteredVariants.length === 0 && filteredCategoriesNotInVariants.length === 0 && isSearchingCategories ? (
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 md:py-10 text-center px-4 animate-scale-in">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 sm:mb-4 md:mb-3.5 animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                  <Search className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 text-[#2B235A] dark:text-gray-500 animate-pulse" />
                 </div>
-              ) : (
-                filteredCategories.map((category, index) => (
-                  <Link
-                    key={category.id}
-                    href={`/browse?category=${category.slug}`}
-                    className={`flex flex-col items-center p-2 sm:p-2 md:p-1.5 rounded-xl focus:!outline-none transition-all duration-200 group app-card ${
-                      filterValue === category.slug
-                        ? 'bg-[#E3E2FF] dark:bg-blue-900/20'
-                        : 'hover:border-gray-300 dark:hover:border-gray-600 hover:bg-white dark:hover:bg-gray-800'
-                    }`}
-                    style={{
-                      animation: `slideInUp 0.5s ease-out ${index * 0.03}s both`
-                    }}
+                <h3 className="text-base sm:text-lg md:text-[17px] font-medium text-[#2B235A] dark:text-white mb-2 animate-slide-in-up">
+                  No categories found
+                </h3>
+                <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 mb-3 sm:mb-4 md:mb-3.5 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+                  Try searching with different keywords
+                </p>
+                <button
+                  onClick={() => setCategorySearchQuery('')}
+                  className="text-white opacity-95 bg-[#2B235A] px-3 sm:px-4 md:px-3.5 py-2 rounded-md hover:opacity-100 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm sm:text-base md:text-[15px] transition-all duration-300 hover:scale-105 active:scale-95 animate-slide-in-up"
+                  style={{ animationDelay: '0.2s' }}
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-8 mb-8 sm:mb-12 md:mb-10">
+                {/* Category Variants */}
+                {filteredVariants.map((variant, variantIndex) => (
+                  <div
+                    key={variant.id}
+                    className="animate-fade-in pb-8 border-b border-[#E3E2FF] dark:border-gray-700 last:border-b-0 last:pb-0"
+                    style={{ animationDelay: `${variantIndex * 0.1}s` }}
                   >
-                    {category.image ? (
-                      <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 rounded-xl object-cover mb-2 sm:mb-3 md:mb-2.5 app-image"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-gradient-to-br from-[#2B235A] to-[#564638] rounded-xl flex items-center justify-center mb-2 sm:mb-3 md:mb-2.5 app-image transition-transform duration-300">
-                        <span className="text-white text-base sm:text-xl md:text-lg font-bold">
-                          {category.name.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-xs sm:text-sm md:text-[13px] font-medium text-[#2B235A] dark:text-white text-center leading-tight">
-                      {category.name}
-                    </span>
-                  </Link>
-                ))
-              )}
-            </div>
+                    <h4 className="text-lg sm:text-xl md:text-[19px] font-semibold text-[#2B235A] dark:text-white mb-4">
+                      {variant.name}
+                    </h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-11 gap-3 sm:gap-4 md:gap-3.5 font-sora">
+                      {variant.categories.map((category, index) => renderCategoryCard(category, index))}
+                    </div>
+                  </div>
+                ))}
 
-            {/* Show loading skeleton for libraries if filter is applied */}
+                {/* Categories NOT in Variants */}
+                {filteredCategoriesNotInVariants.length > 0 && (
+                  <div className="animate-fade-in" style={{ animationDelay: `${filteredVariants.length * 0.1}s` }}>
+                    <h4 className="text-lg sm:text-xl md:text-[19px] font-semibold text-[#2B235A] dark:text-white mb-4">
+                      All Categories
+                    </h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-11 gap-3 sm:gap-4 md:gap-3.5 font-sora">
+                      {filteredCategoriesNotInVariants.map((category, index) => renderCategoryCard(category, index))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {isLoadingLibraries && filterValue && (
               <div className="mt-8">
                 <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">

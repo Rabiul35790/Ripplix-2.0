@@ -6,114 +6,53 @@ import Layout from './Layout';
 import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
 
-// Add CSS for animations
 const animationStyles = `
   @keyframes slideInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes slideInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
-
   @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
-
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-
-  .animate-slide-in-down {
-    animation: slideInDown 0.6s ease-out;
-  }
-
-  .animate-slide-in-up {
-    animation: slideInUp 0.5s ease-out;
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out;
-  }
-
-  .animate-scale-in {
-    animation: scaleIn 0.4s ease-out;
-  }
-
-  .group-hover\\:scale-icon:hover .arrow-icon {
-    transform: none;
-  }
-
-  .element-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Hover effects removed */
-  .element-card:hover {
-    transform: none;
-    box-shadow: none;
-  }
-
-  .element-card:hover .arrow-icon {
-    transform: translateX(3px) scale(1.1);
-  }
-
-  .arrow-icon {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
+  .animate-slide-in-down { animation: slideInDown 0.6s ease-out; }
+  .animate-slide-in-up { animation: slideInUp 0.5s ease-out; }
+  .animate-fade-in { animation: fadeIn 0.8s ease-out; }
+  .animate-scale-in { animation: scaleIn 0.4s ease-out; }
+  .element-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .arrow-icon { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .element-card:hover .arrow-icon { transform: translateX(3px) scale(1.1); }
   @media (prefers-reduced-motion: reduce) {
-    .animate-slide-in-down,
-    .animate-slide-in-up,
-    .animate-fade-in,
-    .animate-scale-in,
-    .element-card {
-      animation: none !important;
-      transition: none !important;
-    }
+    .animate-slide-in-down, .animate-slide-in-up, .animate-fade-in,
+    .animate-scale-in, .element-card { animation: none !important; transition: none !important; }
   }
 `;
 
-// Inject styles
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && !document.getElementById('element-animations')) {
   const style = document.createElement('style');
+  style.id = 'element-animations';
   style.textContent = animationStyles;
   document.head.appendChild(style);
+}
+
+interface Interaction {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface InteractionVariant {
+  id: number;
+  name: string;
+  interactions: Interaction[];
 }
 
 interface Library {
@@ -141,12 +80,6 @@ interface UserPlanLimits {
   planSlug: string;
 }
 
-interface Interaction {
-  id: number;
-  name: string;
-  slug: string;
-}
-
 interface Filter {
   id: number;
   name: string;
@@ -154,9 +87,17 @@ interface Filter {
   image?: string;
 }
 
+interface FlatItem {
+  type: 'heading' | 'interaction';
+  variantName?: string;
+  interaction?: Interaction;
+}
+
 interface AllElementsProps extends PageProps {
   libraries: Library[];
-  interactions: Interaction[];
+  interactionVariants: InteractionVariant[];
+  interactionsNotInVariants: Interaction[];
+  allInteractions: Interaction[];
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
@@ -173,7 +114,9 @@ interface AllElementsProps extends PageProps {
 
 const AllElements: React.FC<AllElementsProps> = ({
   libraries: initialLibraries = [],
-  interactions,
+  interactionVariants = [],
+  interactionsNotInVariants = [],
+  allInteractions = [],
   filters,
   filterType,
   userLibraryIds: initialUserLibraryIds = [],
@@ -184,30 +127,90 @@ const AllElements: React.FC<AllElementsProps> = ({
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
-
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
-  const [isLoadingLibraries, setIsLoadingLibraries] = useState<boolean>(initialLibraries.length === 0 && !!filterValue);
-  const [displayedLibraries, setDisplayedLibraries] = useState<Library[]>([]);
-  const [itemsToShow, setItemsToShow] = useState(12);
-
+  const [isLoadingLibraries, setIsLoadingLibraries] = useState<boolean>(false);
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
   const [viewedLibraryIds, setViewedLibraryIds] = useState<number[]>(initialViewedLibraryIds);
 
-  // Update viewedLibraryIds when props change
-  useEffect(() => {
-    setViewedLibraryIds(initialViewedLibraryIds);
-  }, [initialViewedLibraryIds]);
+  const {
+    searchQuery: interactionSearchQuery,
+    setSearchQuery: setInteractionSearchQuery,
+    filteredData: filteredAllInteractions,
+    isSearching: isSearchingInteractions,
+  } = useSearch({
+    data: allInteractions,
+    searchKey: 'name'
+  });
 
-  // Update userLibraryIds when props change
-  useEffect(() => {
-    setUserLibraryIds(initialUserLibraryIds);
-  }, [initialUserLibraryIds]);
+  // Filter interactions based on search
+  const filteredInteractionsNotInVariants = useMemo(() => {
+    if (!interactionSearchQuery.trim()) {
+      return interactionsNotInVariants;
+    }
+    return interactionsNotInVariants.filter(interaction =>
+      filteredAllInteractions.some(filtered => filtered.id === interaction.id)
+    );
+  }, [interactionsNotInVariants, filteredAllInteractions, interactionSearchQuery]);
 
-  // Callback to handle when a library is viewed
+  // Filter variants based on search
+  const filteredVariants = useMemo(() => {
+    if (!interactionSearchQuery.trim()) {
+      return interactionVariants;
+    }
+
+    return interactionVariants
+      .map(variant => ({
+        ...variant,
+        interactions: variant.interactions.filter(interaction =>
+          filteredAllInteractions.some(filtered => filtered.id === interaction.id)
+        )
+      }))
+      .filter(variant => variant.interactions.length > 0);
+  }, [interactionVariants, filteredAllInteractions, interactionSearchQuery]);
+
+  // Flatten all items (headings + interactions) and distribute into 4 columns
+  const distributeIntoColumns = useMemo(() => {
+    const allItems: FlatItem[] = [];
+
+    // Add all variants with their interactions
+    filteredVariants.forEach(variant => {
+      allItems.push({ type: 'heading', variantName: variant.name });
+      variant.interactions.forEach(interaction => {
+        allItems.push({ type: 'interaction', interaction });
+      });
+    });
+
+    // Add "All Elements" section
+    if (filteredInteractionsNotInVariants.length > 0) {
+      allItems.push({ type: 'heading', variantName: 'All Elements' });
+      filteredInteractionsNotInVariants.forEach(interaction => {
+        allItems.push({ type: 'interaction', interaction });
+      });
+    }
+
+    // Distribute items evenly across 4 columns
+    const columns: FlatItem[][] = [[], [], [], []];
+    const itemsPerColumn = Math.ceil(allItems.length / 4);
+
+    let currentColumn = 0;
+    allItems.forEach((item, index) => {
+      columns[currentColumn].push(item);
+
+      // Move to next column after reaching itemsPerColumn (except for last column)
+      if ((index + 1) % itemsPerColumn === 0 && currentColumn < 3) {
+        currentColumn++;
+      }
+    });
+
+    return columns;
+  }, [filteredVariants, filteredInteractionsNotInVariants]);
+
+  const totalInteractionsCount = allInteractions.length;
+
   const handleLibraryViewed = useCallback((libraryId: number) => {
     setViewedLibraryIds(prev => {
       if (prev.includes(libraryId)) return prev;
@@ -215,105 +218,30 @@ const AllElements: React.FC<AllElementsProps> = ({
     });
   }, []);
 
-  // Use the custom search hook for interactions
-  const {
-    searchQuery: interactionSearchQuery,
-    setSearchQuery: setInteractionSearchQuery,
-    filteredData: filteredInteractions,
-    isSearching: isSearchingInteractions,
-    resultsCount: interactionResultsCount,
-    totalCount: interactionTotalCount
-  } = useSearch({
-    data: interactions,
-    searchKey: 'name'
-  });
-
-  // Fetch libraries if filter is applied
-  useEffect(() => {
-    const fetchLibraries = async () => {
-      // Only fetch if we have a filter and no libraries yet
-      if (!filterValue || libraries.length > 0) {
-        setIsLoadingLibraries(false);
-        return;
-      }
-
-      try {
-        setIsLoadingLibraries(true);
-
-        const params = new URLSearchParams();
-        if (filterValue) {
-          params.set('interaction', filterValue);
-        }
-
-        const response = await fetch(`/api/all-elements/libraries?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch libraries');
-        }
-
-        const data = await response.json();
-        setLibraries(data.libraries);
-      } catch (error) {
-        console.error('Error fetching libraries:', error);
-      } finally {
-        setIsLoadingLibraries(false);
-      }
-    };
-
-    fetchLibraries();
-  }, [filterValue]);
-
-  // Filter libraries based on search
-  const filteredLibraries = useMemo(() => {
-    let filtered = libraries;
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(library =>
-        library.title.toLowerCase().includes(query) ||
-        library.description?.toLowerCase().includes(query) ||
-        library.platforms.some(platform => platform.name.toLowerCase().includes(query)) ||
-        library.categories.some(category => category.name.toLowerCase().includes(query)) ||
-        library.industries.some(industry => industry.name.toLowerCase().includes(query)) ||
-        library.interactions.some(interaction => interaction.name.toLowerCase().includes(query))
-      );
-    }
-
-    return filtered;
-  }, [libraries, searchQuery]);
-
-  // Update displayed libraries when filteredLibraries or itemsToShow changes
-  useEffect(() => {
-    setDisplayedLibraries(filteredLibraries.slice(0, itemsToShow));
-  }, [filteredLibraries, itemsToShow]);
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setItemsToShow(12);
   };
 
-  const handleLoadMore = () => {
-    setItemsToShow(prev => prev + 12);
-  };
-
-  const handleLibraryClick = (library: Library) => {
-    window.open(library.url, '_blank');
-  };
-
-  const handleStarClick = (library: Library, isStarred: boolean) => {
-    if (!authData.user) {
-      console.log('User not authenticated');
-      return;
-    }
-
-    if (isStarred) {
-      console.log(`Adding library ${library.title} to collection for user ${authData.user.id}`);
-    } else {
-      console.log(`Removing library ${library.title} from collection for user ${authData.user.id}`);
-    }
-  };
-
-  const hasMore = displayedLibraries.length < filteredLibraries.length;
+  const renderInteractionLink = (interaction: Interaction, index: number) => (
+    <Link
+      key={interaction.id}
+      href={`/browse?interaction=${interaction.slug}`}
+      className={`flex items-center outline-none focus:outline-none transition-all duration-200 group element-card py-1 ${
+        filterValue === interaction.slug
+          ? 'border-[#E3E2FF] bg-[#FAFAFC] dark:bg-blue-900/20'
+          : 'border-[#E3E2FF] dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800 transition-colors duration-500'
+      }`}
+    >
+      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 mr-2 sm:mr-3 md:mr-2.5 flex items-center justify-center text-lg text-[#CECCFF] group-hover:text-[#2B235A] flex-shrink-0 transition-all duration-500">
+        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-4.5 md:h-4.5 arrow-icon" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm sm:text-base md:text-[15px] font-medium text-[#2B235A] dark:text-white group-hover:text-[#2B235A] dark:group-hover:text-white">
+          {interaction.name}
+        </span>
+      </div>
+    </Link>
+  );
 
   return (
     <>
@@ -331,7 +259,6 @@ const AllElements: React.FC<AllElementsProps> = ({
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
       >
-        {/* Header Section - Shows immediately */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
             {/* Breadcrumb */}
@@ -348,14 +275,13 @@ const AllElements: React.FC<AllElementsProps> = ({
             {/* Header with search */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 md:mb-7 gap-3 sm:gap-4 md:gap-3">
               <h1 className="text-xl sm:text-[26px] md:text-2xl font-semibold text-gray-900 focus:outline-none outline-none dark:text-white animate-slide-in-down">
-                {interactions.length} + {filterName ? `${filterName} Elements` : 'Elements'}
+                {totalInteractionsCount} + {filterName ? `${filterName} Elements` : 'Elements'}
               </h1>
 
-              {/* Universal Search Component */}
               <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <UniversalSearch
                   className='md:mr-8'
-                  data={interactions}
+                  data={allInteractions}
                   searchQuery={interactionSearchQuery}
                   onSearchChange={setInteractionSearchQuery}
                   searchKey="name"
@@ -367,55 +293,53 @@ const AllElements: React.FC<AllElementsProps> = ({
               </div>
             </div>
 
-            {/* Interactions Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-3.5 mb-8 sm:mb-12 md:mb-10 font-sora">
-              {filteredInteractions.length === 0 && isSearchingInteractions ? (
-                <div className="col-span-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-10 text-center px-4 animate-scale-in">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 sm:mb-4 md:mb-3.5 animate-scale-in" style={{ animationDelay: '0.1s' }}>
-                    <Search className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 text-[#2B235A] dark:text-gray-500 animate-pulse" />
-                  </div>
-                  <h3 className="text-base sm:text-lg md:text-[17px] font-medium text-[#2B235A] dark:text-white mb-2 animate-slide-in-up">
-                    No elements found
-                  </h3>
-                  <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 mb-3 sm:mb-4 md:mb-3.5 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
-                    Try searching with different keywords
-                  </p>
-                  <button
-                    onClick={() => setInteractionSearchQuery('')}
-                    className="text-white opacity-95 bg-[#2B235A] px-3 sm:px-4 md:px-3.5 py-2 rounded-md hover:opacity-100 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm sm:text-base md:text-[15px] transition-all duration-300 hover:scale-105 active:scale-95 animate-slide-in-up"
-                    style={{ animationDelay: '0.2s' }}
-                  >
-                    Clear search
-                  </button>
+            {/* No Results State */}
+            {filteredVariants.length === 0 && filteredInteractionsNotInVariants.length === 0 && isSearchingInteractions ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-10 text-center px-4 animate-scale-in">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 bg-[#F5F5FA] border border-[#CECCFF] dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 sm:mb-4 md:mb-3.5 animate-scale-in" style={{ animationDelay: '0.1s' }}>
+                  <Search className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 text-[#2B235A] dark:text-gray-500 animate-pulse" />
                 </div>
-              ) : (
-                filteredInteractions.map((interaction, index) => (
-                  <Link
-                    key={interaction.id}
-                    href={`/browse?interaction=${interaction.slug}`}
-                    className={`flex items-center outline-none focus:outline-none transition-all duration-200 group element-card ${
-                      filterValue === interaction.slug
-                        ? 'border-[#E3E2FF] bg-[#FAFAFC] dark:bg-blue-900/20'
-                        : 'border-[#E3E2FF] dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800 transition-colors duration-500'
-                    }`}
-                    style={{
-                      animation: `slideInUp 0.5s ease-out ${index * 0.03}s both`
-                    }}
+                <h3 className="text-base sm:text-lg md:text-[17px] font-medium text-[#2B235A] dark:text-white mb-2 animate-slide-in-up">
+                  No elements found
+                </h3>
+                <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 mb-3 sm:mb-4 md:mb-3.5 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+                  Try searching with different keywords
+                </p>
+                <button
+                  onClick={() => setInteractionSearchQuery('')}
+                  className="text-white opacity-95 bg-[#2B235A] px-3 sm:px-4 md:px-3.5 py-2 rounded-md hover:opacity-100 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm sm:text-base md:text-[15px] transition-all duration-300 hover:scale-105 active:scale-95 animate-slide-in-up"
+                  style={{ animationDelay: '0.2s' }}
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 sm:gap-x-4 md:gap-x-3.5 mb-8 sm:mb-12 md:mb-10 font-sora">
+                {/* Render each column */}
+                {distributeIntoColumns.map((column, columnIndex) => (
+                  <div
+                    key={columnIndex}
+                    className={`space-y-0 ${columnIndex === 1 ? 'hidden sm:block' : ''} ${columnIndex === 2 ? 'hidden lg:block' : ''} ${columnIndex === 3 ? 'hidden xl:block' : ''}`}
                   >
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 mr-2 sm:mr-3 md:mr-2.5 flex items-center justify-center text-lg text-[#CECCFF] group-hover:text-[#2B235A] flex-shrink-0 transition-all duration-500">
-                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-4.5 md:h-4.5 arrow-icon" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm sm:text-base md:text-[15px] font-medium text-[#2B235A] dark:text-white group-hover:text-[#2B235A] dark:group-hover:text-white">
-                        {interaction.name}
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
+                    {column.map((item, itemIndex) => (
+                      <div key={`${columnIndex}-${itemIndex}`}>
+                        {item.type === 'heading' ? (
+                            <h4
+                                className={`text-base sm:text-lg md:text-xl font-semibold text-[#2B235A] dark:text-white mb-4
+                                ${itemIndex === 0 ? '' : 'pt-5'}`}
+                            >
+                            {item.variantName}
+                          </h4>
+                        ) : (
+                          item.interaction && renderInteractionLink(item.interaction, itemIndex)
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
 
-            {/* Show loading skeleton for libraries if filter is applied */}
             {isLoadingLibraries && filterValue && (
               <div className="mt-8">
                 <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
@@ -438,8 +362,6 @@ const AllElements: React.FC<AllElementsProps> = ({
 };
 
 export default AllElements;
-
-
 
 // here this is my home page currently everything is alright. just have to make something which is for unauthenticated users.  for authenticated users everything will be as it is what it is right now.  the features are:
 

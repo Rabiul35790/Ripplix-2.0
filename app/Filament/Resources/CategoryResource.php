@@ -46,6 +46,13 @@ class CategoryResource extends Resource
                 ->image()
                 ->directory('category-images'),
 
+            Forms\Components\TextInput::make('product_url')
+                ->label('Product URL')
+                ->url()
+                ->maxLength(255)
+                ->placeholder('https://example.com/product')
+                ->helperText('Optional URL for this category'),
+
             Forms\Components\Toggle::make('is_active')
                 ->label('Active')
                 ->default(true),
@@ -64,6 +71,10 @@ class CategoryResource extends Resource
                 Tables\Columns\ImageColumn::make('image')->circular()->size(40),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('slug')->searchable(),
+                Tables\Columns\TextColumn::make('product_url')
+                    ->label('Product URL')
+                    ->limit(30)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('libraries_count')
                     ->counts('libraries')
                     ->label('Total Libraries'),
@@ -71,21 +82,18 @@ class CategoryResource extends Resource
                 Tables\Columns\IconColumn::make('is_top')->boolean()->label('Top'),
             ])
             ->filters([
-                // ✅ Filter by Active/Inactive
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active Status')
                     ->trueLabel('Active')
                     ->falseLabel('Inactive')
                     ->placeholder('All'),
 
-                // ✅ Filter by Top/Non-Top
                 Tables\Filters\TernaryFilter::make('is_top')
                     ->label('Top Category')
                     ->trueLabel('Top')
                     ->falseLabel('Non-Top')
                     ->placeholder('All'),
 
-                // ✅ Filter by Library Count Range
                 Tables\Filters\Filter::make('library_count')
                     ->label('Library Count')
                     ->form([
@@ -98,7 +106,6 @@ class CategoryResource extends Resource
                             ->when($data['max'], fn($q, $max) => $q->has('libraries', '<=', $max));
                     }),
 
-                // ✅ Filter by name (custom text search)
                 Tables\Filters\Filter::make('name_search')
                     ->label('Search by Name')
                     ->form([
@@ -114,10 +121,8 @@ class CategoryResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // Delete bulk action
                     Tables\Actions\DeleteBulkAction::make(),
 
-                    // Make Active
                     Tables\Actions\BulkAction::make('makeActive')
                         ->label('Mark as Active')
                         ->icon('heroicon-o-check-circle')
@@ -129,7 +134,6 @@ class CategoryResource extends Resource
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('Categories activated successfully'),
 
-                    // Make Inactive
                     Tables\Actions\BulkAction::make('makeInactive')
                         ->label('Mark as Inactive')
                         ->icon('heroicon-o-x-circle')
@@ -141,7 +145,6 @@ class CategoryResource extends Resource
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('Categories deactivated successfully'),
 
-                    // Make Top Category
                     Tables\Actions\BulkAction::make('makeTop')
                         ->label('Mark as Top')
                         ->icon('heroicon-o-star')
@@ -153,7 +156,6 @@ class CategoryResource extends Resource
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('Categories marked as top successfully'),
 
-                    // Remove Top Category
                     Tables\Actions\BulkAction::make('removeTop')
                         ->label('Remove from Top')
                         ->icon('heroicon-o-minus-circle')

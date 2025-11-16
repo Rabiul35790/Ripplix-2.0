@@ -552,7 +552,7 @@ return (
 
         </Head>
       <div
-        className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4"
+        className="fixed inset-0 transition-opacity bg-[#EBEBEB59] bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4"
         onClick={handleBackdropClick}
       >
         <div className="relative max-w-7xl w-full">
