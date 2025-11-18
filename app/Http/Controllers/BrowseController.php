@@ -13,6 +13,7 @@ use App\Models\Industry;
 use App\Models\Interaction;
 use App\Models\CategoryFollow;
 use App\Models\CategoryVariant;
+use App\Models\IndustryVariant;
 use App\Models\InteractionVariant;
 use App\Models\User;
 
@@ -195,11 +196,53 @@ public function allApps(Request $request)
             $userPlanLimits = $this->getUserPlanLimits(auth()->user());
         }
 
-        // Get all industries (lightweight query)
-        $industries = Industry::select(['id', 'name', 'slug'])
+        // Get ALL industries (not just those in variants)
+        $allIndustries = Industry::select(['id', 'name', 'slug'])
             ->where('is_active', true)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($industry) {
+                return [
+                    'id' => $industry->id,
+                    'name' => $industry->name,
+                    'slug' => $industry->slug,
+                ];
+            });
+
+        // Get industry variants with their industries
+        $industryVariants = IndustryVariant::with([
+            'industries' => function ($query) {
+                $query->select(['industries.id', 'industries.name', 'industries.slug'])
+                    ->where('industries.is_active', true)
+                    ->orderBy('industry_industry_variant.order');
+            }
+        ])
+        ->where('is_active', true)
+        ->orderBy('order')
+        ->get(['id', 'name', 'order'])
+        ->map(function ($variant) {
+            return [
+                'id' => $variant->id,
+                'name' => $variant->name,
+                'industries' => $variant->industries->map(function ($industry) {
+                    return [
+                        'id' => $industry->id,
+                        'name' => $industry->name,
+                        'slug' => $industry->slug,
+                    ];
+                }),
+            ];
+        });
+
+        // Get IDs of industries that are in variants
+        $industriesInVariants = $industryVariants->flatMap(function ($variant) {
+            return $variant['industries'];
+        })->pluck('id')->toArray();
+
+        // Get industries NOT in any variant
+        $industriesNotInVariants = $allIndustries->filter(function ($industry) use ($industriesInVariants) {
+            return !in_array($industry['id'], $industriesInVariants);
+        })->values();
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
@@ -227,7 +270,9 @@ public function allApps(Request $request)
         // Return MINIMAL data for instant navigation
         return Inertia::render('AllCategories', [
             'libraries' => [], // Empty - will be loaded via API if needed
-            'industries' => $industries,
+            'industryVariants' => $industryVariants,
+            'industriesNotInVariants' => $industriesNotInVariants,
+            'allIndustries' => $allIndustries,
             'filters' => $filters,
             'filterType' => $filterType,
             'filterValue' => $filterValue,

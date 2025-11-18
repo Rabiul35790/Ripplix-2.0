@@ -88,7 +88,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [currentPage, setCurrentPage] = useState(initialCurrentPage);
   const [totalCount, setTotalCount] = useState(initialTotalCount);
-  const [cardsPerRow, setCardsPerRow] = useState(3);
+  const [cardsPerRow, setCardsPerRow] = useState(2);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // ADD THIS: State for userLibraryIds

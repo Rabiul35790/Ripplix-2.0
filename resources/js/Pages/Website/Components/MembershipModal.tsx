@@ -28,7 +28,7 @@ const MembershipModal: React.FC<MembershipModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-[60] font-sora" onClick={handleBackdropClick}>
+    <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-[9999] font-sora" onClick={handleBackdropClick}>
       <div className="bg-[#FFFFFFE5] border border-[#C3C3C9] rounded-lg p-6 md:p-16 max-w-5xl w-full h-auto md:h-[35rem] mx-4 relative shadow-2xl flex items-center justify-center">
         <button
           onClick={onClose}

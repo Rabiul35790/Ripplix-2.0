@@ -401,13 +401,6 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
           scroll-behavior: smooth;
         }
 
-        /* Optimize card animations for smoother scrolling */
-        .library-card-wrapper {
-          will-change: transform;
-          transform: translateZ(0);
-          backface-visibility: hidden;
-        }
-
         /* Reduce motion for users who prefer it */
         @media (prefers-reduced-motion: reduce) {
           * {
@@ -417,101 +410,94 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
             transition-duration: 0.01ms !important;
           }
         }
-
-        /* Optimize grid rendering */
-        .library-grid {
-          contain: layout style paint;
-        }
       `}</style>
 
-      <div className="relative">
-        {/* Grid with merged libraries and ads */}
-        <div className={`library-grid grid ${gridCols} ${gridGap}`}>
-          {mergedItems.map((item) => {
-            if (item.type === 'library') {
-              const library = item.data as Library;
-              return (
-                <div key={item.key} className="library-card-wrapper">
-                  <MemoizedLibraryCard
-                    library={library}
-                    onLibraryClick={onLibraryClick}
-                    cardSize={cardSize}
-                    auth={authData}
-                    ziggy={ziggyData}
-                    onStarClick={onStarClick}
-                    userLibraryIds={userLibraryIds}
-                    viewedLibraryIds={viewedLibraryIds}
-                    onLibraryViewed={onLibraryViewed}
-                    userPlanLimits={userPlanLimits}
-                  />
-                </div>
-              );
-            } else {
-              const ad = item.data as InFeedAd;
-              return (
-                <div key={item.key} className="library-card-wrapper">
-                  <InFeedAdCard
-                    ad={ad}
-                    cardSize={cardSize}
-                  />
-                </div>
-              );
-            }
-          })}
-        </div>
-
-        {/* Login Prompt */}
-        {showLoginPrompt && (
-          <div
-            className="relative -mt-[800px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 max-w-full overflow-hidden"
-            style={{
-              background:
-                "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.8) 80%, rgba(248, 248, 249, 0) 100%)",
-            }}
-          >
-            <div className="relative z-10 max-w-full w-full">
-              <h2 className="font-sora text-2xl sm:text-3xl md:text-4xl pt-10 font-normal text-[#77778F] dark:text-white mb-2 px-4">
-                You're{" "}
-                <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
-                  one click away{" "}
-                </span>
-                from
-              </h2>
-
-              <p className="font-sora text-xl sm:text-2xl md:text-3xl font-normal text-[#77778F] dark:text-gray-400 mb-6 px-4">
-                unlimited inspiration
-              </p>
-
-              <p className="max-w-sm text-sm sm:text-base text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto px-4">
-                Explore thousands of real UI animations, thoughtfully curated for modern
-                design teams
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 px-4">
-                <Link
-                  href="/login"
-                  className="w-full sm:w-auto px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
-                >
-                  <span className="z-10">Log In</span>
-                </Link>
-
-                <Link
-                  href="/register"
-                  className="w-full sm:w-auto px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
-                >
-                  <span className="z-10">Join Free</span>
-                </Link>
+      {/* Grid with merged libraries and ads - REMOVED transform-related CSS */}
+      <div className={`grid ${gridCols} ${gridGap}`}>
+        {mergedItems.map((item) => {
+          if (item.type === 'library') {
+            const library = item.data as Library;
+            return (
+              <div key={item.key}>
+                <MemoizedLibraryCard
+                  library={library}
+                  onLibraryClick={onLibraryClick}
+                  cardSize={cardSize}
+                  auth={authData}
+                  ziggy={ziggyData}
+                  onStarClick={onStarClick}
+                  userLibraryIds={userLibraryIds}
+                  viewedLibraryIds={viewedLibraryIds}
+                  onLibraryViewed={onLibraryViewed}
+                  userPlanLimits={userPlanLimits}
+                />
               </div>
-
-              <p className="text-sm sm:text-base text-[#878787] dark:text-gray-500 mb-6 font-sora px-4">
-                Where designers from the world's leading teams spark interaction ideas
-              </p>
-
-              <ScrollingBrands />
-            </div>
-          </div>
-        )}
+            );
+          } else {
+            const ad = item.data as InFeedAd;
+            return (
+              <div key={item.key}>
+                <InFeedAdCard
+                  ad={ad}
+                  cardSize={cardSize}
+                />
+              </div>
+            );
+          }
+        })}
       </div>
+
+      {/* Login Prompt */}
+      {showLoginPrompt && (
+        <div
+          className="relative -mt-[800px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 max-w-full overflow-hidden z-[10]"
+          style={{
+            background:
+              "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.8) 80%, rgba(248, 248, 249, 0) 100%)",
+          }}
+        >
+          <div className="relative z-10 max-w-full w-full">
+            <h2 className="font-sora text-2xl sm:text-3xl md:text-4xl pt-10 font-normal text-[#77778F] dark:text-white mb-2 px-4">
+              You're{" "}
+              <span className="font-extrabold bg-gradient-to-r from-[#271960] to-[#4226B2] bg-clip-text text-transparent">
+                one click away{" "}
+              </span>
+              from
+            </h2>
+
+            <p className="font-sora text-xl sm:text-2xl md:text-3xl font-normal text-[#77778F] dark:text-gray-400 mb-6 px-4">
+              unlimited inspiration
+            </p>
+
+            <p className="max-w-sm text-sm sm:text-base text-[#828287] dark:text-gray-400 mb-8 text-center font-poppins mx-auto px-4">
+              Explore thousands of real UI animations, thoughtfully curated for modern
+              design teams
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 px-4">
+              <Link
+                href="/login"
+                className="w-full sm:w-auto px-6 py-2 holographic-link2 bg-[#F2EDFF] border border-[#CECCFF] rounded-[4px] font-sora text-base font-semibold text-[#2B235A] hover:opacity-95 transition-opacity duration-500 focus:outline-none focus:ring-0"
+              >
+                <span className="z-10">Log In</span>
+              </Link>
+
+              <Link
+                href="/register"
+                className="w-full sm:w-auto px-6 py-2 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] font-sora text-base text-white rounded-[4px] font-semibold hover:opacity-95 transition-opacity duration-500 shadow-[4px_4px_12px_0px_#260F6329] focus:outline-none focus:ring-0"
+              >
+                <span className="z-10">Join Free</span>
+              </Link>
+            </div>
+
+            <p className="text-sm sm:text-base text-[#878787] dark:text-gray-500 mb-6 font-sora px-4">
+              Where designers from the world's leading teams spark interaction ideas
+            </p>
+
+            <ScrollingBrands />
+          </div>
+        </div>
+      )}
 
       {/* Optimized Loading State with Smooth Appearance */}
       {isLoadingMore && (

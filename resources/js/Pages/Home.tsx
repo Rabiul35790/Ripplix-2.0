@@ -146,7 +146,7 @@ const Home: React.FC<HomeProps> = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState<string>(currentPlatformFilter);
-  const [cardsPerRow, setCardsPerRow] = useState(3);
+  const [cardsPerRow, setCardsPerRow] = useState(2);
   const [error, setError] = useState<string | null>(null);
 
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
@@ -452,49 +452,51 @@ const Home: React.FC<HomeProps> = ({
         </>
         )}
 
-        {/* Sticky Filter - Add containment */}
-        <div className="sticky top-[60px] md:top-[68px] lg:top-[68px] z-10" style={{ contain: 'layout style paint' }}>
-          <FilterWrapper
-            filters={filters}
-            selectedPlatform={selectedPlatform}
-            onPlatformChange={handlePlatformChange}
-            cardsPerRow={cardsPerRow}
-            onCardsPerRowChange={handleCardsPerRowChange}
-          />
-        </div>
+        {/* Library Grid Section with Sticky Filter */}
+        <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12 relative">
+          {/* Sticky Filter - Now contained within this section */}
+          <div className="sticky top-[60px] md:top-[68px] lg:top-[68px] z-10" style={{ contain: 'layout style paint' }}>
+            <FilterWrapper
+              filters={filters}
+              selectedPlatform={selectedPlatform}
+              onPlatformChange={handlePlatformChange}
+              cardsPerRow={cardsPerRow}
+              onCardsPerRowChange={handleCardsPerRowChange}
+            />
+          </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="mx-4 sm:mx-6 lg:mx-8 mb-4">
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                    Error loading libraries
-                  </h3>
-                  <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                    <p>{error}</p>
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                  <div className="mt-4">
-                    <button
-                      onClick={() => handlePlatformChange(selectedPlatform)}
-                      className="bg-red-100 dark:bg-red-800 px-3 py-2 rounded-md text-sm font-medium text-red-800 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
-                    >
-                      Try Again
-                    </button>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Error loading libraries
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                      <p>{error}</p>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={() => handlePlatformChange(selectedPlatform)}
+                        className="bg-red-100 dark:bg-red-800 px-3 py-2 rounded-md text-sm font-medium text-red-800 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-700"
+                      >
+                        Try Again
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12">
+          {/* Library Grid */}
           <LibraryGrid
             libraries={filteredLibraries}
             onLibraryClick={handleLibraryCardClick}
@@ -513,22 +515,22 @@ const Home: React.FC<HomeProps> = ({
           />
         </div>
 
-
+        {/* Rest of the unauthenticated sections remain outside */}
         {!isAuthenticated && (
-            <>
+          <>
             <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
-                <Overview
-                    filters={filters}
-                    total={total}
-                />
+              <Overview
+                filters={filters}
+                total={total}
+              />
             </div>
             <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
-            <Testimonials />
+              <Testimonials />
             </div>
             <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
-                <FAQ/>
+              <FAQ/>
             </div>
-            </>
+          </>
         )}
 
         <LibraryModal

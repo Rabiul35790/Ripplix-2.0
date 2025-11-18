@@ -87,7 +87,7 @@ const Browse: React.FC<BrowseProps> = ({
 
   // Filter states
   const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [cardsPerRow, setCardsPerRow] = useState(3);
+  const [cardsPerRow, setCardsPerRow] = useState(2);
 
   // State for libraries data
   const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
@@ -129,7 +129,51 @@ const Browse: React.FC<BrowseProps> = ({
     });
   }, []);
 
-  // Fetch libraries after component mounts (without platform filter)
+  // UPDATED: Fetch library for modal with full data
+  const fetchLibraryForModal = useCallback(async (slug: string) => {
+    try {
+      const response = await fetch(`/api/libraries/${slug}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch library data');
+      }
+
+      const data = await response.json();
+
+      // CRITICAL FIX: Ensure the library has all required fields
+      const libraryData = data.library;
+      if (!libraryData.platforms) libraryData.platforms = [];
+      if (!libraryData.categories) libraryData.categories = [];
+      if (!libraryData.industries) libraryData.industries = [];
+      if (!libraryData.interactions) libraryData.interactions = [];
+
+      setModalLibrary(libraryData);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching library for modal:', error);
+      const currentPath = window.location.pathname;
+      const basePath = currentPath.includes('/browse') ? window.location.pathname.split('?')[0] : '/browse';
+      window.history.replaceState({}, '', basePath + window.location.search);
+      setIsModalOpen(false);
+      setModalLibrary(null);
+    }
+  }, []);
+
+  // Check URL for library modal
+  useEffect(() => {
+    const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
+
+    if (pathMatch) {
+      const librarySlug = pathMatch[1];
+      if (!modalLibrary || modalLibrary.slug !== librarySlug) {
+        fetchLibraryForModal(librarySlug);
+      }
+    } else if (isModalOpen && !window.location.pathname.startsWith('/library/')) {
+      setIsModalOpen(false);
+      setModalLibrary(null);
+    }
+  }, [url, fetchLibraryForModal, modalLibrary, isModalOpen]);
+
+  // UPDATED: Fetch libraries with proper data structure
   useEffect(() => {
     const fetchLibraries = async () => {
       if (libraries.length > 0) {
@@ -158,8 +202,25 @@ const Browse: React.FC<BrowseProps> = ({
 
         const data = await response.json();
 
-        setLibraries(data.libraries);
-        setAllLibraries(data.allLibraries);
+        // CRITICAL FIX: Ensure all libraries have required structure
+        const librariesWithDefaults = data.libraries.map((lib: any) => ({
+          ...lib,
+          platforms: lib.platforms || [],
+          categories: lib.categories || [],
+          industries: lib.industries || [],
+          interactions: lib.interactions || []
+        }));
+
+        const allLibrariesWithDefaults = data.allLibraries.map((lib: any) => ({
+          ...lib,
+          platforms: lib.platforms || [],
+          categories: lib.categories || [],
+          industries: lib.industries || [],
+          interactions: lib.interactions || []
+        }));
+
+        setLibraries(librariesWithDefaults);
+        setAllLibraries(allLibrariesWithDefaults);
         setPagination(data.pagination);
       } catch (error) {
         console.error('Error fetching libraries:', error);
@@ -170,42 +231,6 @@ const Browse: React.FC<BrowseProps> = ({
 
     fetchLibraries();
   }, [filterType, filterValue]);
-
-  // Check URL for library modal
-  useEffect(() => {
-    const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
-
-    if (pathMatch) {
-      const librarySlug = pathMatch[1];
-      if (!modalLibrary || modalLibrary.slug !== librarySlug) {
-        fetchLibraryForModal(librarySlug);
-      }
-    } else if (isModalOpen && !window.location.pathname.startsWith('/library/')) {
-      setIsModalOpen(false);
-      setModalLibrary(null);
-    }
-  }, [window.location.pathname]);
-
-  // Function to fetch library data for modal
-  const fetchLibraryForModal = async (slug: string) => {
-    try {
-      const response = await fetch(`/api/libraries/${slug}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch library data');
-      }
-
-      const data = await response.json();
-      setModalLibrary(data.library);
-      setIsModalOpen(true);
-    } catch (error) {
-      console.error('Error fetching library for modal:', error);
-      const currentPath = window.location.pathname;
-      const basePath = currentPath.includes('/browse') ? window.location.pathname.split('?')[0] : '/browse';
-      window.history.replaceState({}, '', basePath + window.location.search);
-      setIsModalOpen(false);
-      setModalLibrary(null);
-    }
-  };
 
   // Get current category data for CategoryHeader
   const currentCategory = useMemo(() => {
@@ -222,7 +247,7 @@ const Browse: React.FC<BrowseProps> = ({
     // Apply platform filter on frontend (instant filtering)
     if (selectedPlatform !== 'all') {
       filtered = filtered.filter(library =>
-        library.platforms.some(platform =>
+        library.platforms && library.platforms.some(platform =>
           platform.name.toLowerCase() === selectedPlatform.toLowerCase()
         )
       );
@@ -234,10 +259,10 @@ const Browse: React.FC<BrowseProps> = ({
       filtered = filtered.filter(library =>
         library.title.toLowerCase().includes(query) ||
         library.description?.toLowerCase().includes(query) ||
-        library.platforms.some(platform => platform.name.toLowerCase().includes(query)) ||
-        library.categories.some(category => category.name.toLowerCase().includes(query)) ||
-        library.industries.some(industry => industry.name.toLowerCase().includes(query)) ||
-        library.interactions.some(interaction => interaction.name.toLowerCase().includes(query))
+        (library.platforms && library.platforms.some(platform => platform.name.toLowerCase().includes(query))) ||
+        (library.categories && library.categories.some(category => category.name.toLowerCase().includes(query))) ||
+        (library.industries && library.industries.some(industry => industry.name.toLowerCase().includes(query))) ||
+        (library.interactions && library.interactions.some(interaction => interaction.name.toLowerCase().includes(query)))
       );
     }
 
@@ -264,8 +289,18 @@ const Browse: React.FC<BrowseProps> = ({
     }
   };
 
+  // UPDATED: Ensure library has full data structure before opening modal
   const handleLibraryClick = (library: Library) => {
-    setModalLibrary(library);
+    // Add safety checks
+    const libraryWithDefaults = {
+      ...library,
+      platforms: library.platforms || [],
+      categories: library.categories || [],
+      industries: library.industries || [],
+      interactions: library.interactions || []
+    };
+
+    setModalLibrary(libraryWithDefaults);
     setIsModalOpen(true);
   };
 
@@ -274,8 +309,17 @@ const Browse: React.FC<BrowseProps> = ({
     setModalLibrary(null);
   };
 
+  // UPDATED: Ensure library has full data structure for navigation
   const handleLibraryNavigation = (library: Library) => {
-    setModalLibrary(library);
+    const libraryWithDefaults = {
+      ...library,
+      platforms: library.platforms || [],
+      categories: library.categories || [],
+      industries: library.industries || [],
+      interactions: library.interactions || []
+    };
+
+    setModalLibrary(libraryWithDefaults);
   };
 
   const handleStarClick = (library: Library, isStarred: boolean) => {

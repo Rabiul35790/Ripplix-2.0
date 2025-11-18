@@ -439,7 +439,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 p-2 bg-off-white z-[70] dark:bg-gray-800 rounded-lg dark:border-gray-700 focus:outline-none"
+        className="lg:hidden fixed top-4 left-4 p-2 bg-off-white z-[50] dark:bg-gray-800 rounded-lg dark:border-gray-700 focus:outline-none"
       >
         {isMobileMenuOpen ? (
           <X className="w-6 h-6 text-gray-600 dark:text-gray-300 left-52 top-9 fixed" />

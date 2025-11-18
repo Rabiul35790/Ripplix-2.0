@@ -149,7 +149,12 @@ class ApiImportService
     private function processRelationships(Library $library, array $item): void
     {
         if (!empty($item['product'])) {
-            $category = $this->findOrCreateCategory($item['product'], $item['product_logo'] ?? null);
+            // UPDATED: Now passing product_link/product_url to category
+            $category = $this->findOrCreateCategory(
+                $item['product'],
+                $item['product_logo'] ?? null,
+                $item['product_link'] ?? $item['product_url'] ?? null  // NEW: Handle both attribute names
+            );
             $library->categories()->syncWithoutDetaching([$category->id]);
         }
 
@@ -173,16 +178,38 @@ class ApiImportService
         }
     }
 
-    private function findOrCreateCategory(string $name, ?string $image = null): Category
+    // UPDATED: Added $productUrl parameter
+    private function findOrCreateCategory(string $name, ?string $image = null, ?string $productUrl = null): Category
     {
-        return Category::firstOrCreate(
-            ['slug' => Str::slug($name)],
-            [
-                'name' => $name,
-                'image' => $image,
-                'is_active' => true,
-            ]
-        );
+        $category = Category::where('slug', Str::slug($name))->first();
+
+        if ($category) {
+            // Update existing category if new data is provided
+            $updateData = [];
+
+            if ($image && !$category->image) {
+                $updateData['image'] = $image;
+            }
+
+            if ($productUrl && !$category->product_url) {
+                $updateData['product_url'] = $productUrl;
+            }
+
+            if (!empty($updateData)) {
+                $category->update($updateData);
+            }
+
+            return $category;
+        }
+
+        // Create new category with all data
+        return Category::create([
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'image' => $image,
+            'product_url' => $productUrl,  // NEW: Store product_url
+            'is_active' => true,
+        ]);
     }
 
     private function findOrCreatePlatform(string $name): Platform

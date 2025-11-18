@@ -714,7 +714,7 @@ class LibraryResource extends Resource
             ->defaultSort('created_at', 'desc');
     }
 
-    public static function exportLibrariesByDateRange($startDate, $endDate)
+public static function exportLibrariesByDateRange($startDate, $endDate)
     {
         try {
             $libraries = Library::with(['categories', 'platforms', 'industries', 'interactions'])
@@ -751,6 +751,7 @@ class LibraryResource extends Resource
                     'video_url',
                     'product',
                     'product_logo',
+                    'product_link', // NEW: Added product_link
                     'platform',
                     'industry',
                     'interaction',
@@ -779,6 +780,7 @@ class LibraryResource extends Resource
                         $library->video_url,
                         $firstCategory?->name ?? '',
                         $firstCategory?->image ?? '',
+                        $firstCategory?->product_url ?? '', // NEW: Export product_url as product_link
                         $firstPlatform?->name ?? '',
                         $firstIndustry?->name ?? '',
                         $interactions,
@@ -801,7 +803,8 @@ class LibraryResource extends Resource
     }
 
 
-    public static function exportLibrariesAsJson($startDate, $endDate)
+
+ public static function exportLibrariesAsJson($startDate, $endDate)
     {
         try {
             $libraries = Library::with(['categories', 'platforms', 'industries', 'interactions'])
@@ -841,6 +844,7 @@ class LibraryResource extends Resource
                     'video_url' => $library->video_url,
                     'product' => $firstCategory?->name ?? '',
                     'product_logo' => $firstCategory?->image ?? '',
+                    'product_link' => $firstCategory?->product_url ?? '', // NEW: Export product_url as product_link
                     'platform' => $firstPlatform?->name ?? '',
                     'industry' => $firstIndustry?->name ?? '',
                     'interaction' => $interactions,

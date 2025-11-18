@@ -28,14 +28,17 @@ class AnimationController extends Controller
             ->get();
 
             $animations = $libraries->map(function ($library) {
+                $firstCategory = $library->categories->first();
+
                 return [
                     'id' => $library->external_id,
                     'published_date' => $library->published_date?->format('Y-m-d'),
                     'title' => $library->title,
                     'url' => $library->url,
                     'video_url' => $library->video_url,
-                    'product' => $this->getFirstRelationshipName($library->categories),
-                    'product_logo' => $this->getFirstRelationshipImage($library->categories),
+                    'product' => $firstCategory?->name ?? '',
+                    'product_logo' => $firstCategory?->image ?? '',
+                    'product_link' => $firstCategory?->product_url ?? '', // NEW: Added product_link
                     'platform' => $this->getFirstRelationshipName($library->platforms),
                     'industry' => $this->getFirstRelationshipName($library->industries),
                     'interaction' => $library->interactions->pluck('name')->toArray(),
@@ -71,6 +74,7 @@ class AnimationController extends Controller
                 'animations.*.logo' => 'nullable|string',
                 'animations.*.product' => 'nullable|string',
                 'animations.*.product_logo' => 'nullable|string',
+                'animations.*.product_link' => 'nullable|url', // NEW: Added product_link validation
                 'animations.*.platform' => 'nullable|string',
                 'animations.*.industry' => 'nullable|string',
                 'animations.*.interaction' => 'nullable|array',

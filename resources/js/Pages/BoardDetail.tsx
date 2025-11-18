@@ -104,7 +104,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
 
   // Filter states
   const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [cardsPerRow, setCardsPerRow] = useState(3);
+  const [cardsPerRow, setCardsPerRow] = useState(2);
 
   // ADD THIS: State for userLibraryIds
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);

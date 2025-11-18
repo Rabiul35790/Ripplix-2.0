@@ -86,7 +86,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [cardsPerRow, setCardsPerRow] = useState(3);
+  const [cardsPerRow, setCardsPerRow] = useState(2);
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -472,10 +472,10 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 {/* Unauthenticated User Login Prompt - Responsive */}
                 {showLoginPrompt && (
                   <div
-                    className="relative -mt-[500px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl max-w-full overflow-hidden"
+                    className="relative -mt-[800px] pt-80 pb-10 text-center flex flex-col items-center justify-center px-4 rounded-2xl max-w-full overflow-hidden z-[10]"
                     style={{
-                      background:
-                        "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.7) 80%, rgba(248, 248, 249, 0.2) 100%)",
+                    background:
+                        "linear-gradient(to top, #F8F8F9 0%, rgba(248, 248, 249, 1) 60%, rgba(248, 248, 249, 0.8) 80%, rgba(248, 248, 249, 0) 100%)",
                     }}
                   >
                     <div className="relative z-10 max-w-full w-full">

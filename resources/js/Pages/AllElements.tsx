@@ -232,8 +232,8 @@ const AllElements: React.FC<AllElementsProps> = ({
           : 'border-[#E3E2FF] dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-800 transition-colors duration-500'
       }`}
     >
-      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 mr-2 sm:mr-3 md:mr-2.5 flex items-center justify-center text-lg text-[#CECCFF] group-hover:text-[#2B235A] flex-shrink-0 transition-all duration-500">
-        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-4.5 md:h-4.5 arrow-icon" />
+      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 mr-2 sm:mr-3 md:mr-2.5 flex items-center justify-center text-lg text-[#D3D3DF] group-hover:text-[#2B235A] flex-shrink-0 transition-all duration-500">
+        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-10 md:h-5 arrow-icon" />
       </div>
       <div className="flex-1 min-w-0">
         <span className="text-sm sm:text-base md:text-[15px] font-medium text-[#2B235A] dark:text-white group-hover:text-[#2B235A] dark:group-hover:text-white">
@@ -319,7 +319,7 @@ const AllElements: React.FC<AllElementsProps> = ({
                 {distributeIntoColumns.map((column, columnIndex) => (
                   <div
                     key={columnIndex}
-                    className={`space-y-0 ${columnIndex === 1 ? 'hidden sm:block' : ''} ${columnIndex === 2 ? 'hidden lg:block' : ''} ${columnIndex === 3 ? 'hidden xl:block' : ''}`}
+                    className="space-y-0"
                   >
                     {column.map((item, itemIndex) => (
                       <div key={`${columnIndex}-${itemIndex}`}>

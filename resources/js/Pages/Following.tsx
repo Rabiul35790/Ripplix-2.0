@@ -115,7 +115,7 @@ const Following: React.FC<FollowingProps> = ({
 
   // Filter states
   const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [cardsPerRow, setCardsPerRow] = useState(3);
+  const [cardsPerRow, setCardsPerRow] = useState(2);
 
   // Modal state
   const [modalLibrary, setModalLibrary] = useState<Library | null>(initialSelectedLibrary);

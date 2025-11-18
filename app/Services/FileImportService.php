@@ -141,8 +141,12 @@ class FileImportService
      */
     private function normalizeRecord(array $record): array
     {
+        // Get ID and convert to string if it's a number
+        $id = $record['id'] ?? $record['external_id'] ?? null;
+        $id = $id !== null ? (string) $id : null;
+
         return [
-            'id' => $record['id'] ?? $record['external_id'] ?? null,
+            'id' => $id,
             'published_date' => $record['published_date'] ?? null,
             'title' => $record['title'] ?? null,
             'url' => $record['url'] ?? null,
@@ -150,6 +154,7 @@ class FileImportService
             'logo' => $record['logo'] ?? null,
             'product' => $record['product'] ?? null,
             'product_logo' => $record['product_logo'] ?? null,
+            'product_link' => $record['product_link'] ?? $record['product_url'] ?? null,
             'platform' => $record['platform'] ?? null,
             'industry' => $record['industry'] ?? null,
             'interaction' => $this->normalizeArray($record['interaction'] ?? []),
@@ -191,6 +196,7 @@ class FileImportService
             'logo' => 'nullable|string',
             'product' => 'nullable|string',
             'product_logo' => 'nullable|string',
+            'product_url' => 'nullable|string',
             'platform' => 'nullable|string',
             'industry' => 'nullable|string',
             'interaction' => 'nullable|array',
@@ -216,6 +222,7 @@ class FileImportService
             'video_url',
             'product',
             'product_logo',
+            'product_url',
             'platform',
             'industry',
             'interaction',
@@ -234,6 +241,7 @@ class FileImportService
             'https://example.com/video.mp4',
             'Product Name',
             'https://example.com/logo.jpg',
+            'https://example.com/product_url',
             'Website',
             'Technology',
             'Carousel, Drag, Loop',
@@ -269,6 +277,7 @@ class FileImportService
                     'video_url' => 'https://example.com/video.mp4',
                     'product' => 'Product Name',
                     'product_logo' => 'https://example.com/logo.jpg',
+                    'product_link' => 'https://example.com/product_url',
                     'platform' => 'Website',
                     'industry' => 'Technology',
                     'interaction' => ['Carousel', 'Drag', 'Loop'],

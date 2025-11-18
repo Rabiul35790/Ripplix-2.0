@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, UserPlus, UserMinus } from 'lucide-react';
+import { User } from 'lucide-react';
 import { PageProps } from '@/types';
 import MembershipModal from './Website/Components/MembershipModal';
 
@@ -9,17 +9,18 @@ interface CategoryHeaderProps {
     name: string;
     image?: string;
     slug: string;
+    product_url?: string;
+    variant_name?: string;
   };
   auth: PageProps['auth'];
   ziggy: PageProps['ziggy'];
 }
 
-const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }) => {
+const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
 
-  // Check follow status on mount
   useEffect(() => {
     if (auth?.user && category?.id) {
       checkFollowStatus();
@@ -47,7 +48,6 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }
   };
 
   const handleFollowClick = async () => {
-    // Check if user is authenticated
     if (!auth?.user) {
       setShowMembershipModal(true);
       return;
@@ -70,18 +70,15 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }
         const newFollowStatus = !isFollowing;
         setIsFollowing(newFollowStatus);
 
-        // Dispatch custom event to notify Following page
         const event = new CustomEvent('category-follow-changed', {
           detail: {
             categoryId: category.id,
             categoryName: category.name,
             isFollowing: newFollowStatus,
-            timestamp: Date.now()
-          }
+            timestamp: Date.now(),
+          },
         });
         window.dispatchEvent(event);
-
-        console.log(`Category ${category.name} ${newFollowStatus ? 'followed' : 'unfollowed'}`);
       } else {
         const errorData = await response.json();
         console.error('Error:', errorData.error || 'Failed to toggle follow');
@@ -93,54 +90,83 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth, ziggy }
     }
   };
 
-  const closeMembershipModal = () => {
-    setShowMembershipModal(false);
-  };
+  const closeMembershipModal = () => setShowMembershipModal(false);
 
   return (
     <>
       <div className="bg-[#F8F8F9] px-2 sm:px-3 md:px-4 lg:px-4 dark:bg-gray-900 font-sora">
         <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-3 sm:py-4 md:py-3.5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 border border-[#CECCFF] p-4 sm:p-6 md:p-5 rounded-xl bg-[#F5F5FA]">
-            {/* Left side - Category info */}
-            <div className="flex items-center space-x-3 sm:space-x-4 md:space-x-3.5">
-              {/* Category Image */}
-              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 overflow-hidden rounded-full dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-                {category.image ? (
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 text-gray-400 dark:text-gray-500" />
-                )}
-              </div>
 
-              {/* Category Name */}
-              <div>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-0 border border-[#E3E2FF] p-4 sm:p-6 md:p-5 rounded-xl bg-[#F5F5FA]">
+
+            {/* LEFT SIDE — Logo + Title + Category Badge */}
+            <div className="flex flex-col gap-3">
+              {/* Top Row: Image and Title */}
+              <div className="flex items-center space-x-4">
+                {/* Image */}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-14 md:h-14 overflow-hidden rounded-full dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                  {category.image ? (
+                    <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-6 h-6 sm:w-8 sm:h-8 md:w-7 md:h-7 text-gray-400 dark:text-gray-500" />
+                  )}
+                </div>
+
+                {/* Title */}
                 <h2 className="text-lg sm:text-2xl md:text-xl font-semibold text-gray-900 dark:text-white">
                   {category.name}
                 </h2>
               </div>
+
+              {/* Bottom Row: Category Badge (left aligned) */}
+            {category.variant_name &&(
+                <div className="flex items-center gap-2 pl-0">
+                <span className="text-[#BABABA] dark:text-gray-400 text-base">Category:</span>
+                <span className="px-3 py-1 text-xs sm:text-sm border border-[#E3E2FF] rounded-[4px] bg-white text-[#443B82]">
+                  {category.variant_name}
+                </span>
+              </div>
+              )}
             </div>
 
-            {/* Right side - Follow button */}
-            <button
-              onClick={handleFollowClick}
-              disabled={isLoading}
-              className={`flex items-center justify-center space-x-2 px-4 sm:px-4 md:px-3.5 py-2.5 sm:py-3 md:py-2.5 rounded-md text-xs sm:text-sm md:text-[13px] !font-semibold transition-colors font-sora focus:outline-none focus:ring-0 w-full sm:w-auto ${
-                isFollowing
-                  ? 'bg-[#FFFFFF] dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:opacity-90 transition-opacity duration-500 dark:hover:bg-gray-700'
-                  : 'holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white hover:opacity-95 transition-opacity duration-500'
-              } ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              <span>
+            {/* RIGHT SIDE — Visit Site + Follow App */}
+            <div className="flex items-center space-x-3">
+
+              {/* VISIT SITE BUTTON */}
+              {category.product_url && (
+                <a
+                href={category.product_url}
+                target="_blank"
+                className="holographic-link2 flex items-center justify-center px-4 sm:px-4 md:px-3.5 py-2.5 sm:py-3 md:py-2.5
+                           rounded-[4px] border border-[#CECCFF] text-xs sm:text-sm md:text-[13px]
+                           font-semibold bg-white text-gray-900 hover:bg-gray-50 transition w-full sm:w-auto outline-none focus:outline-none focus:ring-0"
+              >
+                <span>
+                Visit site
+                </span>
+              </a>)}
+
+              {/* FOLLOW BUTTON */}
+              <button
+                onClick={handleFollowClick}
+                disabled={isLoading}
+                className={`flex items-center justify-center space-x-2 px-4 sm:px-4 md:px-3.5 py-2.5 sm:py-3 md:py-2.5
+                  rounded-[4px] text-xs sm:text-sm md:text-[13px] !font-semibold transition-colors font-sora
+                  focus:outline-none focus:ring-0 w-full sm:w-auto shadow-[4px_4px_6px_0px_#34407C2E]
+                  ${
+                    isFollowing
+                      ? 'bg-[#FFFFFF] dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:opacity-90'
+                      : 'holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white hover:opacity-95'
+                  }
+                  ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              >
+                <span>
                 {isLoading ? 'Loading...' : isFollowing ? 'Followed' : 'Follow App'}
-              </span>
-            </button>
+                </span>
+              </button>
+            </div>
+
           </div>
         </div>
       </div>

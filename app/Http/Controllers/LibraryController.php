@@ -346,115 +346,120 @@ public function getTopLibraries(Request $request)
     }
 
     // MODIFIED: Load minimal data for instant navigation
-    public function browse(Request $request)
-    {
-        $isAuthenticated = auth()->check();
 
-        $userPlanLimits = null;
-        if ($isAuthenticated) {
-            $userPlanLimits = $this->getUserPlanLimits(auth()->user());
-        }
+public function browse(Request $request)
+{
+    $isAuthenticated = auth()->check();
 
-        $filterType = null;
-        $filterValue = null;
-        $filterName = null;
-        $categoryData = null;
-
-        // Quick filter metadata lookup (no heavy queries yet)
-        if ($request->has('category') && $request->category !== 'all') {
-            $category = Category::where('slug', $request->category)->first();
-            if ($category) {
-                $filterType = 'category';
-                $filterValue = $category->slug;
-                $filterName = $category->name;
-
-                $categoryData = $category->toArray();
-                if ($isAuthenticated) {
-                    $categoryData['is_following'] = $category->isFollowedBy(auth()->id());
-                } else {
-                    $categoryData['is_following'] = false;
-                }
-            }
-        }
-
-        if ($request->has('industry') && $request->industry !== 'all') {
-            $industry = Industry::where('slug', $request->industry)->first();
-            if ($industry) {
-                $filterType = 'industry';
-                $filterValue = $industry->slug;
-                $filterName = $industry->name;
-            }
-        }
-
-        if ($request->has('interaction') && $request->interaction !== 'all') {
-            $interaction = Interaction::where('slug', $request->interaction)->first();
-            if ($interaction) {
-                $filterType = 'interaction';
-                $filterValue = $interaction->slug;
-                $filterName = $interaction->name;
-            }
-        }
-
-        // Get lightweight filters
-        $filters = $this->getFilters();
-
-        // Get total count only (faster than loading all data)
-        $countQuery = Library::where('is_active', true);
-
-        // Apply filters to count
-        if ($filterType === 'category' && $filterValue) {
-            $category = Category::where('slug', $filterValue)->first();
-            if ($category) {
-                $countQuery->whereHas('categories', function($q) use ($category) {
-                    $q->where('categories.id', $category->id);
-                });
-            }
-        }
-
-        if ($filterType === 'industry' && $filterValue) {
-            $industry = Industry::where('slug', $filterValue)->first();
-            if ($industry) {
-                $countQuery->whereHas('industries', function($q) use ($industry) {
-                    $q->where('industries.id', $industry->id);
-                });
-            }
-        }
-
-        if ($filterType === 'interaction' && $filterValue) {
-            $interaction = Interaction::where('slug', $filterValue)->first();
-            if ($interaction) {
-                $countQuery->whereHas('interactions', function($q) use ($interaction) {
-                    $q->where('interactions.id', $interaction->id);
-                });
-            }
-        }
-
-        $totalLibraryCount = $countQuery->count();
-
-        $userLibraryIds = [];
-        if ($isAuthenticated) {
-            $userLibraryIds = Board::getUserLibraryIds(auth()->id());
-        }
-
-        $viewedLibraryIds = $this->getViewedLibraryIds($request);
-
-        // Return MINIMAL data for instant navigation
-        return Inertia::render('Browse', [
-            'libraries' => [], // Empty - will be loaded via API
-            'filters' => $filters,
-            'filterType' => $filterType,
-            'filterValue' => $filterValue,
-            'filterName' => $filterName,
-            'categoryData' => $categoryData,
-            'selectedLibrary' => null,
-            'allLibraries' => [], // Empty - will be loaded via API
-            'userLibraryIds' => $userLibraryIds,
-            'viewedLibraryIds' => $viewedLibraryIds,
-            'isAuthenticated' => $isAuthenticated,
-            'userPlanLimits' => $userPlanLimits,
-            'totalLibraryCount' => $totalLibraryCount,
-        ]);
+    $userPlanLimits = null;
+    if ($isAuthenticated) {
+        $userPlanLimits = $this->getUserPlanLimits(auth()->user());
     }
+
+    $filterType = null;
+    $filterValue = null;
+    $filterName = null;
+    $categoryData = null;
+
+    // Quick filter metadata lookup (no heavy queries yet)
+    if ($request->has('category') && $request->category !== 'all') {
+        $category = Category::where('slug', $request->category)->first();
+        if ($category) {
+            $filterType = 'category';
+            $filterValue = $category->slug;
+            $filterName = $category->name;
+
+            $categoryData = $category->toArray();
+            if ($isAuthenticated) {
+                $categoryData['is_following'] = $category->isFollowedBy(auth()->id());
+            } else {
+                $categoryData['is_following'] = false;
+            }
+
+            // Add variant name if category belongs to a variant
+            $variant = $category->variants()->where('is_active', true)->first();
+            $categoryData['variant_name'] = $variant ? $variant->name : null;
+        }
+    }
+
+    if ($request->has('industry') && $request->industry !== 'all') {
+        $industry = Industry::where('slug', $request->industry)->first();
+        if ($industry) {
+            $filterType = 'industry';
+            $filterValue = $industry->slug;
+            $filterName = $industry->name;
+        }
+    }
+
+    if ($request->has('interaction') && $request->interaction !== 'all') {
+        $interaction = Interaction::where('slug', $request->interaction)->first();
+        if ($interaction) {
+            $filterType = 'interaction';
+            $filterValue = $interaction->slug;
+            $filterName = $interaction->name;
+        }
+    }
+
+    // Get lightweight filters
+    $filters = $this->getFilters();
+
+    // Get total count only (faster than loading all data)
+    $countQuery = Library::where('is_active', true);
+
+    // Apply filters to count
+    if ($filterType === 'category' && $filterValue) {
+        $category = Category::where('slug', $filterValue)->first();
+        if ($category) {
+            $countQuery->whereHas('categories', function($q) use ($category) {
+                $q->where('categories.id', $category->id);
+            });
+        }
+    }
+
+    if ($filterType === 'industry' && $filterValue) {
+        $industry = Industry::where('slug', $filterValue)->first();
+        if ($industry) {
+            $countQuery->whereHas('industries', function($q) use ($industry) {
+                $q->where('industries.id', $industry->id);
+            });
+        }
+    }
+
+    if ($filterType === 'interaction' && $filterValue) {
+        $interaction = Interaction::where('slug', $filterValue)->first();
+        if ($interaction) {
+            $countQuery->whereHas('interactions', function($q) use ($interaction) {
+                $q->where('interactions.id', $interaction->id);
+            });
+        }
+    }
+
+    $totalLibraryCount = $countQuery->count();
+
+    $userLibraryIds = [];
+    if ($isAuthenticated) {
+        $userLibraryIds = Board::getUserLibraryIds(auth()->id());
+    }
+
+    $viewedLibraryIds = $this->getViewedLibraryIds($request);
+
+    // Return MINIMAL data for instant navigation
+    return Inertia::render('Browse', [
+        'libraries' => [], // Empty - will be loaded via API
+        'filters' => $filters,
+        'filterType' => $filterType,
+        'filterValue' => $filterValue,
+        'filterName' => $filterName,
+        'categoryData' => $categoryData,
+        'selectedLibrary' => null,
+        'allLibraries' => [], // Empty - will be loaded via API
+        'userLibraryIds' => $userLibraryIds,
+        'viewedLibraryIds' => $viewedLibraryIds,
+        'isAuthenticated' => $isAuthenticated,
+        'userPlanLimits' => $userPlanLimits,
+        'totalLibraryCount' => $totalLibraryCount,
+    ]);
+}
 
     // NEW: API endpoint to fetch libraries for browse page
 public function getBrowseLibraries(Request $request)

@@ -33,4 +33,12 @@ class Industry extends Model
     {
         return $this->belongsToMany(Library::class);
     }
+
+    public function variants(): BelongsToMany
+    {
+        return $this->belongsToMany(IndustryVariant::class, 'industry_industry_variant')
+            ->withPivot('order')
+            ->withTimestamps()
+            ->orderByPivot('order');
+    }
 }

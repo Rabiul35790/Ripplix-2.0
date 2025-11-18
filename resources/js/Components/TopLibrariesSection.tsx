@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Atom, ChevronRight, Command, Heart, Star, SwatchBook } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
 interface Category {
   id: number;
@@ -267,13 +268,13 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
                 </p>
               </div>
             </div>
-            <a
+            <Link
               href="/all-apps"
-              className="flex items-center gap-1 text-sm bg-[#F5F5FA] border border-[#CECCFF] px-3 py-2 rounded-md text-[#2B235A] hover:text-[#9943EE] transition-colors font-medium whitespace-nowrap"
+              className="flex items-center gap-1 text-sm  px-3 py-2 rounded-md text-[#2B235A] hover:opacity-75 transition-opacity duration-500 font-medium whitespace-nowrap underline outline-none focus:outline-none focus:ring-0"
             >
               See All
               <ChevronRight className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -367,13 +368,13 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
                 </p>
               </div>
             </div>
-            <a
+            <Link
               href="/all-elements"
-              className="flex items-center gap-1 text-sm bg-[#F5F5FA] border border-[#CECCFF] px-3 py-2 rounded-md text-[#2B235A] hover:text-[#9943EE] transition-colors font-medium whitespace-nowrap"
+              className="flex items-center gap-1 text-sm  px-3 py-2 rounded-md text-[#2B235A] hover:opacity-75 transition-opacity duration-500 font-medium whitespace-nowrap underline outline-none focus:outline-none focus:ring-0"
             >
               See All
               <ChevronRight className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -401,13 +402,13 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
                 </p>
               </div>
             </div>
-            <a
+            <Link
               href="/all-categories"
-              className="flex items-center gap-1 text-sm bg-[#F5F5FA] border border-[#CECCFF] px-3 py-2 rounded-md text-[#2B235A] hover:text-[#9943EE] transition-colors font-medium whitespace-nowrap"
+              className="flex items-center gap-1 text-sm  px-3 py-2 rounded-md text-[#2B235A] hover:opacity-75 transition-opacity duration-500 font-medium whitespace-nowrap underline outline-none focus:outline-none focus:ring-0"
             >
               See All
               <ChevronRight className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
