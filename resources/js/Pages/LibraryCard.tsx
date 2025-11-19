@@ -532,7 +532,14 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
                 {/* Title */}
                 <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
-                {getCategoryName()}
+                    <Link
+                    href={`/browse?category=${getCategorySlug()}`}
+                    className={`font-sora !font-bold ${
+                      filterValue === getCategorySlug() ? '' : ''
+                    }`}
+                  >
+                    {getCategoryName()}
+                </Link>
                 </h3>
 
                 {/* Interactions */}

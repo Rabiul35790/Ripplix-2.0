@@ -29,7 +29,7 @@ const FilterWrapper: React.FC<FilterWrapperProps> = ({
   onCardsPerRowChange
 }) => {
   return (
-    <div className="mx-4 sm:mx-6 lg:mx-8 mt-2 sm:mt-4 lg:mt-4 bg-[#F8F8F9] dark:bg-gray-900 rounded-xl overflow-hidden">
+    <div className=" mt-2 sm:mt-4 lg:mt-4 bg-[#F8F8F9] dark:bg-gray-900 rounded-xl overflow-hidden">
       <FilterSection
         filters={filters}
         selectedPlatform={selectedPlatform}

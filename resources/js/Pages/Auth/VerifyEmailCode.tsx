@@ -1,6 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler, useState, useRef, useEffect } from 'react';
-import { Mail, CheckCircle, RefreshCw, Link } from 'lucide-react';
+import { Mail, CheckCircle, RefreshCw} from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputError from '@/Components/InputError';
 

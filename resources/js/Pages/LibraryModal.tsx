@@ -568,7 +568,11 @@ return (
 
           <div
             ref={modalContentRef}
-            className="bg-[#F8F8F9] border border-[#C3C3C9] dark:bg-gray-900 rounded-lg sm:rounded-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto font-sora"
+            className="bg-[#F8F8F9] border border-[#C3C3C9] dark:bg-gray-900 rounded-lg sm:rounded-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto font-sora scrollbar-hide"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}
           >
             {/* NEW LAYOUT: Top Header Section */}
             <div className="p-4 sm:p-6 dark:border-gray-800">
@@ -577,17 +581,17 @@ return (
                 {/* Left: Category Image and Name */}
                 <div className="flex items-center space-x-3 flex-1">
                   {getCategoryImage() && (
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
                       <img src={getCategoryImage()} alt="Category" className="w-full h-full object-cover" />
                     </div>
                   )}
-                  <div className="min-w-0 flex-1">
+                  <div className="inline-block">
                     {getCategoryName() && (
                       <Link
                         href={`/browse?category=${getCategorySlug()}`}
                         className="font-sora !font-bold"
                       >
-                        <h2 className="text-base sm:text-2xl !font-bold text-[#150F32] opacity-85 hover:opacity-100 transition-opacity duration-500 dark:text-white font-sora">
+                        <h2 className="text-lg sm:text-3xl !font-bold text-[#150F32] opacity-85 hover:opacity-100 transition-opacity duration-500 dark:text-white font-sora">
                           {getCategoryName()}
                         </h2>
                       </Link>
@@ -630,7 +634,7 @@ return (
                     {/* Interactions */}
                     {library.interactions.length > 0 && (
                       <div className="flex-shrink-0">
-                        <h3 className="text-xs sm:text-sm text-[#9D9DA8] dark:text-gray-300 mb-2 font-sora">
+                        <h3 className="text-sm sm:text-lg text-[#9D9DA8] dark:text-gray-300 mb-2 font-sora">
                           Interactions
                         </h3>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -638,7 +642,7 @@ return (
                             <Link
                               key={interaction.id}
                               href={`/browse?interaction=${getInteractionSlug(interaction.name)}`}
-                              className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-xs sm:text-xs rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+                              className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-sm sm:text-base rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
                             >
                               {interaction.name}
                             </Link>
@@ -650,7 +654,7 @@ return (
                     {/* Industries */}
                     {library.industries.length > 0 && (
                       <div className="flex-shrink-0">
-                        <h3 className="text-xs sm:text-sm text-[#9D9DA8] dark:text-gray-300 mb-2 font-sora">
+                        <h3 className="text-sm sm:text-lg text-[#9D9DA8] dark:text-gray-300 mb-2 font-sora">
                           Industries
                         </h3>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -658,7 +662,7 @@ return (
                             <Link
                               key={industry.id}
                               href={`/browse?industry=${getIndustrySlug(industry.name)}`}
-                              className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-xs sm:text-xs rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+                              className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-sm sm:text-base rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
                             >
                               {industry.name}
                             </Link>
@@ -670,7 +674,7 @@ return (
                     {/* Platforms */}
                     {library.platforms.length > 0 && (
                       <div className="flex-shrink-0">
-                        <h3 className="text-xs sm:text-sm text-[#9D9DA8] dark:text-gray-300 mb-2 font-sora">
+                        <h3 className="text-sm sm:text-lg text-[#9D9DA8] dark:text-gray-300 mb-2 font-sora">
                           Platforms
                         </h3>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -678,7 +682,7 @@ return (
                             <Link
                               key={platform.id}
                               href={`/browse?platform=${getPlatformSlug(platform.name)}`}
-                              className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-xs sm:text-xs rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+                              className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-sm sm:text-base rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
                             >
                               {platform.name}
                             </Link>
@@ -690,11 +694,11 @@ return (
                 </div>
 
                 {/* Right Side: Action Buttons in One Row */}
-                <div className="flex gap-2 lg:items-start lg:min-w-[380px]">
+                <div className="flex gap-2 lg:items-start lg:min-w-[450px]">
                   <button
                     onClick={handleStarClick}
                     disabled={isLoadingBoards}
-                    className={`flex-1 flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md transition-colors focus:outline-none text-xs sm:text-sm font-semibold disabled:opacity-50 ${
+                    className={`flex-1 flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md transition-colors focus:outline-none text-xs sm:text-base font-semibold disabled:opacity-50 ${
                       isUserAuthenticated
                         ? 'border border-[#CECCFF] dark:bg-gray-800 text-[#2B235A] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                         : 'border border-[#CECCFF] dark:bg-gray-800 text-[#2B235A] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -713,16 +717,16 @@ return (
 
                   <button
                     onClick={handleCopyLink}
-                    className="flex-1 flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors focus:outline-none text-xs sm:text-sm font-sora font-semibold"
+                    className="flex-1 flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors focus:outline-none text-xs sm:text-base font-sora !font-semibold"
                   >
                     {linkCopied ? (
                       <>
-                        <Check className="font-sora w-4 h-4 sm:w-4 sm:h-4 z-10" />
+                        <Check strokeWidth={3} className="font-sora w-4 h-4 sm:w-4 sm:h-4 z-10" />
                         <span>Link Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Link2 className="font-sora w-4 h-4 sm:w-4 sm:h-4 z-10" />
+                        <Link2 strokeWidth={3} className="font-sora w-4 h-4 sm:w-4 sm:h-4 z-10" />
                         <span>Copy Link</span>
                       </>
                     )}
@@ -751,7 +755,7 @@ return (
             </div>
 
             <div className="p-4 sm:p-6">
-            <div className="w-full mb-6">
+            <div className="w-full mb-12">
                 {isLoadingModalAd ? (
                 <div className="w-full h-80 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
                     <div className="w-3/4 h-60 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
@@ -823,7 +827,7 @@ return (
               {/* Suggested Libraries Section - Shows for all users */}
               {suggestedLibraries.length > 0 && (
                 <>
-                  <h3 className="text-lg sm:font-bold font-bold sm:text-xl text-[#2E241C] dark:text-white mb-3 sm:mb-4">
+                  <h3 className="text-lg sm:font-bold font-bold sm:text-3xl text-[#2E241C] dark:text-white mb-4 sm:mb-6">
                     You might also like
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Atom, ChevronRight, Command, Heart, Star, SwatchBook } from 'lucide-react';
+import { Atom, Building2, ChevronRight, Command, Heart, Star, SwatchBook } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
 interface Category {
@@ -97,7 +97,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
       <div className="px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
         <div className="flex items-start gap-3">
           {type === 'category' && group.image && (
-            <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-gray-100">
+            <div className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden bg-gray-100">
               <img
                 src={group.image}
                 alt={group.name}
@@ -111,7 +111,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
           )}
 
           <div className="flex-1 min-w-0">
-            <h3 className="text-[#2B235A] font-semibold text-lg sm:text-xl leading-tight mb-1.5 truncate">
+            <h3 className="text-[#2B235A] font-semibold text-lg sm:text-xl leading-tight truncate">
               {group.name}{type === 'interaction' ? ' Animation' : ''}
             </h3>
             <p className="text-[#62626C] text-sm">
@@ -143,7 +143,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
                   return (
                     <div
                       key={index}
-                      className="absolute inset-0 rounded-lg overflow-hidden border border-gray-200 bg-white"
+                      className="absolute inset-0 rounded-lg overflow-hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-2px_rgba(0,0,0,0.06)] bg-white"
                       style={{
                         transform: `scale(${scale}) translateY(${offsetY}rem)`,
                         transformOrigin: 'center top',
@@ -250,7 +250,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
   };
 
   return (
-    <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-14 mt-12 sm:mt-16 lg:mt-12 pb-8 sm:pb-10 lg:pb-12 space-y-12 sm:space-y-16 font-sora">
+    <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-14 mt-12 sm:mt-16 lg:mt-12 pb-8 sm:pb-10 lg:pb-12 space-y-10 sm:space-y-12 font-sora">
       {/* Top Apps Section */}
       {topLibrariesByCategory.length > 0 && (
         <div>
@@ -391,7 +391,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#D6EDFC] flex items-center justify-center flex-shrink-0">
-                <SwatchBook className="w-5 h-5 text-[#42B0EF]" />
+                <Building2 className="w-5 h-5 text-[#42B0EF]" />
               </div>
               <div className="flex flex-col">
                 <h2 className="text-xl lg:text-2xl font-bold text-[#2B235A] mb-2">
