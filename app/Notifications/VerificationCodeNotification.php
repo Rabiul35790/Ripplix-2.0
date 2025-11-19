@@ -23,10 +23,9 @@ class VerificationCodeNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Verify Your Email Address')
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Thank you for registering. Please use the following code to verify your email address:')
-            ->line('**Verification Code: ' . $this->code . '**')
-            ->line('This code will expire in 15 minutes.')
-            ->line('If you did not create an account, no further action is required.');
+            ->view('emails.verification-code', [
+                'code' => $this->code,
+                'userName' => $notifiable->name
+            ]);
     }
 }

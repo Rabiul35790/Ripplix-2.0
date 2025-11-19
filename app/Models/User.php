@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\CustomResetPasswordNotification;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Panel;
 use Filament\Models\Contracts\FilamentUser;
@@ -503,6 +504,12 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         });
 
         Log::info("User {$this->id} started free trial, expires: {$expiresAt->toDateString()}");
+    }
+
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomResetPasswordNotification($token));
     }
 
 }

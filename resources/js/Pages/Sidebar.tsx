@@ -142,22 +142,22 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
       name: 'Explore',
       route: 'explore',
       icon: Navigation,
-      iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-      iconColor: 'text-orange-600 dark:text-orange-400'
+      iconBg: 'bg-[#EAD3FF] dark:bg-orange-900/30',
+      iconColor: 'text-[#B16FF3] dark:text-orange-400'
     },
     {
       name: 'Collections',
       route: 'collections',
       icon: FolderOpen,
-      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-      iconColor: 'text-blue-600 dark:text-blue-400'
+      iconBg: 'bg-[#FFD5E4] dark:bg-blue-900/30',
+      iconColor: 'text-[#F772A2] dark:text-blue-400'
     },
     {
       name: 'Following',
       route: 'following',
       icon: Star,
-      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-      iconColor: 'text-purple-600 dark:text-purple-400',
+      iconBg: 'bg-[#CDE7FF] dark:bg-purple-900/30',
+      iconColor: 'text-[#61B2FF] dark:text-purple-400',
     },
   ];
 
@@ -166,22 +166,22 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
       name: 'All Apps',
       route: 'all-apps',
       icon: Command,
-      iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-      iconColor: 'text-orange-600 dark:text-orange-400'
+      iconBg: 'bg-[#EBF5C8] dark:bg-orange-900/30',
+      iconColor: 'text-[#ADCE3A] dark:text-orange-400'
     },
     {
       name: 'All Elements',
       route: 'all-elements',
       icon: SquareMousePointer,
-      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-      iconColor: 'text-purple-600 dark:text-purple-400'
+      iconBg: 'bg-[#C7F6FF] dark:bg-purple-900/30',
+      iconColor: 'text-[#46D0EB] dark:text-purple-400'
     },
     {
       name: 'All Industries',
       route: 'all-categories',
       icon: Building2,
-      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-      iconColor: 'text-blue-600 dark:text-blue-400'
+      iconBg: 'bg-[#FAD9FF] dark:bg-blue-900/30',
+      iconColor: 'text-[#D669E6] dark:text-blue-400'
     },
   ];
 
@@ -190,22 +190,22 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
       name: 'Curators',
       route: 'curators',
       icon: User,
-      iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-      iconColor: 'text-orange-600 dark:text-orange-400'
+      iconBg: 'bg-[#FFDCCC] dark:bg-orange-900/30',
+      iconColor: 'text-[#F27E49] dark:text-orange-400'
     },
     {
       name: 'Contact Us',
       route: 'contact-us',
       icon: Phone,
-      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-      iconColor: 'text-purple-600 dark:text-purple-400'
+      iconBg: 'bg-[#FFC7E0] dark:bg-purple-900/30',
+      iconColor: 'text-[#DE5290] dark:text-purple-400'
     },
     {
       name: 'Sponsor Us',
       route: 'sponsor-us',
       icon: Heart,
-      iconBg: 'bg-pink-100 dark:bg-pink-900/30',
-      iconColor: 'text-pink-600 dark:text-pink-400'
+      iconBg: 'bg-[#D4FFE3] dark:bg-pink-900/30',
+      iconColor: 'text-[#40C26C] dark:text-pink-400'
     },
   ];
 

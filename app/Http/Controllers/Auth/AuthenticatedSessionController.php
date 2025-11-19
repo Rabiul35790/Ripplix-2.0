@@ -23,21 +23,11 @@ class AuthenticatedSessionController extends Controller
 
     public function create(): Response
     {
-
-         $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-            ->where('is_active', true);
-
-        $query2 = User::where('is_active', true);
-        $totalUserCount = $query2->count();
-
         // Get total count before limiting results
-        $totalLibraryCount = $query->count();
         $settings = Setting::getInstance();
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
-            'totalLibraryCount' => $totalLibraryCount,
-            'totalUserCount' => $totalUserCount,
             'settings' => [
                 'logo' => $settings->logo ? asset('storage/' . $settings->logo) : null,
                 'favicon' => $settings->favicon ? asset('storage/' . $settings->favicon) : null,

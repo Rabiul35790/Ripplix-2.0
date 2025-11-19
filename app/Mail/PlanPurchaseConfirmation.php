@@ -23,14 +23,20 @@ class PlanPurchaseConfirmation extends Mailable
 
     public function envelope(): Envelope
     {
+        // Add billing period only if it is "monthly"
+        $billingPeriodText = ($this->plan->billing_period === 'monthly')
+            ? ' ' . $this->plan->billing_period
+            : '';
+
         $subject = $this->transactionType === 'renewal'
-            ? "Plan Renewed: {$this->plan->name} {$this->plan->billing_period}"
-            : "Plan Purchased: {$this->plan->name} {$this->plan->billing_period}";
+            ? "Plan Renewed: {$this->plan->name}{$billingPeriodText}"
+            : "Plan Purchased: {$this->plan->name}{$billingPeriodText}";
 
         return new Envelope(
             subject: $subject,
         );
     }
+
 
     public function content(): Content
     {

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use Inertia\Response;
 
 class PasswordResetLinkController extends Controller
@@ -18,7 +19,6 @@ class PasswordResetLinkController extends Controller
      */
     public function create(): Response
     {
-
         $settings = Setting::getInstance();
 
         return Inertia::render('Auth/ForgotPassword', [
@@ -37,8 +37,6 @@ class PasswordResetLinkController extends Controller
 
     /**
      * Handle an incoming password reset link request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
@@ -46,19 +44,26 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        try {
+            // Send the password reset link
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
 
-        if ($status == Password::RESET_LINK_SENT) {
-            return back()->with('status', __($status));
+            if ($status == Password::RESET_LINK_SENT) {
+                return redirect()->back()->with('status', __($status));
+            }
+
+            throw ValidationException::withMessages([
+                'email' => [trans($status)],
+            ]);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Password reset error: ' . $e->getMessage());
+
+            throw ValidationException::withMessages([
+                'email' => ['An error occurred while sending the reset link. Please try again.'],
+            ]);
         }
-
-        throw ValidationException::withMessages([
-            'email' => [trans($status)],
-        ]);
     }
 }
