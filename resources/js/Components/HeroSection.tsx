@@ -18,6 +18,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
   const [loadedVideos, setLoadedVideos] = useState<Record<number, boolean>>({});
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const hasStartedLoading = useRef(false);
 
   const videos = useMemo(() => [
     '/images/Gif/amoweb.webm',
@@ -45,62 +46,100 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     'from-yellow-200 to-yellow-300'
   ], []);
 
-  // Preload and autoplay critical videos (first 3 cards)
+  // CRITICAL: Load first video immediately to stop spinner
   useEffect(() => {
-    const preloadVideos = videos.slice(0, 3);
-    preloadVideos.forEach((src, idx) => {
-      const video = document.createElement('video');
-      video.muted = true;
-      video.playsInline = true;
-      video.loop = true;
-      video.preload = 'auto';
+    if (hasStartedLoading.current) return;
+    hasStartedLoading.current = true;
 
-      video.onloadeddata = () => {
-        setLoadedVideos(prev => ({ ...prev, [idx]: true }));
-        // Small delay to ensure smooth transition
-        setTimeout(() => {
-          video.play().catch(err => console.log('Autoplay prevented:', err));
-        }, 50);
-      };
+    // Load first video with highest priority
+    const loadFirstVideo = () => {
+      const firstVideo = videoRefs.current[0];
+      if (firstVideo) {
+        firstVideo.src = videos[0];
+        firstVideo.load();
 
-      video.onerror = () => {
-        setVideoErrors(prev => ({ ...prev, [idx]: true }));
-      };
+        firstVideo.onloadeddata = () => {
+          setLoadedVideos(prev => ({ ...prev, [0]: true }));
+          firstVideo.play().catch(() => {});
+        };
 
-      video.src = src;
-      video.load();
-    });
+        firstVideo.onerror = () => {
+          setVideoErrors(prev => ({ ...prev, [0]: true }));
+        };
+      }
+    };
+
+    // Use requestIdleCallback to not block main thread
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(loadFirstVideo, { timeout: 100 });
+    } else {
+      setTimeout(loadFirstVideo, 0);
+    }
   }, [videos]);
 
-  // Lazy load remaining videos with intersection observer
+  // Load remaining videos progressively after first paint
+  useEffect(() => {
+    // Wait for first video to start loading
+    const loadRemainingVideos = () => {
+      // Load videos 1-2 quickly
+      [1, 2].forEach((idx) => {
+        setTimeout(() => {
+          const video = videoRefs.current[idx];
+          if (video && !loadedVideos[idx] && !videoErrors[idx]) {
+            video.src = videos[idx];
+            video.load();
+
+            video.onloadeddata = () => {
+              setLoadedVideos(prev => ({ ...prev, [idx]: true }));
+              video.play().catch(() => {});
+            };
+
+            video.onerror = () => {
+              setVideoErrors(prev => ({ ...prev, [idx]: true }));
+            };
+          }
+        }, idx * 150);
+      });
+
+      // Load videos 3-6 after small delay
+      setTimeout(() => {
+        [3, 4, 5, 6].forEach((idx) => {
+          const video = videoRefs.current[idx];
+          if (video && !loadedVideos[idx] && !videoErrors[idx]) {
+            video.src = videos[idx];
+            video.load();
+
+            video.onloadeddata = () => {
+              setLoadedVideos(prev => ({ ...prev, [idx]: true }));
+              video.play().catch(() => {});
+            };
+
+            video.onerror = () => {
+              setVideoErrors(prev => ({ ...prev, [idx]: true }));
+            };
+          }
+        });
+      }, 400);
+    };
+
+    // Start loading remaining videos after component mounts
+    const timer = setTimeout(loadRemainingVideos, 100);
+    return () => clearTimeout(timer);
+  }, [videos, loadedVideos, videoErrors]);
+
+  // Pause videos when not visible to save resources
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const video = entry.target as HTMLVideoElement;
-            const idx = parseInt(video.dataset.index || '0');
+          const video = entry.target as HTMLVideoElement;
+          const idx = parseInt(video.dataset.index || '0');
 
-            if (idx >= 3 && !loadedVideos[idx] && !videoErrors[idx]) {
-              const src = video.dataset.src;
-              if (src) {
-                video.onloadeddata = () => {
-                  setLoadedVideos(prev => ({ ...prev, [idx]: true }));
-                  setTimeout(() => {
-                    video.play().catch(err => console.log('Autoplay prevented:', err));
-                  }, 50);
-                };
-                video.onerror = () => {
-                  setVideoErrors(prev => ({ ...prev, [idx]: true }));
-                };
-                video.src = src;
-                video.load();
-              }
-            } else if (loadedVideos[idx] && video.paused) {
-              video.play().catch(err => console.log('Autoplay prevented:', err));
+          if (entry.isIntersecting) {
+            if (loadedVideos[idx] && video.paused) {
+              video.play().catch(() => {});
             }
           } else {
-            const video = entry.target as HTMLVideoElement;
             if (!video.paused) {
               video.pause();
             }
@@ -115,8 +154,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     });
 
     return () => observer.disconnect();
-  }, [loadedVideos, videoErrors]);
+  }, [loadedVideos]);
 
+  // Start animation carousel
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % videos.length);
@@ -172,20 +212,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
             src={settings.hero_image}
             alt="Hero background"
             className="w-full h-full object-cover"
-            loading="lazy"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
           />
         </div>
       )}
 
       <style>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
         .card-transition {
           transition: transform 1000ms cubic-bezier(0.4, 0, 0.2, 1),
-                      opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1),
-                      z-index 0ms;
+                      opacity 1000ms cubic-bezier(0.4, 0, 0.2, 1);
+          will-change: transform, opacity;
         }
         .skeleton-shimmer {
           background: linear-gradient(90deg, #1a1a2e 25%, #2d2d44 50%, #1a1a2e 75%);
@@ -197,24 +235,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           100% { background-position: -200% 0; }
         }
         .video-fade-in {
-          animation: fadeInVideo 0.4s ease-out forwards;
+          animation: fadeInVideo 0.3s ease-out forwards;
         }
         @keyframes fadeInVideo {
-          from {
-            opacity: 0;
-            transform: scale(0.98);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
 
-      <div className="relative z-10 max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 w-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-4 xl:gap-8 items-center lg:min-h-[70vh]">
+      <div className="relative z-10 max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-16 2xl:px-20 w-full">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 xl:gap-12 2xl:gap-16 items-center lg:min-h-[70vh]">
           {/* Left Content */}
-          <div className="text-left lg:text-left flex flex-col space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8 items-start font-sora order-1 lg:order-1">
+          <div className="text-left lg:text-left flex flex-col space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8 items-start font-sora order-1 lg:order-1 lg:pr-4 xl:pr-8 lg:max-w-[700px] xl:max-w-[800px] 2xl:max-w-[850px]">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#080921] border border-[#858B984D] font-inter">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
@@ -229,26 +261,25 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
             {/* Heading */}
             <div className='space-y-3 sm:space-y-4 lg:space-y-5'>
-                <h1 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-[54px] font-bold leading-tight sm:leading-[1.2] md:leading-[1.2] lg:leading-[68px] xl:leading-[78px] bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
-                    Your Netflix for UI Animation <br/>
-                    & Micro-Interaction Design
+                <h1 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-[54px] font-bold leading-tight sm:leading-[1.2] md:leading-[1.2] lg:leading-[68px] xl:leading-[78px] bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent whitespace-nowrap">
+                    Your Netflix for UI Animation <br />& Micro-Interaction Design
                 </h1>
 
                 {/* Description */}
-                <p className="font-inter text-sm sm:text-base md:text-lg text-white/85 leading-relaxed max-w-xl font-light">
+                <p className="font-inter text-sm sm:text-base md:text-lg lg:text-base xl:text-lg text-white/85 leading-relaxed max-w-xl font-light">
                     A curated, evolving library of the world's best UI animations. Stream inspiration, study motion systems, and design experiences users feel.
                 </p>
             </div>
 
             {/* CTA Section */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 lg:gap-6 pt-2 w-full">
-            <button
-            onClick={handleBookmark}
-            className="group holographic-link2 relative px-5 sm:px-6 lg:px-7 py-2.5 sm:py-3 bg-[#9943EE] text-white font-semibold rounded-lg transition-all duration-300 w-full sm:w-auto hover:bg-[#8534d4] shadow-[0_0_60px_10px_rgba(59,130,246,0.25)]"
-            >
-            <span className="relative z-10 text-sm sm:text-base lg:text-lg font-semibold">Bookmark Now</span>
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>
-            </button>
+              <button
+                onClick={handleBookmark}
+                className="group holographic-link2 relative px-5 sm:px-6 lg:px-7 py-2.5 sm:py-3 bg-[#9943EE] text-white font-semibold rounded-lg transition-all duration-300 w-full sm:w-auto hover:bg-[#8534d4] shadow-[0_0_60px_10px_rgba(59,130,246,0.25)]"
+              >
+                <span className="relative z-10 text-sm sm:text-base lg:text-lg font-semibold">Bookmark Now</span>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>
+              </button>
 
               {/* User Avatars */}
               <div className="flex items-center gap-2 sm:gap-3">
@@ -262,7 +293,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
                         src={avat}
                         alt={`User ${idx + 1}`}
                         className="w-full h-full object-cover"
-                        loading="lazy"
+                        loading="eager"
+                        decoding="async"
                       />
                     </div>
                   ))}
@@ -273,19 +305,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           </div>
 
           {/* Right - Animated Card Stack */}
-          <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[520px] xl:h-[550px] flex items-center justify-center lg:justify-end order-2 lg:order-2 overflow-visible">
-            <div className="relative w-full h-full lg:ml-8 xl:ml-16 2xl:ml-20 lg:mr-4 xl:mr-8">
+          <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[500px] xl:h-[540px] 2xl:h-[580px] flex items-center justify-center lg:justify-end order-2 lg:order-2 overflow-visible">
+            <div className="relative w-full h-full lg:ml-12 xl:ml-20 2xl:ml-28">
               {videos.map((videoSrc, idx) => {
                 const style = getCardStyle(idx, activeIndex);
                 const colorIndex = idx % colors.length;
                 const hasError = videoErrors[idx];
                 const isLoaded = loadedVideos[idx];
-                const shouldPreload = idx < 3;
 
                 return (
                   <div
                     key={idx}
-                    className="card-transition absolute left-1/2 top-1/2 w-[85%] sm:w-[75%] md:w-[70%] lg:w-[85%] xl:w-[82%] max-w-[240px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[380px] xl:max-w-[420px] rounded-lg sm:rounded-xl shadow-2xl overflow-hidden"
+                    className="card-transition absolute left-1/2 top-1/2 w-[85%] sm:w-[75%] md:w-[70%] lg:w-[90%] xl:w-[88%] 2xl:w-[85%] max-w-[240px] sm:max-w-[280px] md:max-w-[340px] lg:max-w-[360px] xl:max-w-[400px] 2xl:max-w-[440px] rounded-lg sm:rounded-xl shadow-2xl overflow-hidden"
                     style={style}
                   >
                     <div className="w-full aspect-[4/3] sm:aspect-[20/15] rounded-lg sm:rounded-xl overflow-hidden bg-gray-900">
@@ -296,16 +327,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
                           )}
                           <video
                             ref={el => videoRefs.current[idx] = el}
-                            src={shouldPreload ? videoSrc : undefined}
-                            data-src={!shouldPreload ? videoSrc : undefined}
                             data-index={idx}
                             className={`w-full h-full object-cover ${isLoaded ? 'video-fade-in' : 'opacity-0'}`}
                             onError={() => handleVideoError(idx)}
                             muted
                             playsInline
                             loop
-                            autoPlay={shouldPreload}
-                            preload={shouldPreload ? "auto" : "none"}
+                            preload="none"
                           />
                         </>
                       ) : (

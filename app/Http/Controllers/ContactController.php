@@ -98,15 +98,36 @@ class ContactController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Send email to admin (async queue recommended)
-            Mail::to(config('mail.admin_email'))
-                ->send(new ContactFormMail($contact));
+            $adminEmailSent = false;
+            $userEmailSent = false;
 
-            // Send confirmation email to user (async queue recommended)
-            Mail::to($contact->email)
-                ->send(new ContactFormMail($contact, true));
+            // Send email to admin
+            try {
+                Mail::to(config('mail.admin_email'))
+                    ->send(new ContactFormMail($contact));
+                $adminEmailSent = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to send admin email: ' . $e->getMessage());
+            }
 
-            return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
+            // Send confirmation email to user
+            try {
+                Mail::to($contact->email)
+                    ->send(new ContactFormMail($contact, true));
+                $userEmailSent = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to send user confirmation email: ' . $e->getMessage());
+            }
+
+            // Return success if at least the contact was saved
+            // You can customize the message based on email statuses if needed
+            if ($adminEmailSent || $userEmailSent) {
+                return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
+            } else {
+                // Both emails failed but contact is saved
+                Log::warning('Contact saved but both emails failed to send. Contact ID: ' . $contact->id);
+                return back()->with('success', 'Thank you for your message! We\'ll get back to you soon.');
+            }
 
         } catch (\Exception $e) {
             Log::error('Contact form submission failed: ' . $e->getMessage());

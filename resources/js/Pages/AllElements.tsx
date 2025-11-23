@@ -307,7 +307,7 @@ const AllElements: React.FC<AllElementsProps> = ({
                 </p>
                 <button
                   onClick={() => setInteractionSearchQuery('')}
-                  className="text-white opacity-95 bg-[#2B235A] px-3 sm:px-4 md:px-3.5 py-2 rounded-md hover:opacity-100 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm sm:text-base md:text-[15px] transition-all duration-300 hover:scale-105 active:scale-95 animate-slide-in-up"
+                  className="text-white opacity-95 bg-[#2B235A] px-3 sm:px-4 md:px-3.5 py-2 rounded-md hover:opacity-100 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm sm:text-base md:text-[15px] transition-all duration-300 active:scale-95 animate-slide-in-up"
                   style={{ animationDelay: '0.2s' }}
                 >
                   Clear search

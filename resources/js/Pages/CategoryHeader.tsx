@@ -90,6 +90,19 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth }) => {
     }
   };
 
+  // Helper function to add ref parameter to URL
+  const addReferralParam = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      urlObj.searchParams.append('ref', 'ripplix');
+      return urlObj.toString();
+    } catch {
+      // Fallback for invalid URLs or relative paths
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}ref=ripplix`;
+    }
+  };
+
   const closeMembershipModal = () => setShowMembershipModal(false);
 
   return (
@@ -135,8 +148,9 @@ const CategoryHeader: React.FC<CategoryHeaderProps> = ({ category, auth }) => {
               {/* VISIT SITE BUTTON */}
               {category.product_url && (
                 <a
-                href={category.product_url}
+                href={addReferralParam(category.product_url)}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="holographic-link2 flex items-center justify-center px-4 sm:px-4 md:px-3.5 py-2.5 sm:py-3 md:py-2.5
                            rounded-[4px] border border-[#CECCFF] text-xs sm:text-sm md:text-[13px]
                            font-semibold bg-white text-gray-900 hover:bg-gray-50 transition w-full sm:w-auto outline-none focus:outline-none focus:ring-0"

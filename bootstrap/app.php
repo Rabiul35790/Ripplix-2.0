@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auto.expired.subscriptions' => \App\Http\Middleware\AutoHandleExpiredSubscriptions::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'api.admin.access' => \App\Http\Middleware\ApiAdminAccess::class,
+            'cache.static' => \App\Http\Middleware\CacheStaticAssets::class, // Add cache middleware alias
         ]);
 
         $middleware->web(append: [
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SeoMiddleware::class,
             \App\Http\Middleware\AutoHandleExpiredSubscriptions::class,
             \App\Http\Middleware\TrackCookieConsent::class,
+            \App\Http\Middleware\CacheStaticAssets::class, // Add cache middleware at the end
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -101,13 +103,11 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withCommands([
-        // \App\Console\Commands\ImportProductsFromApi::class,
         \App\Console\Commands\CleanupVisitorSessions::class,
         GenerateSitemap::class,
         \App\Console\Commands\HandleExpiredSubscriptionsCommand::class,
         AutoBackupCommand::class,
     ])
-
     ->withSchedule(function (Schedule $schedule) {
         // Automatic backup every 7 days at 2 AM
         $schedule->command('backup:auto --type=full')

@@ -10,7 +10,6 @@ use App\Models\Interaction;
 use App\Models\LibraryView;
 use App\Models\Setting;
 use App\Mail\SponsorFormMail;
-use App\Models\Library;
 use App\Models\Platform;
 use App\Models\Sponsor;
 use App\Models\User;
@@ -22,9 +21,8 @@ use Inertia\Inertia;
 class SponsorController extends Controller
 {
     /**
-     * Show the sponsor form.
+     * Show the sponsor form - OPTIMIZED for instant loading.
      */
-
     private function getViewedLibraryIds(Request $request): array
     {
         $userId = auth()->id();
@@ -43,16 +41,10 @@ class SponsorController extends Controller
     public function index(Request $request)
     {
         $settings = Setting::getInstance();
-
-        // Get libraries data similar to BrowseController
-        // $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-        //     ->where('is_active', true);
-
-        // $libraries = $query->latest()->get();
-        $filters = $this->getFilters();
-
         $isAuthenticated = auth()->check();
 
+        // Get lightweight filters only
+        $filters = $this->getFilters();
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
 
@@ -66,8 +58,9 @@ class SponsorController extends Controller
             $userLibraryIds = Board::getUserLibraryIds(auth()->id());
         }
 
+        // Return MINIMAL data for instant page load - NO LIBRARIES
         return Inertia::render('SponsorUs', [
-            'libraries' => [],
+            'libraries' => [], // Empty - sponsor page doesn't need libraries
             'filters' => $filters,
             'filterType' => null,
             'filterValue' => null,
@@ -107,17 +100,36 @@ class SponsorController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
+            $adminEmailSent = false;
+            $userEmailSent = false;
+
             // Send email to admin
-
-            Mail::to(config('mail.admin_email'))
-                ->send(new SponsorFormMail($sponsor));
-
+            try {
+                Mail::to(config('mail.admin_email'))
+                    ->send(new SponsorFormMail($sponsor));
+                $adminEmailSent = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to send admin sponsorship email: ' . $e->getMessage());
+            }
 
             // Send confirmation email to sponsor
-            Mail::to($sponsor->email)
-                ->send(new SponsorFormMail($sponsor, true));
+            try {
+                Mail::to($sponsor->email)
+                    ->send(new SponsorFormMail($sponsor, true));
+                $userEmailSent = true;
+            } catch (\Exception $e) {
+                Log::error('Failed to send sponsor confirmation email: ' . $e->getMessage());
+            }
 
-            return back()->with('success', 'Thank you for your sponsorship inquiry! We\'ll review your request and get back to you soon.');
+            // Return success if at least the sponsor record was saved
+            // You can customize the message based on email statuses if needed
+            if ($adminEmailSent || $userEmailSent) {
+                return back()->with('success', 'Thank you for your sponsorship inquiry! We\'ll review your request and get back to you soon.');
+            } else {
+                // Both emails failed but sponsor is saved
+                Log::warning('Sponsor saved but both emails failed to send. Sponsor ID: ' . $sponsor->id);
+                return back()->with('success', 'Thank you for your sponsorship inquiry! We\'ll review your request and get back to you soon.');
+            }
 
         } catch (\Exception $e) {
             Log::error('Sponsor form submission failed: ' . $e->getMessage());
@@ -127,15 +139,15 @@ class SponsorController extends Controller
     }
 
     /**
-     * Get filters data for the Layout component
+     * Get filters data for the Layout component - OPTIMIZED
      */
     private function getFilters()
     {
         return [
-            'platforms' => Platform::where('is_active', true)->get(),
-            'categories' => Category::where('is_active', true)->orderBy('name')->get(),
-            'industries' => Industry::where('is_active', true)->orderBy('name')->get(),
-            'interactions' => Interaction::where('is_active', true)->orderBy('name')->get(),
+            'platforms' => Platform::where('is_active', true)->get(['id', 'name', 'slug']),
+            'categories' => Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug', 'image']),
+            'industries' => Industry::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug']),
+            'interactions' => Interaction::where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug']),
         ];
     }
 }

@@ -194,7 +194,10 @@ class LibraryResource extends Resource
                         ]),
 
                         Forms\Components\TagsInput::make('keywords')
-                            ->helperText('Additional keywords for SEO'),
+                            ->helperText('Additional keywords for SEO')
+                            ->default([])
+                            ->dehydrated()
+                            ->columnSpanFull(),
 
                         Forms\Components\Grid::make(2)
                             ->schema([

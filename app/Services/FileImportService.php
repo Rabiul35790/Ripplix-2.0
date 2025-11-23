@@ -145,6 +145,14 @@ class FileImportService
         $id = $record['id'] ?? $record['external_id'] ?? null;
         $id = $id !== null ? (string) $id : null;
 
+        // Handle focus_keyword -> keywords mapping
+        $keywords = [];
+        if (isset($record['focus_keyword'])) {
+            $keywords = $this->normalizeArray($record['focus_keyword']);
+        } elseif (isset($record['keywords'])) {
+            $keywords = $this->normalizeArray($record['keywords']);
+        }
+
         return [
             'id' => $id,
             'published_date' => $record['published_date'] ?? null,
@@ -159,9 +167,10 @@ class FileImportService
             'industry' => $record['industry'] ?? null,
             'interaction' => $this->normalizeArray($record['interaction'] ?? []),
             'description' => $record['description'] ?? null,
-            'meta_description' => $record['meta_description'] ?? null,
-            'keywords' => $this->normalizeArray($record['keywords'] ?? $record['focus_keyword'] ?? []),
+            'meta_description' => $record['meta_description'] ?? $record['meta description'] ?? null,
+            'keywords' => $keywords,
             'seo_title' => $record['seo_title'] ?? null,
+            'focus_keyword' => !empty($keywords) ? $keywords[0] : null, // Add focus_keyword as first keyword
         ];
     }
 

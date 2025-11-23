@@ -143,7 +143,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
                   return (
                     <div
                       key={index}
-                      className="absolute inset-0 rounded-lg overflow-hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1),0_-2px_4px_-2px_rgba(0,0,0,0.06)] bg-white"
+                      className="absolute inset-0 rounded-lg overflow-hidden shadow-[0_-2px_3px_-1px_rgba(0,0,0,0.08),0_-1px_2px_-1px_rgba(0,0,0,0.05)] bg-white"
                       style={{
                         transform: `scale(${scale}) translateY(${offsetY}rem)`,
                         transformOrigin: 'center top',

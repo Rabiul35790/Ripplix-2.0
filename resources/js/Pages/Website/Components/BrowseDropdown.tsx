@@ -164,12 +164,12 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
                     href="/all-categories"
                     className="font-semibold text-[#2B235A] opacity-85 dark:text-white text-sm hover:opacity-100 dark:hover:text-blue-400 transition-colors focus:outline-none focus:ring-0"
                 >
-                    Browse All Categories
+                    Browse All Industries
                 </a>
                 </div>
             </div>
             <p className="text-xs font-semibold text-[#9D9DA8] dark:text-gray-400 mb-3">
-                {filters.industries.length}+ Categories
+                {filters.industries.length}+ Industries
             </p>
 
             <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -311,11 +311,11 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
                     onClick={onClose}
                     className="!font-semibold text-[#2B235A] opacity-85 dark:text-white text-sm hover:opacity-100 dark:hover:text-blue-400 outline-none focus:outline-none focus:ring-0 transition-opacity duration-500"
                 >
-                    Browse All Categories
+                    Browse All Industries
                 </Link>
                 </div>
                 <p className="text-xs !font-semibold text-[#0A081B] dark:text-gray-400">
-                {filters.industries.length}+ Categories
+                {filters.industries.length}+ Industries
                 </p>
             </div>
             <div className="px-6 pb-7 pt-2">

@@ -12,383 +12,376 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            color: #2B235A;
+            color: #333;
             margin: 0;
-            padding: 10px;
-            background-color: #F5F5FA;
+            padding: 0;
+            background-color: #F8F8F9;
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
         }
 
-        .email-container {
-            background-color: white;
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #F8F8F9;
             padding: 20px;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section img {
+            height: 50px;
+        }
+
+        .email-card {
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            border: 1px solid #E0DAC8;
+            overflow: hidden;
         }
 
         .header {
+            background-image: url('{{ asset('images/logo/topbg.png') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            padding: 60px 40px;
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #E3E2FF;
+            position: relative;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .envelope {
+            width: 90px;
+            height: 90px;
+            margin-bottom: 20px;
         }
 
         .header h1 {
-            color: #0A081B;
-            font-size: 28px;
-            margin-bottom: 8px;
-            line-height: 1.3;
-            font-weight: 600;
-        }
-
-        .header p {
-            color: #2B235A;
-            font-size: 16px;
             margin: 0;
-            opacity: 0.8;
+            font-size: 28px;
+            font-weight: 600;
+            z-index: 1;
         }
 
-        .board-info {
-            background: linear-gradient(135deg, #F5F5FA 0%, #FAFAFA 100%);
-            padding: 25px;
-            border-radius: 10px;
-            border: 1px solid #E3E2FF;
-            margin: 20px 0;
+        .content {
+            padding: 40px 40px 50px 40px;
         }
 
         .board-name {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0A081B;
-            margin-bottom: 12px;
-            word-wrap: break-word;
+            font-size: 24px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 15px;
         }
 
         .board-creator {
-            color: #2B235A;
-            margin-bottom: 18px;
-            word-wrap: break-word;
-            font-size: 15px;
+            color: #474750;
+            margin-bottom: 20px;
+            font-size: 18px;
         }
 
-        .board-creator strong {
-            color: #1A04B0;
+        .board-creator .creator-name {
+            color: #9943EE;
+            font-weight: 600;
         }
 
-        .board-info > p {
-            margin: 18px 0;
-            color: #2B235A;
-            line-height: 1.6;
+        .message {
+            color: #474750;
+            font-size: 18px;
+            line-height: 1.8;
+            margin: 20px 0 30px 0;
         }
 
         .cta-button {
             display: inline-block;
-            background: linear-gradient(360deg, #1A04B0 -126.39%, #260F63 76.39%);
+            background: #9943EE;
             color: white !important;
-            padding: 16px 32px;
+            padding: 14px 40px;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
-            margin: 20px 0;
-            text-align: center;
-            min-width: 220px;
-            transition: opacity 0.3s ease;
-            touch-action: manipulation;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(26, 4, 176, 0.25);
+            font-size: 20px;
+            margin: 0;
+            border: none;
         }
 
         .cta-button:hover {
-            opacity: 0.95;
+            opacity: 0.9;
         }
 
-        .cta-container {
+        .button-wrapper {
             text-align: center;
-            margin: 28px 0;
+            margin-bottom: 35px;
         }
 
         .direct-link-section {
-            background-color: #FAFAFA;
-            padding: 18px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #E3E2FF;
-        }
-
-        .direct-link-section h3 {
-            color: #0A081B;
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .share-url {
-            background-color: white;
-            padding: 14px;
-            border-radius: 6px;
-            border: 1px solid #E3E2FF;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-            margin: 12px 0;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #2B235A;
+            margin-top: 30px;
+            padding-top: 25px;
         }
 
         .direct-link-section p {
-            font-size: 13px;
-            color: #2B235A;
-            margin-bottom: 0;
-            margin-top: 10px;
-            opacity: 0.8;
+            color: #474750;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .link-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #F5F5F7;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .share-url {
+            flex: 1;
+            font-size: 16px;
+            color: #474750;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .copy-button {
+            background: #E8E8F0;
+            color: #474750;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .copy-button:hover {
+            background: #DCDCE5;
         }
 
         .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #E3E2FF;
+            background: #F8F8F9;
+            padding: 30px 20px;
             text-align: center;
-            color: #2B235A;
-            font-size: 14px;
+            color: #8787A8;
+            font-size: 16px;
         }
 
         .footer p {
-            margin: 10px 0;
-            opacity: 0.7;
+            margin: 5px 0;
         }
 
-        .emoji {
-            font-size: 32px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        /* Tablet styles */
-        @media screen and (min-width: 480px) {
-            body {
-                padding: 20px;
+        /* Responsive Design */
+        @media only screen and (max-width: 768px) {
+            .container {
+                margin: 20px auto;
+                padding: 15px;
             }
 
-            .email-container {
-                padding: 35px;
+            .logo-section img {
+                height: 40px;
             }
 
-            .header h1 {
-                font-size: 30px;
-            }
-
-            .board-name {
-                font-size: 22px;
-            }
-
-            .board-info {
-                padding: 28px;
-            }
-
-            .direct-link-section {
-                padding: 22px;
-            }
-        }
-
-        /* Desktop styles */
-        @media screen and (min-width: 768px) {
-            body {
-                padding: 30px;
-            }
-
-            .email-container {
-                padding: 45px;
+            .email-card {
+                border-radius: 15px;
             }
 
             .header {
-                margin-bottom: 35px;
+                padding: 40px 20px;
+                min-height: 240px;
             }
 
-            .header h1 {
-                font-size: 32px;
+            .envelope {
+                width: 90px;
+                height: 90px;
+                margin-bottom: 15px;
             }
 
-            .board-name {
-                font-size: 24px;
-            }
-
-            .footer {
-                margin-top: 35px;
-            }
-
-            .direct-link-section h3 {
-                font-size: 18px;
-            }
-
-            .cta-button {
-                font-size: 17px;
-                padding: 18px 36px;
-            }
-        }
-
-        /* Very small mobile devices */
-        @media screen and (max-width: 320px) {
             .header h1 {
                 font-size: 24px;
             }
 
+            .content {
+                padding: 30px 25px 40px 25px;
+            }
+
             .board-name {
-                font-size: 18px;
-            }
-
-            .cta-button {
-                padding: 14px 24px;
-                min-width: 200px;
-                font-size: 15px;
-            }
-
-            .share-url {
-                font-size: 12px;
-                padding: 12px;
-            }
-        }
-
-        /* Email client specific fixes */
-        @media screen and (max-width: 600px) {
-            .email-container {
-                border-radius: 0 !important;
-                box-shadow: none !important;
-            }
-
-            body {
-                background-color: white !important;
-                padding: 0 !important;
-            }
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #0A081B;
-                color: #E5E5E5;
-            }
-
-            .email-container {
-                background-color: #1A1825;
-                color: #E5E5E5;
-                border-color: #2B235A;
-            }
-
-            .header h1, .board-name, .direct-link-section h3 {
-                color: white;
-            }
-
-            .header {
-                border-bottom-color: #2B235A;
-            }
-
-            .board-info {
-                background: linear-gradient(135deg, #1A1825 0%, #2B235A 100%);
-                border-color: #2B235A;
+                font-size: 20px;
             }
 
             .board-creator {
-                color: #E5E5E5;
+                font-size: 14px;
             }
 
-            .board-creator strong {
-                color: #8B7FFF;
+            .message {
+                font-size: 15px;
             }
 
-            .board-info > p {
-                color: #E5E5E5;
+            .cta-button {
+                padding: 12px 35px;
+                font-size: 15px;
+            }
+
+            .link-box {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .copy-button {
+                width: 100%;
+            }
+        }
+
+        @media only screen and (max-width: 480px) {
+            .container {
+                margin: 10px auto;
+                padding: 10px;
+            }
+
+            .logo-section {
+                margin-bottom: 20px;
+            }
+
+            .logo-section img {
+                height: 35px;
+            }
+
+            .header {
+                padding: 30px 15px;
+                min-height: 220px;
+            }
+
+            .envelope {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 10px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .content {
+                padding: 25px 20px 35px 20px;
+            }
+
+            .board-name {
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+
+            .board-creator {
+                font-size: 13px;
+                margin-bottom: 18px;
+            }
+
+            .message {
+                font-size: 14px;
+                margin: 18px 0 25px 0;
+            }
+
+            .cta-button {
+                padding: 12px 30px;
+                font-size: 14px;
+            }
+
+            .button-wrapper {
+                margin-bottom: 30px;
             }
 
             .direct-link-section {
-                background-color: #1A1825;
-                border-color: #2B235A;
-            }
-
-            .share-url {
-                background-color: #2B235A;
-                border-color: #3D3570;
-                color: #E5E5E5;
-            }
-
-            .footer {
-                border-top-color: #2B235A;
-                color: #E5E5E5;
+                margin-top: 25px;
+                padding-top: 20px;
             }
 
             .direct-link-section p {
-                color: #E5E5E5;
-            }
-        }
-
-        /* High contrast mode support */
-        @media (prefers-contrast: high) {
-            .cta-button {
-                border: 2px solid #1A04B0;
+                font-size: 14px;
+                margin-bottom: 12px;
             }
 
-            .board-info, .direct-link-section {
-                border-width: 2px;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-            body {
-                background-color: white !important;
-                color: black !important;
+            .share-url {
+                font-size: 13px;
             }
 
-            .email-container {
-                box-shadow: none !important;
-                border: 1px solid #ccc;
+            .copy-button {
+                font-size: 13px;
+                padding: 8px 18px;
             }
 
-            .cta-button {
-                border: 2px solid #1A04B0 !important;
-                color: #1A04B0 !important;
-                background: transparent !important;
+            .footer {
+                padding: 25px 15px;
+                font-size: 13px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <span class="emoji">
-                🎨
-            </span>
-            <h1>You've Been Invited!</h1>
+    <div class="container">
+        <div class="logo-section">
+            <img src="{{ asset('images/logo/logo.png') }}" alt="RippliX">
         </div>
 
-        <div class="board-info">
-            <div class="board-name">{{ $board->name }}</div>
-            <div class="board-creator">
-                Shared by <strong>{{ $creatorName }}</strong> ({{ $board->creator_email }})
+        <div class="email-card">
+            <div class="header">
+                <img src="{{ asset('images/logo/enve.png') }}" alt="" class="envelope">
+                <h1>You've been invited!</h1>
             </div>
 
-            <p>You've been invited to view this interactive collection. Click the button below to explore the shared content and discover amazing interactions.</p>
+            <div class="content">
+                <div class="board-name">{{ $board->name }}</div>
 
-            <div class="cta-container">
-                <a href="{{ $shareUrl }}" class="cta-button">View Collection</a>
+                <div class="board-creator">
+                    Shared by <span class="creator-name">{{ $creatorName }}</span> ({{ $board->creator_email }})
+                </div>
+
+                <p class="message">
+                    You've been invited to view this interactive collection. Click the button below to explore the shared content and discover amazing interactions.
+                </p>
+
+                <div class="button-wrapper">
+                    <a href="{{ $shareUrl }}" class="cta-button">View Board</a>
+                </div>
+
+                <div class="direct-link-section">
+                    <p>You can also copy and paste this link directly into your browser: <strong>Direct Link:</strong></p>
+
+                    <div class="link-box">
+                        <div class="share-url">{{ $shareUrl }}</div>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="direct-link-section">
-            <h3>Direct Link:</h3>
-            <div class="share-url">{{ $shareUrl }}</div>
-            <p>You can also copy and paste this link directly into your browser.</p>
         </div>
 
         <div class="footer">
-            <p>This invitation was sent because {{ $creatorName }} shared a collection with your email address.</p>
-            <p>If you believe this was sent in error, you can safely ignore this email.</p>
+            <p>© 2025 Ripplix · All Rights Reserved.</p>
         </div>
     </div>
+
+    <script>
+        function copyToClipboard() {
+            const url = '{{ $shareUrl }}';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function() {
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = originalText;
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Failed to copy:', err);
+                });
+            }
+        }
+    </script>
 </body>
 </html>

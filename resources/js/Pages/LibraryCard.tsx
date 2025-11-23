@@ -534,7 +534,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                 <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
                     <Link
                     href={`/browse?category=${getCategorySlug()}`}
-                    className={`font-sora !font-bold ${
+                    className={`font-sora !font-bold outline-none focus:outline-none focus:ring-0 ${
                       filterValue === getCategorySlug() ? '' : ''
                     }`}
                   >
@@ -555,7 +555,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                         >
                           <Link
                             href={`/browse?interaction=${interaction.name.toLowerCase().replace(/\s+/g, '-')}`}
-                            className={`focus:outline-none focus:ring-0 hover:text-[#9943EE] transition-color duration-500 ${
+                            className={`outline-none focus:outline-none focus:ring-0 hover:text-[#9943EE] transition-color duration-500 ${
                               filterValue === interaction.name.toLowerCase().replace(/\s+/g, '-') ? '' : ''
                             }`}
                           >

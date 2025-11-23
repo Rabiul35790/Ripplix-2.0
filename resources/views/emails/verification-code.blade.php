@@ -92,8 +92,8 @@
                                 © Ripplix
                             </p>
                             <p style="margin: 0;">
-                                <a href="#" style="color: #4a7cff; font-size: 14px; text-decoration: none; margin: 0 10px;">Privacy policy</a>
-                                <a href="#" style="color: #4a7cff; font-size: 14px; text-decoration: none; margin: 0 10px;">Terms of service</a>
+                                <a href="/privacy" style="color: #4a7cff; font-size: 14px; text-decoration: none; margin: 0 10px;">Privacy policy</a>
+                                <a href="/terms" style="color: #4a7cff; font-size: 14px; text-decoration: none; margin: 0 10px;">Terms of service</a>
                             </p>
                         </td>
                     </tr>
