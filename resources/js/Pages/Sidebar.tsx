@@ -428,6 +428,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
             <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
               Privacy
             </Link>
+            <Link href="/blog" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+              Blog
+            </Link>
           </div>
         </div>
       </div>

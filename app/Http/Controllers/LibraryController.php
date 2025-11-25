@@ -462,6 +462,8 @@ public function browse(Request $request)
 }
 
     // NEW: API endpoint to fetch libraries for browse page
+// Replace the getBrowseLibraries method in LibraryController.php
+
 public function getBrowseLibraries(Request $request)
 {
     $isAuthenticated = auth()->check();
@@ -518,8 +520,6 @@ public function getBrowseLibraries(Request $request)
         }
     }
 
-    // Platform filtering is removed - will be done on frontend for instant results
-
     // Changed from latest() to inRandomOrder() for random ordering
     $libraries = $query->inRandomOrder()
         ->paginate($perPage);
@@ -536,6 +536,7 @@ public function getBrowseLibraries(Request $request)
         'pagination' => [
             'current_page' => $libraries->currentPage(),
             'last_page' => $libraries->lastPage(),
+            'per_page' => $libraries->perPage(),
             'total' => $libraries->total(),
             'has_more' => $libraries->hasMorePages()
         ]
@@ -807,8 +808,18 @@ public function getBrowseLibraries(Request $request)
 
         $filters = $this->getFilters();
 
-        // Check if this is an AJAX request (for modal)
-        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+        $settings = Setting::getInstance();
+
+        // Check if this is specifically a fetch API call (not an Inertia request)
+        // Inertia requests will have the X-Inertia header
+        $isInertiaRequest = $request->header('X-Inertia') !== null;
+        $isFetchApiCall = !$isInertiaRequest && (
+            $request->wantsJson() ||
+            $request->header('X-Requested-With') === 'XMLHttpRequest'
+        );
+
+        // Only return JSON for fetch API calls, not Inertia requests
+        if ($isFetchApiCall) {
             return response()->json([
                 'library' => $library,
                 'userLibraryIds' => $userLibraryIds,
@@ -817,7 +828,7 @@ public function getBrowseLibraries(Request $request)
             ]);
         }
 
-        // For direct access (e.g., shared links), render with modal open
+        // For Inertia requests (including browser back button), render the Home page with modal open
         return Inertia::render('Home', [
             'libraries' => Library::with(['platforms', 'categories', 'industries', 'interactions'])
                 ->where('is_active', true)
@@ -833,9 +844,25 @@ public function getBrowseLibraries(Request $request)
             'isAuthenticated' => $isAuthenticated,
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
+            'pagination' => [
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => 18,
+                'total' => 18,
+                'has_more' => true
+            ],
+            'settings' => [
+                'logo' => $settings->logo ? asset('storage/' . $settings->logo) : null,
+                'favicon' => $settings->favicon ? asset('storage/' . $settings->favicon) : null,
+                'authentication_page_image' => $settings->authentication_page_image ? asset('storage/' . $settings->authentication_page_image) : null,
+                'copyright_text' => $settings->copyright_text,
+                'hero_image' => $settings->hero_image ? asset('storage/' . $settings->hero_image) : null,
+            ],
+            'topLibrariesByCategory' => [],
+            'topLibrariesByInteraction' => [],
+            'topLibrariesByIndustry' => [],
         ]);
     }
-
     private function getFilters()
     {
         return [

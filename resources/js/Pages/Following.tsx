@@ -529,7 +529,7 @@ const Following: React.FC<FollowingProps> = ({
                         ) : (
                           <div className="p-8 sm:p-12 md:p-10 text-center">
                             <p className="text-sm sm:text-base md:text-[15px] text-[#2B235A] dark:text-gray-400">
-                              No interactions found for this category yet.
+                              No interactions found for this App yet.
                             </p>
                           </div>
                         )}

@@ -83,7 +83,6 @@ const Browse: React.FC<BrowseProps> = ({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [displayedLibraries, setDisplayedLibraries] = useState<Library[]>([]);
-  const [itemsToShow, setItemsToShow] = useState(isAuthenticated ? 12 : 3);
 
   // Filter states
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -93,6 +92,7 @@ const Browse: React.FC<BrowseProps> = ({
   const [libraries, setLibraries] = useState<Library[]>(initialLibraries);
   const [allLibraries, setAllLibraries] = useState<Library[]>([]);
   const [isLoadingLibraries, setIsLoadingLibraries] = useState(initialLibraries.length === 0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // State for userLibraryIds
   const [userLibraryIds, setUserLibraryIds] = useState<number[]>(initialUserLibraryIds);
@@ -107,6 +107,7 @@ const Browse: React.FC<BrowseProps> = ({
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
+    per_page: isAuthenticated ? 50 : 18,
     total: 0,
     has_more: false
   });
@@ -173,63 +174,71 @@ const Browse: React.FC<BrowseProps> = ({
     }
   }, [url, fetchLibraryForModal, modalLibrary, isModalOpen]);
 
-  // UPDATED: Fetch libraries with proper data structure
-  useEffect(() => {
-    const fetchLibraries = async () => {
-      if (libraries.length > 0) {
-        setIsLoadingLibraries(false);
-        return;
+  // UPDATED: Fetch libraries with pagination
+  const fetchLibraries = useCallback(async (page: number = 1, append: boolean = false) => {
+    try {
+      if (!append) {
+        setIsLoadingLibraries(true);
+      } else {
+        setIsLoadingMore(true);
       }
 
-      try {
-        setIsLoadingLibraries(true);
+      const params = new URLSearchParams();
 
-        const params = new URLSearchParams();
+      if (filterValue) {
+        if (filterType === 'category') params.set('category', filterValue);
+        if (filterType === 'industry') params.set('industry', filterValue);
+        if (filterType === 'interaction') params.set('interaction', filterValue);
+      }
 
-        if (filterValue) {
-          if (filterType === 'category') params.set('category', filterValue);
-          if (filterType === 'industry') params.set('industry', filterValue);
-          if (filterType === 'interaction') params.set('interaction', filterValue);
-        }
+      params.set('page', page.toString());
 
-        params.set('page', '1');
+      const response = await fetch(`/api/browse/libraries?${params.toString()}`);
 
-        const response = await fetch(`/api/browse/libraries?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch libraries');
+      }
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch libraries');
-        }
+      const data = await response.json();
 
-        const data = await response.json();
+      // CRITICAL FIX: Ensure all libraries have required structure
+      const librariesWithDefaults = data.libraries.map((lib: any) => ({
+        ...lib,
+        platforms: lib.platforms || [],
+        categories: lib.categories || [],
+        industries: lib.industries || [],
+        interactions: lib.interactions || []
+      }));
 
-        // CRITICAL FIX: Ensure all libraries have required structure
-        const librariesWithDefaults = data.libraries.map((lib: any) => ({
-          ...lib,
-          platforms: lib.platforms || [],
-          categories: lib.categories || [],
-          industries: lib.industries || [],
-          interactions: lib.interactions || []
-        }));
+      const allLibrariesWithDefaults = data.allLibraries.map((lib: any) => ({
+        ...lib,
+        platforms: lib.platforms || [],
+        categories: lib.categories || [],
+        industries: lib.industries || [],
+        interactions: lib.interactions || []
+      }));
 
-        const allLibrariesWithDefaults = data.allLibraries.map((lib: any) => ({
-          ...lib,
-          platforms: lib.platforms || [],
-          categories: lib.categories || [],
-          industries: lib.industries || [],
-          interactions: lib.interactions || []
-        }));
-
+      if (append) {
+        setLibraries(prev => [...prev, ...librariesWithDefaults]);
+      } else {
         setLibraries(librariesWithDefaults);
         setAllLibraries(allLibrariesWithDefaults);
-        setPagination(data.pagination);
-      } catch (error) {
-        console.error('Error fetching libraries:', error);
-      } finally {
-        setIsLoadingLibraries(false);
       }
-    };
 
-    fetchLibraries();
+      setPagination(data.pagination);
+    } catch (error) {
+      console.error('Error fetching libraries:', error);
+    } finally {
+      setIsLoadingLibraries(false);
+      setIsLoadingMore(false);
+    }
+  }, [filterType, filterValue]);
+
+  // Initial fetch
+  useEffect(() => {
+    if (libraries.length === 0) {
+      fetchLibraries(1, false);
+    }
   }, [filterType, filterValue]);
 
   // Get current category data for CategoryHeader
@@ -240,7 +249,7 @@ const Browse: React.FC<BrowseProps> = ({
     return null;
   }, [filterType, filterValue, filters.categories]);
 
-  // Filter libraries based on search, platform (frontend), and active page filter
+  // Filter libraries based on search and platform (frontend)
   const filteredLibraries = useMemo(() => {
     let filtered = libraries;
 
@@ -269,23 +278,19 @@ const Browse: React.FC<BrowseProps> = ({
     return filtered;
   }, [libraries, selectedPlatform, searchQuery]);
 
-  // Update displayed libraries when filteredLibraries or itemsToShow changes
+  // Update displayed libraries when filteredLibraries changes
   useEffect(() => {
-    if (isAuthenticated) {
-      setDisplayedLibraries(filteredLibraries.slice(0, itemsToShow));
-    } else {
-      setDisplayedLibraries(filteredLibraries.slice(0, 18));
-    }
-  }, [filteredLibraries, itemsToShow, isAuthenticated]);
+    setDisplayedLibraries(filteredLibraries);
+  }, [filteredLibraries]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setItemsToShow(isAuthenticated ? 12 : 10);
   };
 
+  // NEW: Handle load more pagination
   const handleLoadMore = () => {
-    if (isAuthenticated) {
-      setItemsToShow(prev => prev + 12);
+    if (pagination.has_more && !isLoadingMore) {
+      fetchLibraries(pagination.current_page + 1, true);
     }
   };
 
@@ -333,14 +338,11 @@ const Browse: React.FC<BrowseProps> = ({
   // Filter handlers - platform filtering happens instantly on frontend
   const handlePlatformChange = (platform: string) => {
     setSelectedPlatform(platform);
-    setItemsToShow(isAuthenticated ? 12 : 10);
   };
 
   const handleCardsPerRowChange = (count: number) => {
     setCardsPerRow(count);
   };
-
-  const hasMore = isAuthenticated && displayedLibraries.length < filteredLibraries.length;
 
   const getPageTitle = () => {
     if (filterType && filterName) {
@@ -356,44 +358,6 @@ const Browse: React.FC<BrowseProps> = ({
       }
     }
     return 'Browse Libraries';
-  };
-
-  const getBreadcrumbText = () => {
-    if (filterType && filterName) {
-      switch (filterType) {
-        case 'category':
-          return `Apps: ${filterName}`;
-        case 'industry':
-          return `Category: ${filterName}`;
-        case 'interaction':
-          return `Element: ${filterName}`;
-        default:
-          return 'All Libraries';
-      }
-    }
-    return 'All Libraries';
-  };
-
-  const getActiveFiltersDescription = () => {
-    const activeFilters = [];
-
-    if (selectedPlatform !== 'all') {
-      let platform = filters.platforms.find(p => p.id.toString() === selectedPlatform);
-      if (!platform) {
-        platform = filters.platforms.find(p => p.name.toLowerCase() === selectedPlatform.toLowerCase());
-      }
-      if (platform) {
-        activeFilters.push(`Platform: ${platform.name}`);
-      } else {
-        activeFilters.push(`Platform: ${selectedPlatform}`);
-      }
-    }
-
-    if (filterName) {
-      activeFilters.push(`${filterType === 'category' ? 'Category' : filterType === 'industry' ? 'Industry' : 'Interaction'}: ${filterName}`);
-    }
-
-    return activeFilters.length > 0 ? ` (${activeFilters.join(', ')})` : '';
   };
 
   return (
@@ -441,9 +405,9 @@ const Browse: React.FC<BrowseProps> = ({
                   Showing
                 </div>
                 <div className="text-[#2E241C] dark:text-gray-400 text-sm sm:text-sm md:text-[13px] mt-1 font-semibold">
-                  {!isAuthenticated && filteredLibraries.length > 18
-                    ? `18 of ${filteredLibraries.length} Results`
-                    : `${filteredLibraries.length} ${filteredLibraries.length === 1 ? 'Result' : 'Results'}`
+                  {!isAuthenticated && pagination.total > 18
+                    ? `${Math.min(displayedLibraries.length, 18)} of ${pagination.total} Results`
+                    : `${pagination.total} ${pagination.total === 1 ? 'Result' : 'Results'}`
                   }
                   {searchQuery && ` for "${searchQuery}"`}
                 </div>
@@ -502,7 +466,7 @@ const Browse: React.FC<BrowseProps> = ({
               />
             )}
 
-            <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[60px] md:top-[75px] lg:top-[75px] z-10">
+            <div className="max-w-full px-4 sm:px-6 md:px-7 lg:px-6 mx-auto sticky top-[65px] md:top-[80px] lg:top-[80px] z-10">
               <FilterSection
                 filters={filters}
                 selectedPlatform={selectedPlatform}
@@ -517,9 +481,9 @@ const Browse: React.FC<BrowseProps> = ({
                 ziggy={ziggyData}
                 libraries={displayedLibraries}
                 onLibraryClick={handleLibraryClick}
-                onLoadMore={hasMore ? handleLoadMore : undefined}
-                hasMore={hasMore}
-                isLoading={false}
+                onLoadMore={pagination.has_more ? handleLoadMore : undefined}
+                hasMore={pagination.has_more}
+                isLoading={isLoadingMore}
                 cardsPerRow={cardsPerRow}
                 auth={authData}
                 onStarClick={handleStarClick}
@@ -551,7 +515,6 @@ const Browse: React.FC<BrowseProps> = ({
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedPlatform('all');
-                      setItemsToShow(isAuthenticated ? 12 : 3);
                     }}
                     className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-4 sm:px-4 md:px-3.5 py-2 rounded-[4px] !font-sora !font-medium text-sm sm:text-[16px] md:text-[15px] hover:opacity-95 transition-all whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
                   >
