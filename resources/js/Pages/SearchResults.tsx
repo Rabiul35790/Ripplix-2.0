@@ -51,6 +51,7 @@ interface SearchResultsProps extends PageProps {
   currentPage: number;
   isAuthenticated: boolean;
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -72,6 +73,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   isAuthenticated: initialIsAuthenticated = false,
   filters,
   userPlanLimits,
+  currentPlan,
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -260,6 +262,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       userLibraryIds={userLibraryIds}
       viewedLibraryIds={viewedLibraryIds}
       onLibraryViewed={handleLibraryViewed}
+      currentPlan={currentPlan}
     >
       <Head title={`Search Results for "${searchQuery}"`} />
 

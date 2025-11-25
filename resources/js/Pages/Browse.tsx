@@ -48,6 +48,7 @@ interface BrowseProps extends PageProps {
   isAuthenticated: boolean;
   totalLibraryCount: number;
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -73,6 +74,7 @@ const Browse: React.FC<BrowseProps> = ({
   filterName,
   categoryData,
   userPlanLimits,
+  currentPlan,
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -372,6 +374,7 @@ const Browse: React.FC<BrowseProps> = ({
         auth={authData}
         ziggy={ziggyData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ContactController;
@@ -127,6 +128,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Public shared board route
 Route::get('/boards/shared/{token}', [CollectionController::class, 'shared'])->name('boards.shared');
 
+
+
+
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+// Blog API Routes
+Route::prefix('api')->group(function () {
+    Route::get('/blogs', [BlogController::class, 'getBlogs'])->name('api.blogs.index');
+    Route::post('/blogs/{slug}/increment-view', [BlogController::class, 'incrementView'])->name('api.blogs.increment-view');
+});
 
 
 

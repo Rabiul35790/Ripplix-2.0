@@ -31,6 +31,28 @@ class CollectionController extends Controller
         return LibraryView::getViewedLibraryIds($userId, $sessionId);
     }
 
+    private function getCurrentPlan($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Get current plan details
+        if ($user->pricingPlan) {
+            return [
+                'id' => $user->pricingPlan->id,
+                'name' => $user->pricingPlan->name,
+                'slug' => $user->pricingPlan->slug ?? null,
+                'price' => $user->pricingPlan->price ?? 0,
+                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $user->subscription_ends_at ?? null,
+                'days_until_expiry' => $user->daysUntilExpiry(),
+            ];
+        }
+
+        return null;
+    }
+
     public function index(Request $request): Response
     {
         $boards = [];
@@ -91,6 +113,7 @@ class CollectionController extends Controller
             'boards' => $boards,
             'filters' => $filters,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
         ]);
@@ -452,12 +475,14 @@ class CollectionController extends Controller
             'filters' => $filters,
             'userLibraryIds' => $userLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'viewedLibraryIds' => $viewedLibraryIds,
         ]);
     }
 
     public function shared(Request $request, string $token): Response
     {
+        $user = auth()->user();
         $board = Board::where('share_token', $token)
             ->whereNotNull('share_token')
             ->where(function($query) {
@@ -496,6 +521,7 @@ class CollectionController extends Controller
                 'userLibraryIds' => $userLibraryIds,
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => auth()->check() ? $this->getUserPlanLimits(auth()->user()) : null,
+                'currentPlan' => $this->getCurrentPlan($user),
                 'isPrivate' => true,
                 'isOwner' => false,
             ]);
@@ -548,6 +574,7 @@ class CollectionController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'isPrivate' => false,
             'isOwner' => $isOwner,
         ]);

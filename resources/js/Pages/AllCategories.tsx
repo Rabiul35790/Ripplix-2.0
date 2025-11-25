@@ -101,6 +101,7 @@ interface AllCategoriesProps extends PageProps {
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -122,6 +123,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   userPlanLimits,
+  currentPlan,
   filterValue,
   filterName,
   auth
@@ -255,6 +257,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
         auth={authData}
         ziggy={ziggyData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}

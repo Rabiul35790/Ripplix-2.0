@@ -85,6 +85,7 @@ interface HomeProps extends PageProps {
   total: number,
   pagination: Pagination;
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   currentPlatformFilter?: string;
   settings?: Settings;
   topLibrariesByCategory?: TopLibraryGroup[];
@@ -111,6 +112,7 @@ const Home: React.FC<HomeProps> = ({
   pagination: initialPagination,
   currentPlatformFilter = 'all',
   userPlanLimits,
+  currentPlan,
   filters,
   total,
   settings,
@@ -419,6 +421,7 @@ const Home: React.FC<HomeProps> = ({
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         settings={settings}
       >
 

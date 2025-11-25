@@ -96,6 +96,7 @@ interface AllAppsProps extends PageProps {
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -117,6 +118,7 @@ const AllApps: React.FC<AllAppsProps> = ({
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   userPlanLimits,
+  currentPlan,
   filterValue,
   filterName,
   auth
@@ -230,9 +232,11 @@ const AllApps: React.FC<AllAppsProps> = ({
         auth={authData}
         ziggy={ziggyData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+
       >
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">

@@ -54,6 +54,7 @@ interface FollowingProps extends PageProps {
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -94,6 +95,7 @@ const Following: React.FC<FollowingProps> = ({
   filters,
   followedCategories: initialFollowedCategories,
   userPlanLimits,
+  currentPlan,
   auth,
   initialLoad = false,
 }) => {
@@ -376,6 +378,7 @@ const Following: React.FC<FollowingProps> = ({
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={handleLibraryViewed}
           userPlanLimits={userPlanLimits}
+          currentPlan={currentPlan}
         >
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
             <div className="mb-4 sm:mb-6 md:mb-5">
@@ -418,6 +421,7 @@ const Following: React.FC<FollowingProps> = ({
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
       >
         <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
           {/* Breadcrumb & Heading */}

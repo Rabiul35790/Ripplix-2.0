@@ -74,6 +74,7 @@ interface BoardDetailProps extends PageProps {
   userLibraryIds?: number[];
   viewedLibraryIds?: number[]; // ADD THIS
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -89,6 +90,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [], // ADD THIS
   userPlanLimits,
+  currentPlan,
   filters
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -320,6 +322,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
         auth={authData}
         ziggy={ziggyData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}

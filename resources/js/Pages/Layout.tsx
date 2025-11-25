@@ -45,6 +45,7 @@ interface LayoutProps extends PageProps {
   onSearch?: (query: string) => void;
   searchQuery?: string;
     userPlanLimits?: UserPlanLimits | null;
+    currentPlan?: any;
   filters?: {
     platforms: Filter[];
     categories: Filter[];
@@ -61,6 +62,7 @@ const Layout: React.FC<LayoutProps> = ({
   filters,
   libraries,
   userPlanLimits,
+  currentPlan,
   userLibraryIds = [],
   viewedLibraryIds = [],
   onLibraryViewed,
@@ -89,6 +91,7 @@ const Layout: React.FC<LayoutProps> = ({
           ziggy={props.ziggy}
           userLibraryIds={userLibraryIds}
           userPlanLimits={userPlanLimits}
+          currentPlan={currentPlan}
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={onLibraryViewed}
         />

@@ -40,11 +40,33 @@ class ContactController extends Controller
         }
         return $user->getPlanLimits();
     }
+        private function getCurrentPlan($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Get current plan details
+        if ($user->pricingPlan) {
+            return [
+                'id' => $user->pricingPlan->id,
+                'name' => $user->pricingPlan->name,
+                'slug' => $user->pricingPlan->slug ?? null,
+                'price' => $user->pricingPlan->price ?? 0,
+                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $user->subscription_ends_at ?? null,
+                'days_until_expiry' => $user->daysUntilExpiry(),
+            ];
+        }
+
+        return null;
+    }
 
     public function index(Request $request)
     {
         $settings = Setting::getInstance();
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Get lightweight filters only
         $filters = $this->getFilters();
@@ -70,6 +92,7 @@ class ContactController extends Controller
             'filterName' => null,
             'categoryData' => null,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'settings' => [

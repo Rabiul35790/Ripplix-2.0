@@ -80,6 +80,7 @@ interface CollectionProps extends PageProps {
   boards: Board[];
   libraries: Library[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   filters: {
@@ -94,6 +95,7 @@ const Collections: React.FC<CollectionProps> = ({
   boards: initialBoards,
   libraries,
   userPlanLimits,
+  currentPlan,
   filters,
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
@@ -200,6 +202,7 @@ const handleCloseDeleteModal = () => {
           auth={authData}
           ziggy={ziggyData}
           userPlanLimits={userPlanLimits}
+          currentPlan={currentPlan}
           userLibraryIds={userLibraryIds}
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={handleLibraryViewed}
@@ -245,6 +248,7 @@ const handleCloseDeleteModal = () => {
         auth={authData}
         ziggy={ziggyData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}

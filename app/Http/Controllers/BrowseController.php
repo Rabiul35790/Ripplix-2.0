@@ -34,10 +34,33 @@ class BrowseController extends Controller
         return $user->getPlanLimits();
     }
 
+    private function getCurrentPlan($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Get current plan details
+        if ($user->pricingPlan) {
+            return [
+                'id' => $user->pricingPlan->id,
+                'name' => $user->pricingPlan->name,
+                'slug' => $user->pricingPlan->slug ?? null,
+                'price' => $user->pricingPlan->price ?? 0,
+                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $user->subscription_ends_at ?? null,
+                'days_until_expiry' => $user->daysUntilExpiry(),
+            ];
+        }
+
+        return null;
+    }
+
     // OPTIMIZED: allApps - instant navigation
 public function allApps(Request $request)
     {
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Get user plan limits
         $userPlanLimits = null;
@@ -142,6 +165,7 @@ public function allApps(Request $request)
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 
@@ -189,6 +213,7 @@ public function allApps(Request $request)
     public function allCategories(Request $request)
     {
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Get user plan limits
         $userPlanLimits = null;
@@ -280,6 +305,7 @@ public function allApps(Request $request)
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 
@@ -326,6 +352,7 @@ public function allApps(Request $request)
 public function allElements(Request $request)
 {
     $isAuthenticated = auth()->check();
+    $user = auth()->user();
 
     // Get user plan limits
     $userPlanLimits = null;
@@ -417,6 +444,7 @@ public function allElements(Request $request)
         'userLibraryIds' => $userLibraryIds,
         'viewedLibraryIds' => $viewedLibraryIds,
         'userPlanLimits' => $userPlanLimits,
+        'currentPlan' => $this->getCurrentPlan($user),
     ]);
 }
 

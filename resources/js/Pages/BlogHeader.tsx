@@ -2,13 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import BrowseDropdown from './Website/Components/BrowseDropdown';
-import SearchModal from './SearchModal';
 import ProfileModal from './ProfileModal';
 import PricingModal from './PricingModal';
 import SupportModal from './SupportModal';
-import { Settings, MessageSquare, LucideBookUser, UserPlus } from 'lucide-react';
+import { Settings, MessageSquare, UserPlus } from 'lucide-react';
 import axios from 'axios';
-import PricingCard, { AnimatedGradientBorderStyles } from './PriceComponents/PricingCard';
+import { AnimatedGradientBorderStyles } from './PriceComponents/PricingCard';
 
 interface Filter {
   id: number;
@@ -17,7 +16,6 @@ interface Filter {
   image?: string;
 }
 
-
 interface UserPlanLimits {
   isFree: boolean;
   maxBoards: number;
@@ -25,22 +23,6 @@ interface UserPlanLimits {
   canShare: boolean;
   planName: string;
   planSlug: string;
-}
-
-interface Library {
-  id: number;
-  title: string;
-  slug: string;
-  url: string;
-  video_url: string;
-  description?: string;
-  logo?: string;
-  platforms: Array<{ id: number; name: string }>;
-  categories: Array<{ id: number; name: string; image?: string }>;
-  industries: Array<{ id: number; name: string }>;
-  interactions: Array<{ id: number; name: string }>;
-  created_at: string;
-  published_date:string;
 }
 
 interface CurrentPlan {
@@ -53,42 +35,34 @@ interface CurrentPlan {
   days_until_expiry?: number;
 }
 
-interface HeaderProps {
-  libraries: Library[];
-  onSearch: (query: string) => void;
-  searchQuery: string;
-  userLibraryIds?: number[];
-  viewedLibraryIds?: number[];
-  onLibraryViewed?: (libraryId: number) => void;
+interface Settings {
+  logo?: string;
+  copyright_text?: string;
+}
+
+interface BlogHeaderProps {
   auth: PageProps['auth'];
   ziggy?: PageProps['ziggy'];
-
-    userPlanLimits?: UserPlanLimits | null;
-    filters?: {
+  userPlanLimits?: UserPlanLimits | null;
+  filters?: {
     platforms: Filter[];
     categories: Filter[];
     industries: Filter[];
     interactions: Filter[];
   };
   currentPlan?: CurrentPlan | null;
+  settings?: Settings;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  onSearch,
-  searchQuery,
+const BlogHeader: React.FC<BlogHeaderProps> = ({
   auth,
   filters,
-  libraries,
   ziggy,
   userPlanLimits,
-  userLibraryIds = [],
-  viewedLibraryIds = [],
-  onLibraryViewed,
-  currentPlan
+  currentPlan,
+  settings
 }) => {
-  const [query, setQuery] = useState(searchQuery);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
@@ -100,11 +74,12 @@ const Header: React.FC<HeaderProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const browseRef = useRef<HTMLDivElement>(null);
 
+  const logo = settings?.logo;
+
   // Fetch unread support count
   useEffect(() => {
     if (currentUser) {
       fetchUnreadSupportCount();
-      // Set up interval to check for new support messages every 30 seconds
       const interval = setInterval(fetchUnreadSupportCount, 30000);
       return () => clearInterval(interval);
     }
@@ -117,23 +92,6 @@ const Header: React.FC<HeaderProps> = ({
     } catch (error) {
       console.error('Error fetching unread support count:', error);
     }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(query);
-  };
-
-  const handleSearchInputClick = () => {
-    setIsSearchModalOpen(true);
-  };
-
-  const handleSearchModalClose = () => {
-    setIsSearchModalOpen(false);
-  };
-
-  const handleSearchChange = (newQuery: string) => {
-    setQuery(newQuery);
   };
 
   const toggleDropdown = () => {
@@ -177,7 +135,6 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleSupportModalClose = () => {
     setIsSupportModalOpen(false);
-    // Refresh unread count when closing support modal
     fetchUnreadSupportCount();
   };
 
@@ -198,7 +155,7 @@ const Header: React.FC<HeaderProps> = ({
     });
   };
 
-const formatText = (text = '') => text.charAt(0).toUpperCase() + text.slice(1);
+  const formatText = (text = '') => text.charAt(0).toUpperCase() + text.slice(1);
 
 const getUnlockProButtonText = () => {
   if (!currentUser) {
@@ -225,6 +182,7 @@ const getUnlockProButtonText = () => {
   return { full: 'Unlock Pro', short: 'Pro' };
 };
 
+
   const getUnlockProButtonStyle = () => {
     if (!currentUser) {
       return "animated-gradient-border-button-inner holographic-link2 bg-[#F2EDFF] dark:bg-gray-800 text-[#2B235A] dark:text-gray-300 border border-[#CECCFF] dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700";
@@ -247,6 +205,7 @@ const getUnlockProButtonText = () => {
   const buttonText = getUnlockProButtonText();
   const buttonStyle = getUnlockProButtonStyle();
 
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -258,21 +217,6 @@ const getUnlockProButtonText = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchModalOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -294,17 +238,19 @@ const getUnlockProButtonText = () => {
   };
 
   const shouldShowAvatar = currentUser?.avatar && !avatarError;
-  console.log("main header button text",getUnlockProButtonText())
-  console.log("main header limit", userPlanLimits)
-  console.log("main header current",currentPlan)
+
+  console.log("Blog header button text",getUnlockProButtonText())
+  console.log("Blog header limit", userPlanLimits)
+  console.log("Blog header current",currentPlan)
+  console.log("Blog header current expiry",currentPlan?.days_until_expiry)
+
 
   return (
     <>
-
       <header className="bg-white dark:bg-gray-900 px-4 sm:px-6 pb-4 sticky sticky:bg-white top-0 z-40 pt-4 sm:pt-6 font-sora">
         <div className="flex items-center justify-between">
-          {/* Left side - Navigation */}
-          <div className="flex items-center">
+          {/* Left side - Logo */}
+          <div className="flex items-center space-x-4">
             {/* Mobile menu button */}
             <button
               onClick={toggleMobileMenu}
@@ -315,140 +261,84 @@ const getUnlockProButtonText = () => {
               </svg>
             </button>
 
-            {/* Mobile Plugin Link */}
-            <div className="md:hidden flex items-center space-x-2 ml-6">
-                <div className="relative" ref={browseRef}>
-                <button
-                  onClick={toggleBrowseDropdown}
-                  className="bg-transparent border-none text-[#2B235A] dark:text-gray-300 font-medium focus:!outline-none focus:border-none text-sm lg:text-base flex items-center hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  Browse
-                  <svg
-                    className={`ml-1 w-4 h-4 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                <BrowseDropdown
-                  isOpen={isBrowseDropdownOpen}
-                  onClose={() => setIsBrowseDropdownOpen(false)}
-                  filters={filters || defaultFilters}
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-2 focus:outline-none">
+              {logo ? (
+                <img
+                  src={logo}
+                  alt="RippliX Logo"
+                  className="h-8 max-w-[120px] object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
+              ) : null}
+              <div className={`w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center ${logo ? 'hidden' : ''}`}>
+                <span className="text-white dark:text-black font-bold text-sm">R</span>
               </div>
+            </Link>
+          </div>
+
+          {/* Center - Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="relative" ref={browseRef}>
+              <button
+                onClick={toggleBrowseDropdown}
+                className="bg-transparent border-none text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:!outline-none focus:border-none text-sm lg:text-base flex items-center hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Browse
+                <svg
+                  className={`ml-1 w-5 h-5 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <BrowseDropdown
+                isOpen={isBrowseDropdownOpen}
+                onClose={() => setIsBrowseDropdownOpen(false)}
+                filters={filters || defaultFilters}
+              />
+            </div>
+
+            <div>
               <a
                 href="https://plugin.ripplix.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-700 dark:text-gray-300 font-medium hover:text-[#564638] dark:hover:text-blue-400 transition-colors text-sm whitespace-nowrap"
+                className="relative text-[#2B235A] dark:text-gray-300 font-bold hover:opacity-100 dark:hover:text-[#E0DAC8] outline-none focus:outline-none transition-colors text-sm lg:text-base whitespace-nowrap duration-500"
               >
-                Plugin
+                <span className="opacity-80 hover:opacity-100 transition-opacity">
+                  Figma Plugin
+                </span>
               </a>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-4 ml-6">
-              <div className="relative" ref={browseRef}>
-                <button
-                  onClick={toggleBrowseDropdown}
-                  className="bg-transparent border-none text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:!outline-none focus:border-none text-sm lg:text-base flex items-center hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  Browse
-                  <svg
-                    className={`ml-1 w-5 h-5 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                <BrowseDropdown
-                  isOpen={isBrowseDropdownOpen}
-                  onClose={() => setIsBrowseDropdownOpen(false)}
-                  filters={filters || defaultFilters}
-                />
-              </div>
-            <div>
-            <a
-            href="https://plugin.ripplix.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative text-[#2B235A] dark:text-gray-300 font-bold hover:opacity-100 dark:hover:text-[#E0DAC8] outline-none focus:outline-none transition-colors text-sm lg:text-base whitespace-nowrap duration-500"
-            >
-            <span className="opacity-80 hover:opacity-100 transition-opacity">
-                Figma Plugin
+            <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
+              New
             </span>
-            </a>
-
-            </div>
-
-              <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
-                New
-              </span>
-            </div>
           </div>
-
-          {/* Center - Search (Desktop) */}
-            <div className="hidden sm:flex flex-1 max-w-xs sm:max-w-md lg:max-w-2xl mx-4 lg:mx-8">
-            <form onSubmit={handleSearch} className="relative w-full">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 text-[#2B235A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                </div>
-                <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onClick={handleSearchInputClick}
-                placeholder="Try searching 'Hover Effect'"
-                className="w-full pl-8 sm:pl-10 pr-12 sm:pr-16 py-2 bg-[#F5F5FA] dark:bg-gray-800 border border-[#CECCFF] dark:border-[#E0DAC8] rounded-lg focus:outline-none focus:ring-0 focus:border-[#E0DAC8] dark:focus:border-[#E0DAC8] outline-none ring-0 text-gray-900 dark:text-white placeholder-[#2B235A] dark:placeholder-gray-400 cursor-pointer text-sm"
-                style={{ outline: 'none', boxShadow: 'none' }}
-                readOnly
-                />
-                <button
-                type="button"
-                onClick={handleSearchInputClick}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                <kbd className="hidden sm:inline-block bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-1 rounded text-xs">
-                    ⌘K
-                </kbd>
-                </button>
-            </form>
-            </div>
 
           {/* Right side - Actions */}
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Mobile Search Button */}
-            <button
-              onClick={handleSearchInputClick}
-              className="sm:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors outline-none focus:outline-none"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-
-            {/* Unlock Pro button - now opens pricing modal */}
+            {/* Unlock Pro button */}
             <div className="animated-gradient-border-button">
-            <button
-              onClick={handlePricingModalOpen}
-              className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 ${buttonStyle}`}
-            >
-              <span className="hidden sm:inline">{buttonText.full}</span>
-              <span className="sm:hidden">{buttonText.short}</span>
-            </button>
+              <button
+                onClick={handlePricingModalOpen}
+                className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 ${buttonStyle}`}
+              >
+                <span className="hidden sm:inline">{buttonText.full}</span>
+                <span className="sm:hidden">{buttonText.short}</span>
+              </button>
             </div>
 
             {/* Conditional rendering based on authentication */}
             {currentUser ? (
-              // User is authenticated - show profile icon/avatar with dropdown
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
@@ -485,16 +375,6 @@ const getUnlockProButtonText = () => {
                       <div className="px-4 py-2 text-sm text-[#2B235A] dark:text-gray-300 border-b border-[#E3E2FF] dark:border-gray-700">
                         <div className="font-medium truncate">{currentUser.name}</div>
                         <div className="text-[#9D9DA8] dark:text-gray-400 text-xs truncate">{currentUser.email}</div>
-                        {/* {currentPlan && (
-                          <div className="text-blue-600 dark:text-blue-400 text-xs mt-1">
-                            {currentPlan.name}
-                            {currentPlan.expires_at && currentPlan.days_until_expiry !== undefined && (
-                              <span className="ml-1">
-                                • {currentPlan.days_until_expiry <= 0 ? 'Expired' : `${currentPlan.days_until_expiry}d left`}
-                              </span>
-                            )}
-                          </div>
-                        )} */}
                       </div>
                       <div className='border-b border-[#E3E2FF] dark:border-gray-700'>
                         <button
@@ -503,7 +383,7 @@ const getUnlockProButtonText = () => {
                         >
                           <div className="flex items-center mb-1">
                             <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
-                            <Settings className='w-4 h-4 '/>
+                              <Settings className='w-4 h-4 '/>
                             </span>
                             <span className="font-medium text-[#2B235A] ">Settings</span>
                           </div>
@@ -517,8 +397,8 @@ const getUnlockProButtonText = () => {
                           className="w-full text-left block px-2 !py-[6px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
                           <div className="flex items-center mb-1">
-                          <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
-                            <MessageSquare className='w-4 h-4'/>
+                            <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
+                              <MessageSquare className='w-4 h-4'/>
                             </span>
                             <span className="font-medium text-[#2B235A]">Support</span>
                             {unreadSupportCount > 0 && (
@@ -538,7 +418,7 @@ const getUnlockProButtonText = () => {
                         >
                           <div className="flex items-center mb-1">
                             <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
-                            <UserPlus className='w-4 h-4'/>
+                              <UserPlus className='w-4 h-4'/>
                             </span>
                             <span className="font-medium text-[#2B235A]">Membership</span>
                           </div>
@@ -572,13 +452,13 @@ const getUnlockProButtonText = () => {
                 )}
               </div>
             ) : (
-                <Link
-                    href="/register"
-                    className=" holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
-                >
-                    <span className="hidden sm:inline">Join Now</span>
-                    <span className="sm:hidden">Join</span>
-                </Link>
+              <Link
+                href="/register"
+                className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
+              >
+                <span className="hidden sm:inline">Join Now</span>
+                <span className="sm:hidden">Join</span>
+              </Link>
             )}
           </div>
         </div>
@@ -636,13 +516,13 @@ const getUnlockProButtonText = () => {
                 <div className="flex flex-col space-y-2">
                   <Link
                     href={route('login')}
-                    className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 ${buttonStyle}`}
+                    className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 text-center ${buttonStyle}`}
                   >
                     Log in
                   </Link>
                   <Link
                     href={route('register')}
-                    className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
+                    className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none text-center"
                   >
                     Join Now
                   </Link>
@@ -652,21 +532,6 @@ const getUnlockProButtonText = () => {
           </div>
         )}
       </header>
-
-      {/* Search Modal */}
-      <SearchModal
-        libraries={libraries}
-        isOpen={isSearchModalOpen}
-        onClose={handleSearchModalClose}
-        searchQuery={query}
-        onSearchChange={handleSearchChange}
-        filters={filters || defaultFilters}
-        auth={{ user: currentUser }}
-        userLibraryIds={userLibraryIds}
-        userPlanLimits={userPlanLimits}
-        viewedLibraryIds={viewedLibraryIds} // ADD THIS
-        onLibraryViewed={onLibraryViewed}
-      />
 
       {/* Profile Modal */}
       <ProfileModal
@@ -695,4 +560,4 @@ const getUnlockProButtonText = () => {
   );
 };
 
-export default Header;
+export default BlogHeader;

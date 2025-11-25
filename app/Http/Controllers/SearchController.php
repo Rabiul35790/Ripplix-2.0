@@ -36,11 +36,34 @@ class SearchController extends Controller
         }
         return $user->getPlanLimits();
     }
+
+    private function getCurrentPlan($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Get current plan details
+        if ($user->pricingPlan) {
+            return [
+                'id' => $user->pricingPlan->id,
+                'name' => $user->pricingPlan->name,
+                'slug' => $user->pricingPlan->slug ?? null,
+                'price' => $user->pricingPlan->price ?? 0,
+                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $user->subscription_ends_at ?? null,
+                'days_until_expiry' => $user->daysUntilExpiry(),
+            ];
+        }
+
+        return null;
+    }
     public function index(Request $request): Response
     {
         $query = $request->get('q', '');
         $platform = $request->get('platform', '');
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Different pagination for auth vs unauth users
         $perPage = $isAuthenticated ? 20 : 18;
@@ -74,6 +97,7 @@ class SearchController extends Controller
                 'userLibraryIds' => $userLibraryIds,
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => $userPlanLimits,
+                'currentPlan' => $this->getCurrentPlan($user),
             ]);
         }
 
@@ -126,6 +150,7 @@ class SearchController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 
@@ -138,6 +163,7 @@ class SearchController extends Controller
         $platform = $request->get('platform', '');
         $page = $request->get('page', 1);
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Different pagination logic for authenticated vs unauthenticated users
         $perPage = $isAuthenticated ? 20 : 18; // 20 for auth users, 12 for unauth
@@ -165,6 +191,7 @@ class SearchController extends Controller
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'is_authenticated' => $isAuthenticated,
                 'userPlanLimits' => $userPlanLimits,
+                'currentPlan' => $this->getCurrentPlan($user),
             ]);
         }
 
@@ -221,6 +248,7 @@ class SearchController extends Controller
             'viewedLibraryIds' => $viewedLibraryIds,
             'is_authenticated' => $isAuthenticated,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 
@@ -234,6 +262,7 @@ class SearchController extends Controller
         $page = $request->get('page', 1);
         $perPage = 24;
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
         $userPlanLimits = null;
@@ -250,6 +279,7 @@ class SearchController extends Controller
                 'userLibraryIds' => [],
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => $userPlanLimits,
+                'currentPlan' => $this->getCurrentPlan($user),
             ]);
         }
 
@@ -263,6 +293,7 @@ class SearchController extends Controller
                 'current_page' => 1,
                 'userLibraryIds' => $userLibraryIds,
                 'userPlanLimits' => $userPlanLimits,
+                'currentPlan' => $this->getCurrentPlan($user),
             ]);
         }
 
@@ -307,6 +338,7 @@ class SearchController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 

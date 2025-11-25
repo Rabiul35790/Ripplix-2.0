@@ -64,6 +64,7 @@ interface Filter {
 interface ContactUsProps extends BasePageProps {
   libraries: Library[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   filters: {
@@ -90,6 +91,7 @@ const ContactUs: React.FC<ContactUsProps> = ({
   libraries = [],
   filters,
   userPlanLimits,
+  currentPlan,
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   filterType,
@@ -225,6 +227,7 @@ const ContactUs: React.FC<ContactUsProps> = ({
         ziggy={ziggyData}
         settings={settingsData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}

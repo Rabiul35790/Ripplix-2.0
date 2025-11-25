@@ -24,12 +24,36 @@ class LibraryController extends Controller
     const LIBRARIES_PER_PAGE = 18;
 
 
+
+
     private function getUserPlanLimits(?User $user): ?array
     {
         if (!$user) {
             return null;
         }
         return $user->getPlanLimits();
+    }
+
+    private function getCurrentPlan($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Get current plan details
+        if ($user->pricingPlan) {
+            return [
+                'id' => $user->pricingPlan->id,
+                'name' => $user->pricingPlan->name,
+                'slug' => $user->pricingPlan->slug ?? null,
+                'price' => $user->pricingPlan->price ?? 0,
+                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $user->subscription_ends_at ?? null,
+                'days_until_expiry' => $user->daysUntilExpiry(),
+            ];
+        }
+
+        return null;
     }
 
     private function getViewedLibraryIds(Request $request): array
@@ -44,6 +68,7 @@ public function index(Request $request)
     $page = (int) $request->get('page', 1);
     $perPage = self::LIBRARIES_PER_PAGE;
     $isAuthenticated = auth()->check();
+    $user = auth()->user();
 
     // Get user plan limits
     $userPlanLimits = null;
@@ -132,6 +157,7 @@ public function index(Request $request)
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'pagination' => $paginationData,
             'currentPlatformFilter' => $platformFilter,
             'topLibrariesByCategory' => [], // Empty - will load via API
@@ -159,6 +185,7 @@ public function index(Request $request)
         'userLibraryIds' => $userLibraryIds,
         'viewedLibraryIds' => $viewedLibraryIds,
         'userPlanLimits' => $userPlanLimits,
+        'currentPlan' => $this->getCurrentPlan($user),
     ]);
 }
 
@@ -274,6 +301,7 @@ public function getTopLibraries(Request $request)
     // New method for loading more libraries via AJAX with filter support
     public function loadMore(Request $request)
     {
+        $user = auth()->user();
         $page = (int) $request->get('page', 1);
         $perPage = self::LIBRARIES_PER_PAGE;
         $isAuthenticated = auth()->check();
@@ -341,6 +369,7 @@ public function getTopLibraries(Request $request)
             'pagination' => $paginationData,
             'userLibraryIds' => $userLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'viewedLibraryIds' => $viewedLibraryIds,
         ]);
     }
@@ -350,6 +379,7 @@ public function getTopLibraries(Request $request)
 public function browse(Request $request)
 {
     $isAuthenticated = auth()->check();
+    $user = auth()->user();
 
     $userPlanLimits = null;
     if ($isAuthenticated) {
@@ -457,6 +487,7 @@ public function browse(Request $request)
         'viewedLibraryIds' => $viewedLibraryIds,
         'isAuthenticated' => $isAuthenticated,
         'userPlanLimits' => $userPlanLimits,
+        'currentPlan' => $this->getCurrentPlan($user),
         'totalLibraryCount' => $totalLibraryCount,
     ]);
 }
@@ -547,6 +578,7 @@ public function getBrowseLibraries(Request $request)
     public function browseByCategory(Request $request, $slug)
     {
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Get user plan limits
         $userPlanLimits = null;
@@ -594,6 +626,7 @@ public function getBrowseLibraries(Request $request)
             'viewedLibraryIds' => $viewedLibraryIds,
             'isAuthenticated' => $isAuthenticated,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'totalLibraryCount' => $totalLibraryCount,
         ]);
     }
@@ -601,6 +634,7 @@ public function getBrowseLibraries(Request $request)
     public function browseByIndustry(Request $request, $slug)
     {
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Get user plan limits
         $userPlanLimits = null;
@@ -640,6 +674,7 @@ public function getBrowseLibraries(Request $request)
             'viewedLibraryIds' => $viewedLibraryIds,
             'isAuthenticated' => $isAuthenticated,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'totalLibraryCount' => $totalLibraryCount,
         ]);
     }
@@ -647,6 +682,7 @@ public function getBrowseLibraries(Request $request)
     public function browseByInteraction(Request $request, $slug)
     {
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
 
         // Get user plan limits
         $userPlanLimits = null;
@@ -686,6 +722,7 @@ public function getBrowseLibraries(Request $request)
             'viewedLibraryIds' => $viewedLibraryIds,
             'isAuthenticated' => $isAuthenticated,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'totalLibraryCount' => $totalLibraryCount,
         ]);
     }
@@ -775,6 +812,7 @@ public function getBrowseLibraries(Request $request)
 
     public function show(Request $request, $slug)
     {
+        $user = auth()->user();
         $library = Library::with(['platforms', 'categories', 'industries', 'interactions'])
             ->where('slug', $slug)
             ->where('is_active', true)
@@ -841,6 +879,7 @@ public function getBrowseLibraries(Request $request)
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'isAuthenticated' => $isAuthenticated,
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),

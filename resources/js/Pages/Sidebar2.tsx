@@ -406,13 +406,16 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
                 <p>{copyright_text}</p>
               ) : null}
             </div>
-            <div className="flex justify-center space-x-4">
-              <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                Terms
-              </Link>
-              <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                Privacy
-              </Link>
+            <div className="flex justify-center space-x-4 font-semibold text-xs ">
+                <Link href="/terms" className="hover:opacity-80 outline-none focus:outline-none focus:ring-0 dark:hover:text-gray-300 transition-opacity duration-500">
+                    Terms
+                </Link>
+                <Link href="/privacy" className="hover:opacity-80 outline-none focus:outline-none focus:ring-0 dark:hover:text-gray-300 transition-opacity duration-500">
+                    Privacy
+                </Link>
+                <Link href="/blog" className="hover:opacity-80 outline-none focus:outline-none focus:ring-0 dark:hover:text-gray-300 transition-opacity duration-500">
+                    Blog
+                </Link>
             </div>
           </div>
         </div>

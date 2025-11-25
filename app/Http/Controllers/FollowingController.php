@@ -32,6 +32,28 @@ class FollowingController extends Controller
         return $user->getPlanLimits();
     }
 
+    private function getCurrentPlan($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        // Get current plan details
+        if ($user->pricingPlan) {
+            return [
+                'id' => $user->pricingPlan->id,
+                'name' => $user->pricingPlan->name,
+                'slug' => $user->pricingPlan->slug ?? null,
+                'price' => $user->pricingPlan->price ?? 0,
+                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $user->subscription_ends_at ?? null,
+                'days_until_expiry' => $user->daysUntilExpiry(),
+            ];
+        }
+
+        return null;
+    }
+
     public function index(Request $request)
     {
         // Get filters for layout (lightweight)
@@ -44,6 +66,7 @@ class FollowingController extends Controller
         }
 
         $isAuthenticated = auth()->check();
+        $user = auth()->user();
         $userPlanLimits = null;
         if ($isAuthenticated) {
             $userPlanLimits = $this->getUserPlanLimits(auth()->user());
@@ -60,6 +83,7 @@ class FollowingController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
+            'currentPlan' => $this->getCurrentPlan($user),
             'initialLoad' => true, // Flag to trigger API call
         ]);
     }

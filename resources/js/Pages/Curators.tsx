@@ -69,6 +69,7 @@ interface CuratorsProps extends BasePageProps {
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -96,6 +97,7 @@ const Curators: React.FC<CuratorsProps> = ({
    userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   userPlanLimits,
+  currentPlan,
   filterType,
   filterValue,
   filterName,
@@ -165,6 +167,7 @@ const Curators: React.FC<CuratorsProps> = ({
         ziggy={ziggyData}
         settings={settingsData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}

@@ -69,6 +69,7 @@ interface SponsorUsProps extends BasePageProps {
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -95,6 +96,7 @@ const SponsorUs: React.FC<SponsorUsProps> = ({
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
   userPlanLimits,
+  currentPlan,
   filterType,
   filterValue,
   filterName,
@@ -232,6 +234,7 @@ const SponsorUs: React.FC<SponsorUsProps> = ({
         ziggy={ziggyData}
         settings={settingsData}
         userPlanLimits={userPlanLimits}
+        currentPlan={currentPlan}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
