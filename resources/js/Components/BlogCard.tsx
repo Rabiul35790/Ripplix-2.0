@@ -61,7 +61,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog }) => {
 
         {/* Title - Max 2 lines */}
         <h3
-          className="font-sora text-[20px] sm:text-[22px] font-semibold text-[#150F32] mb-3 line-clamp-2"
+          className="font-sora text-[20px] sm:text-[22px] !font-semibold text-[#150F32] mb-3 line-clamp-2"
           style={{
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -74,7 +74,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog }) => {
 
         {/* Excerpt - Max 2 lines */}
         <p
-          className="font-poppins text-[14px] font-normal text-[#62626C] mb-4 line-clamp-2"
+          className="font-poppins text-[14px] !font-normal text-[#62626C] mb-4 line-clamp-2"
           style={{
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -87,11 +87,11 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog }) => {
 
         {/* Footer - Date & Category */}
         <div className="flex items-center justify-between">
-          <span className="font-poppins text-[14px] font-normal text-[#7F7F8A]">
+          <span className="font-poppins text-[14px] !font-normal text-[#7F7F8A]">
             {formatDate(blog.published_date)}
           </span>
           {blog.category && (
-            <span className="font-poppins text-[14px] font-medium text-[#8941D1]">
+            <span className="font-poppins text-[14px] !font-medium text-[#8941D1]">
               {blog.category.name}
             </span>
           )}
