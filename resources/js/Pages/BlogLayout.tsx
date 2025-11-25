@@ -60,7 +60,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
   const authData = auth || props.auth;
 
   return (
-    <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F8F8F9] dark:bg-gray-900">
+    <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F9F5FF] dark:bg-gray-900">
       <BlogHeader
         auth={authData}
         filters={filters}
@@ -70,7 +70,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
         settings={settings}
       />
 
-      <main className="min-h-screen pt-6 lg:pt-8">
+      <main className="min-h-screen pt-12 lg:pt-20 pb-6 lg:pb-8">
         {children}
       </main>
     </div>

@@ -247,7 +247,8 @@ const getUnlockProButtonText = () => {
 
   return (
     <>
-      <header className="bg-white dark:bg-gray-900 px-4 sm:px-6 pb-4 sticky sticky:bg-white top-0 z-40 pt-4 sm:pt-6 font-sora">
+    <div className="bg-white sticky sticky:bg-white top-0 z-40">
+      <header className="bg-white max-w-[1400px] mx-auto dark:bg-gray-900 pb-4  pt-4 sm:pt-6 font-sora">
         <div className="flex items-center justify-between">
           {/* Left side - Logo */}
           <div className="flex items-center space-x-4">
@@ -556,6 +557,7 @@ const getUnlockProButtonText = () => {
           auth={{ user: currentUser }}
         />
       )}
+      </div>
     </>
   );
 };

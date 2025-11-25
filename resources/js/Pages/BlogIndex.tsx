@@ -116,6 +116,7 @@ const BlogIndex: React.FC<BlogIndexProps> = ({
   return (
     <>
       <Head title="Blog - Resources and Insights" />
+
       <BlogLayout
         settings={settings}
         filters={filters}
@@ -124,21 +125,22 @@ const BlogIndex: React.FC<BlogIndexProps> = ({
         auth={authData}
         ziggy={ziggyData}
       >
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="bg-[#F9F5FF]">
+        <div className="max-w-[1400px] bg-[#F9F5FF] mx-auto">
           {/* Hero Section */}
           <div className="text-center mb-8 sm:mb-12">
-            <p className="text-[#8941D1] font-poppins text-sm font-medium mb-3">
+            <button className="bg-[#ece9fe] text-[#5E54AB] font-poppins !text-sm font-medium mb-3 px-2 py-1 rounded-[4px] outline-none focus:outline-none focus:ring-0">
               Our blog
-            </p>
-            <h1 className="text-[#150F32] dark:text-white font-sora text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            </button>
+            <h1 className="text-[#443B82] dark:text-white font-sora text-3xl sm:text-4xl lg:text-5xl !font-semibold mb-6">
               Resources and insights
             </h1>
-            <p className="text-[#62626C] dark:text-gray-400 font-poppins text-base sm:text-lg max-w-2xl mx-auto mb-8">
+            <p className="text-[#5E54AB] dark:text-gray-400 font-poppins text-xl sm:text-xl max-w-2xl mx-auto mb-8">
               The latest industry news, insights, technologies, and resources.
             </p>
 
             {/* Search */}
-            <div className="max-w-xl mx-auto">
+            <div className="max-w-sm mx-auto">
               <BlogSearch
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -194,7 +196,9 @@ const BlogIndex: React.FC<BlogIndexProps> = ({
             </>
           )}
         </div>
+        </div>
       </BlogLayout>
+
     </>
   );
 };

@@ -36,7 +36,7 @@ const BlogFilterSection: React.FC<BlogFilterSectionProps> = ({
   };
 
   return (
-    <div className="bg-[#F8F8F9] dark:bg-gray-900 py-4 font-sora">
+    <div className="bg-[#F9F5FF] dark:bg-gray-900 py-4 font-sora">
       <div className="flex items-center justify-between flex-wrap gap-4">
         {/* Filter Tabs */}
         <div className="flex items-center bg-white border rounded-lg p-1 border-[#E3E2FF] dark:border-gray-300 overflow-x-auto max-w-full">

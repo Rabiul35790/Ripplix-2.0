@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class Blog extends Model
 {
@@ -36,6 +37,31 @@ class Blog extends Model
         'is_featured' => 'boolean',
         'views_count' => 'integer',
     ];
+
+    // Add this accessor to automatically convert image paths to full URLs
+    protected $appends = ['featured_image_urls'];
+
+    public function getFeaturedImageUrlsAttribute()
+    {
+        if (empty($this->featured_images)) {
+            return [];
+        }
+
+        return array_map(function ($image) {
+            // If the image is already a full URL, return it as is
+            if (Str::startsWith($image, ['http://', 'https://'])) {
+                return $image;
+            }
+
+            // If the image path starts with 'storage/', use asset helper
+            if (Str::startsWith($image, 'storage/')) {
+                return asset($image);
+            }
+
+            // Otherwise, assume it's stored in storage/app/public
+            return Storage::url($image);
+        }, $this->featured_images);
+    }
 
     protected static function boot()
     {

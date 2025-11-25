@@ -18,6 +18,7 @@ interface Blog {
   excerpt: string;
   content: string;
   featured_images?: string[];
+  featured_image_urls?: string[];
   published_date: string;
   author: string;
   meta_title?: string;
@@ -38,6 +39,40 @@ interface BlogShowProps extends PageProps {
   filters?: any;
 }
 
+// Helper function to get proper image URL
+const getImageUrl = (blog: Blog): string => {
+  // Priority 1: Use the accessor if available
+  if (blog.featured_image_urls && blog.featured_image_urls.length > 0) {
+    return blog.featured_image_urls[0];
+  }
+
+  // Priority 2: Check featured_images and build proper URL
+  if (blog.featured_images && blog.featured_images.length > 0) {
+    const imagePath = blog.featured_images[0];
+
+    // If already a full URL, return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
+    // If path starts with 'storage/', use it directly
+    if (imagePath.startsWith('storage/')) {
+      return `/${imagePath}`;
+    }
+
+    // If path starts with '/', use it directly
+    if (imagePath.startsWith('/')) {
+      return imagePath;
+    }
+
+    // Otherwise, prepend /storage/
+    return `/storage/${imagePath}`;
+  }
+
+  // Priority 3: Fallback to placeholder
+  return '/images/blog-placeholder.jpg';
+};
+
 const BlogShow: React.FC<BlogShowProps> = ({
   blog,
   relatedBlogs = [],
@@ -51,10 +86,7 @@ const BlogShow: React.FC<BlogShowProps> = ({
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
-
-  const featuredImage = blog.featured_images && blog.featured_images.length > 0
-    ? blog.featured_images[0]
-    : '/images/blog-placeholder.jpg';
+  const featuredImage = getImageUrl(blog);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -119,6 +151,10 @@ const BlogShow: React.FC<BlogShowProps> = ({
                   src={featuredImage}
                   alt={blog.title}
                   className="w-full h-auto object-cover"
+                  onError={(e) => {
+                    // Fallback if image fails to load
+                    e.currentTarget.src = '/images/blog-placeholder.jpg';
+                  }}
                 />
               </div>
 
