@@ -248,27 +248,17 @@ const getUnlockProButtonText = () => {
   return (
     <>
     <div className="bg-white sticky sticky:bg-white top-0 z-40">
-      <header className="bg-white max-w-[1400px] mx-auto dark:bg-gray-900 pb-4  pt-4 sm:pt-6 font-sora">
+      <header className="bg-white max-w-[1400px] mx-auto dark:bg-gray-900 pb-4 pt-4 sm:pt-6 font-sora px-2 md:px-2">
         <div className="flex items-center justify-between">
           {/* Left side - Logo */}
           <div className="flex items-center space-x-4">
-            {/* Mobile menu button */}
-            <button
-              onClick={toggleMobileMenu}
-              className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 focus:outline-none">
               {logo ? (
                 <img
                   src={logo}
                   alt="RippliX Logo"
-                  className="h-8 max-w-[120px] object-contain"
+                  className="h-6 w-auto md:h-8 md:max-w-[120px] object-contain"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -276,13 +266,52 @@ const getUnlockProButtonText = () => {
                   }}
                 />
               ) : null}
-              <div className={`w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center ${logo ? 'hidden' : ''}`}>
-                <span className="text-white dark:text-black font-bold text-sm">R</span>
+              <div className={`w-6 h-6 md:w-8 md:h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center ${logo ? 'hidden' : ''}`}>
+                <span className="text-white dark:text-black font-bold text-xs md:text-sm">R</span>
               </div>
             </Link>
           </div>
 
           {/* Center - Navigation */}
+          <div className="flex md:hidden items-center space-x-2">
+            <div className="relative" ref={browseRef}>
+              <button
+                onClick={toggleBrowseDropdown}
+                className="bg-transparent border-none text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:!outline-none focus:border-none text-sm flex items-center hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Browse
+                <svg
+                  className={`ml-1 w-4 h-4 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <BrowseDropdown
+                isOpen={isBrowseDropdownOpen}
+                onClose={() => setIsBrowseDropdownOpen(false)}
+                filters={filters || defaultFilters}
+              />
+            </div>
+
+            <div>
+              <a
+                href="https://plugin.ripplix.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative text-[#2B235A] dark:text-gray-300 font-bold hover:opacity-100 dark:hover:text-[#E0DAC8] outline-none focus:outline-none transition-colors text-sm whitespace-nowrap duration-500"
+              >
+                <span className="opacity-80 hover:opacity-100 transition-opacity">
+                  Plugin
+                </span>
+              </a>
+            </div>
+          </div>
+
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="relative" ref={browseRef}>
               <button
@@ -463,75 +492,6 @@ const getUnlockProButtonText = () => {
             )}
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col space-y-3">
-              <button
-                onClick={toggleBrowseDropdown}
-                className="bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-[#2B235A] dark:text-gray-300 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
-              >
-                <span>Browse</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${isBrowseDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <a
-                href="https://plugin.ripplix.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#2B235A] dark:text-gray-300 font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2 flex items-center justify-between border border-gray-200 dark:border-gray-600 rounded-lg px-3"
-              >
-                <span>Figma Plugin</span>
-                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium outline-none focus:outline-none">
-                  New
-                </span>
-              </a>
-
-              {/* Mobile Support Option - only show if authenticated */}
-              {currentUser && (
-                <button
-                  onClick={handleSupportModalOpen}
-                  className="text-gray-700 dark:text-gray-300 font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2 flex items-center justify-between border border-gray-200 dark:border-gray-600 rounded-lg px-3"
-                >
-                  <div className="flex items-center">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    <span>Support</span>
-                  </div>
-                  {unreadSupportCount > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {unreadSupportCount}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {/* Mobile Auth Links - only show if not authenticated */}
-              {!currentUser && (
-                <div className="flex flex-col space-y-2">
-                  <Link
-                    href={route('login')}
-                    className={`px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] transition-colors text-sm whitespace-nowrap outline-none focus:outline-none duration-500 text-center ${buttonStyle}`}
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href={route('register')}
-                    className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none text-center"
-                  >
-                    Join Now
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Profile Modal */}

@@ -188,7 +188,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
 
     // Add "All Categories" section
     if (filteredIndustriesNotInVariants.length > 0) {
-      allItems.push({ type: 'heading', variantName: 'All Categories' });
+      allItems.push({ type: 'heading', variantName: 'Other Industries' });
       filteredIndustriesNotInVariants.forEach(industry => {
         allItems.push({ type: 'industry', industry });
       });
@@ -278,7 +278,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
             {/* Header with search */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 md:mb-7 gap-3 sm:gap-4 md:gap-3">
               <h1 className="text-xl sm:text-[26px] md:text-2xl font-semibold text-gray-900 focus:outline-none outline-none dark:text-white animate-slide-in-down">
-                {totalIndustriesCount} + {filterName ? `${filterName} Categories` : 'Categories'}
+                {totalIndustriesCount} + {filterName ? `${filterName} Industries` : 'Industries'}
               </h1>
 
               <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
