@@ -115,7 +115,7 @@ const BlogIndex: React.FC<BlogIndexProps> = ({
 
   return (
     <>
-      <Head title="Blog - Resources and Insights" />
+      <Head title="Blog" />
 
       <BlogLayout
         settings={settings}
@@ -126,7 +126,7 @@ const BlogIndex: React.FC<BlogIndexProps> = ({
         ziggy={ziggyData}
       >
         {/* Top Section with Original Background */}
-        <div className="bg-[#F9F5FF]">
+        <div className="bg-[#F9F5FF]  pt-10 lg:pt-12">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             {/* Hero Section */}
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 pt-6 sm:pt-8">

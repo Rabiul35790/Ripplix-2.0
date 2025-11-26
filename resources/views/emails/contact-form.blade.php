@@ -8,19 +8,19 @@
 
         body { font-family: Sora, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #FAF9F6; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .header { background: linear-gradient(90deg, #382973 0%, #6C44D8 100%); padding: 20px; border-radius: 5px; margin-bottom: 20px; }
         .content { background: #fff; padding: 20px; border: 1px solid #e9ecef; border-radius: 5px; }
         .field { margin-bottom: 15px; }
-        .label { font-weight: bold; color: #333333; }
-        .value { margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 3px; }
-        .message-box { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #333333; }
+        .label { font-weight: bold; color: #000000; }
+        .value { margin-top: 5px; padding: 10px; background: #F5F5F7; border-radius: 3px; }
+        .message-box { background: #F5F5F7; padding: 15px; border-radius: 5px; border-left: 4px solid #9943EE; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2 style="color:#333333">New Contact Form Submission</h2>
-            <p style="color: 564638">You have received a new message from your website contact form.</p>
+            <h2 style="color:#ffffff">New Contact Form Submission</h2>
+            <p style="color: #ffffff">You have received a new message from your website contact form.</p>
         </div>
 
         <div class="content">

@@ -70,7 +70,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
         settings={settings}
       />
 
-      <main className="min-h-screen pt-12 lg:pt-16">
+      <main className="min-h-screen">
         {children}
         {/* Bottom spacer without padding/margin */}
       </main>

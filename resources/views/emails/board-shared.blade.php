@@ -22,9 +22,10 @@
 
         .container {
             max-width: 700px;
-            margin: 40px auto;
-            background: #F8F8F9;
-            padding: 20px;
+            margin: 0 auto;
+            background: transparent;
+            padding: 40px 20px;
+            min-height: 100vh;
         }
 
         .logo-section {
@@ -61,7 +62,8 @@
         .envelope {
             width: 90px;
             height: 90px;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
+            display: block;
         }
 
         .header h1 {
@@ -69,6 +71,7 @@
             font-size: 28px;
             font-weight: 600;
             z-index: 1;
+            text-align: center;
         }
 
         .content {
@@ -168,7 +171,7 @@
         }
 
         .footer {
-            background: #F8F8F9;
+            background: transparent;
             padding: 30px 20px;
             text-align: center;
             color: #8787A8;
@@ -182,8 +185,7 @@
         /* Responsive Design */
         @media only screen and (max-width: 768px) {
             .container {
-                margin: 20px auto;
-                padding: 15px;
+                padding: 20px 15px;
             }
 
             .logo-section img {
@@ -202,7 +204,7 @@
             .envelope {
                 width: 90px;
                 height: 90px;
-                margin-bottom: 15px;
+                margin: 0 auto 15px auto;
             }
 
             .header h1 {
@@ -243,7 +245,6 @@
 
         @media only screen and (max-width: 480px) {
             .container {
-                margin: 10px auto;
                 padding: 10px;
             }
 
@@ -263,7 +264,7 @@
             .envelope {
                 width: 80px;
                 height: 80px;
-                margin-bottom: 10px;
+                margin: 0 auto 10px auto;
             }
 
             .header h1 {

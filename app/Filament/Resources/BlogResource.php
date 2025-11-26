@@ -125,6 +125,7 @@ class BlogResource extends Resource
                                 'bold',
                                 'bulletList',
                                 'codeBlock',
+                                'h1',
                                 'h2',
                                 'h3',
                                 'italic',
@@ -136,8 +137,11 @@ class BlogResource extends Resource
                                 'undo',
                             ])
                             ->placeholder('Write your blog content here...')
-                            ->helperText('Click the paperclip icon to attach images')
-                            ->columnSpanFull(),
+                            ->helperText('Click the paperclip icon to attach images. Images will be automatically sized.')
+                            ->columnSpanFull()
+                            ->extraInputAttributes([
+                                'style' => 'min-height: 400px;'
+                            ]),
                     ]),
 
                 Forms\Components\Section::make('Featured Images')

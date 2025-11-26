@@ -694,7 +694,7 @@ return (
                 </div>
 
                 {/* Right Side: Action Buttons in One Row */}
-                <div className="flex gap-2 lg:items-start lg:min-w-[450px]">
+                <div className="flex gap-2 lg:items-end lg:min-w-[450px]">
                   <button
                     onClick={handleStarClick}
                     disabled={isLoadingBoards}

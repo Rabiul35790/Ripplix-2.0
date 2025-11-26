@@ -255,5 +255,9 @@ body {
   animation: textPulse 1.2s ease-in-out infinite;
 }
 
+    figcaption {
+        display: none;
+    }
+
 
 

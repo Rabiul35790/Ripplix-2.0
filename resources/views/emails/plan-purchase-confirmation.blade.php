@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan Confirmation</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
             line-height: 1.6;
@@ -12,25 +16,33 @@
             background-color: #F8F8F9;
             margin: 0;
             padding: 0;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
         }
+
         .container {
             max-width: 800px;
-            margin: 40px auto;
-            background: #F8F8F9;
-            padding: 20px;
+            margin: 0 auto;
+            background: transparent;
+            padding: 40px 20px;
+            min-height: 100vh;
         }
+
         .logo-section {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .logo-section img {
             height: 50px;
         }
+
         .email-card {
             background: #ffffff;
             border-radius: 12px;
             overflow: hidden;
         }
+
         .header {
             background: linear-gradient(90deg, #382973 0%, #6C44D8 100%);
             color: white;
@@ -43,6 +55,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .spark-left {
             position: absolute;
             top: 30px;
@@ -50,6 +63,7 @@
             width: 160px;
             height: 160px;
         }
+
         .spark-right {
             position: absolute;
             bottom: 30px;
@@ -57,148 +71,45 @@
             width: 160px;
             height: 160px;
         }
+
         .envelope {
             width: 160px;
             height: 120px;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
+            display: block;
         }
 
-        /* Responsive Design */
-        @media only screen and (max-width: 768px) {
-            .container {
-                margin: 20px auto;
-                padding: 15px;
-            }
-            .logo-section img {
-                height: 40px;
-            }
-            .email-card {
-                border-radius: 15px;
-            }
-            .header {
-                padding: 40px 20px;
-            }
-            .spark-left {
-                top: 15px;
-                left: 20px;
-                width: 50px;
-                height: 50px;
-            }
-            .spark-right {
-                bottom: 15px;
-                right: 20px;
-                width: 50px;
-                height: 50px;
-            }
-            .envelope {
-                width: 80px;
-                height: 80px;
-                margin-bottom: 15px;
-            }
-            .header h1 {
-                font-size: 22px;
-            }
-            .content {
-                padding: 30px 25px 40px 25px;
-            }
-            .greeting {
-                font-size: 16px;
-            }
-            .message {
-                font-size: 15px;
-            }
-            .cta-button {
-                padding: 12px 35px;
-                font-size: 15px;
-            }
-        }
-
-        @media only screen and (max-width: 480px) {
-            .container {
-                margin: 10px auto;
-                padding: 10px;
-            }
-            .logo-section {
-                margin-bottom: 20px;
-            }
-            .logo-section img {
-                height: 35px;
-            }
-            .header {
-                padding: 30px 15px;
-            }
-            .spark-left {
-                top: 10px;
-                left: 10px;
-                width: 40px;
-                height: 40px;
-            }
-            .spark-right {
-                bottom: 10px;
-                right: 10px;
-                width: 40px;
-                height: 40px;
-            }
-            .envelope {
-                width: 70px;
-                height: 70px;
-                margin-bottom: 10px;
-            }
-            .header h1 {
-                font-size: 20px;
-            }
-            .content {
-                padding: 25px 20px 35px 20px;
-            }
-            .greeting {
-                font-size: 15px;
-                margin-bottom: 20px;
-            }
-            .message {
-                font-size: 14px;
-            }
-            .cta-button {
-                padding: 12px 30px;
-                font-size: 14px;
-                margin: 25px 0;
-            }
-            .closing, .signature {
-                font-size: 14px;
-            }
-            .transaction-id {
-                font-size: 12px;
-                margin-top: 25px;
-            }
-            .footer {
-                padding: 25px 15px;
-                font-size: 13px;
-            }
-        }
         .header h1 {
             margin: 0;
             font-size: 36px;
             font-weight: 700;
             z-index: 1;
+            text-align: center;
         }
+
         .content {
             padding: 40px 40px 50px 40px;
         }
+
         .greeting {
             font-size: 20px;
             color: #000000;
             margin-bottom: 25px;
             font-weight: 700;
         }
+
         .message {
             color: #474750;
             font-size: 18px;
             line-height: 1.8;
             margin: 20px 0;
         }
+
         .plan-highlight {
             color: #9943EE;
             font-weight: 700;
         }
+
         .cta-button {
             display: inline-block;
             background: linear-gradient(360deg, #1A04B0 -126.39%, #260F63 76.39%);
@@ -211,41 +122,184 @@
             margin: 20px 0;
             border: none;
         }
+
         .cta-button:hover {
             opacity: 0.9;
         }
+
         .button-wrapper {
             text-align: center;
         }
+
         .transaction-id {
             font-size: 16px;
             color: #474750;
             margin-top: 30px;
             text-align: left;
         }
+
         .footer {
-            background: #F8F8F9;
+            background: transparent;
             padding: 30px 20px;
             text-align: center;
             color: #8787A8;
             font-size: 16px;
         }
+
         .footer a {
             color: #8787A8;
             text-decoration: none;
         }
+
         .footer a:hover {
             text-decoration: underline;
         }
+
         .closing {
             color: #474750;
             font-size: 18px;
             margin-top: 35px;
         }
+
         .signature {
             color: #474750;
             font-size: 18px;
             margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media only screen and (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .logo-section img {
+                height: 40px;
+            }
+
+            .email-card {
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 40px 20px;
+            }
+
+            .spark-left {
+                top: 15px;
+                left: 20px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .spark-right {
+                bottom: 15px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .envelope {
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 15px auto;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .content {
+                padding: 30px 25px 40px 25px;
+            }
+
+            .greeting {
+                font-size: 16px;
+            }
+
+            .message {
+                font-size: 15px;
+            }
+
+            .cta-button {
+                padding: 12px 35px;
+                font-size: 15px;
+            }
+        }
+
+        @media only screen and (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .logo-section {
+                margin-bottom: 20px;
+            }
+
+            .logo-section img {
+                height: 35px;
+            }
+
+            .header {
+                padding: 30px 15px;
+            }
+
+            .spark-left {
+                top: 10px;
+                left: 10px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .spark-right {
+                bottom: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .envelope {
+                width: 70px;
+                height: 70px;
+                margin: 0 auto 10px auto;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 25px 20px 35px 20px;
+            }
+
+            .greeting {
+                font-size: 15px;
+                margin-bottom: 20px;
+            }
+
+            .message {
+                font-size: 14px;
+            }
+
+            .cta-button {
+                padding: 12px 30px;
+                font-size: 14px;
+                margin: 25px 0;
+            }
+
+            .closing, .signature {
+                font-size: 14px;
+            }
+
+            .transaction-id {
+                font-size: 12px;
+                margin-top: 25px;
+            }
+
+            .footer {
+                padding: 25px 15px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>

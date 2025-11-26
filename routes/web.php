@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CuratorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowingController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PricingController;
@@ -285,7 +286,8 @@ Route::middleware(['web'])->prefix('ads')->group(function () {
 
 
 
-
+Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
 /*
 |--------------------------------------------------------------------------
 | Contact Routes

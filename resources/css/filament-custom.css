@@ -1,0 +1,73 @@
+/* Hide image filenames in Filament RichEditor */
+.tiptap img + a {
+    display: none !important;
+}
+
+/* Style images in the editor with proper sizing */
+.tiptap img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Remove the file link that appears after images */
+.tiptap .file-attachment-link {
+    display: none !important;
+}
+
+/* Better spacing for content elements */
+.tiptap h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.tiptap h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.75rem;
+    margin-bottom: 0.875rem;
+}
+
+.tiptap p {
+    margin-bottom: 1rem;
+    line-height: 1.75;
+}
+
+.tiptap ul, .tiptap ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.tiptap li {
+    margin-bottom: 0.5rem;
+}
+
+/* Style code blocks */
+.tiptap pre {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.tiptap code {
+    background-color: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+/* Style blockquotes */
+.tiptap blockquote {
+    border-left: 4px solid #8941D1;
+    padding-left: 1rem;
+    font-style: italic;
+    margin: 1.5rem 0;
+    color: #64748b;
+}
