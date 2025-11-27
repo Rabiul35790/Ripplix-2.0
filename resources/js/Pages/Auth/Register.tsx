@@ -252,19 +252,21 @@ export default function Register({
                                 />
                                 <label htmlFor="terms" className="text-xs sm:text-sm md:text-xs text-[#7F7F8A] dark:text-gray-400 leading-relaxed">
                                     I agree to the{' '}
-                                    <Link
-                                        href="#"
+                                    <a
+                                        href="/terms"
+                                        target="_blank"
                                         className="text-[#2B235A] hover:text-black dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300 focus:outline-none focus:ring-0"
                                     >
-                                        Terms of Service
-                                    </Link>{' '}
+                                        Terms and Condition
+                                    </a>{' '}
                                     and{' '}
-                                    <Link
-                                        href="#"
+                                    <a
+                                        href="/privacy"
+                                        target="_blank"
                                         className="text-[#2B235A] hover:text-black dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors duration-300 focus:outline-none focus:ring-0"
                                     >
                                         Privacy Policy
-                                    </Link>
+                                    </a>
                                 </label>
                             </div>
 
