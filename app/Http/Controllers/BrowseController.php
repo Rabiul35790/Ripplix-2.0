@@ -39,33 +39,22 @@ class BrowseController extends Controller
         if (!$user) {
             return null;
         }
-
-        // Get current plan details
-        if ($user->pricingPlan) {
-            return [
-                'id' => $user->pricingPlan->id,
-                'name' => $user->pricingPlan->name,
-                'slug' => $user->pricingPlan->slug ?? null,
-                'price' => $user->pricingPlan->price ?? 0,
-                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
-                'expires_at' => $user->subscription_ends_at ?? null,
-                'days_until_expiry' => $user->daysUntilExpiry(),
-            ];
-        }
-
-        return null;
+        return $user->getCurrentPlan(); // Now cached in model
     }
 
     // OPTIMIZED: allApps - instant navigation
-public function allApps(Request $request)
+    public function allApps(Request $request)
     {
         $isAuthenticated = auth()->check();
         $user = auth()->user();
 
         // Get user plan limits
         $userPlanLimits = null;
-        if ($isAuthenticated) {
-            $userPlanLimits = $this->getUserPlanLimits(auth()->user());
+        $currentPlan = null;
+
+        if ($isAuthenticated && $user) {
+            $userPlanLimits = $this->getUserPlanLimits($user);
+            $currentPlan = $this->getCurrentPlan($user);
         }
 
         // Get ALL categories (not just those in variants)
@@ -165,7 +154,7 @@ public function allApps(Request $request)
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
+            'currentPlan' => $currentPlan,
         ]);
     }
 
@@ -217,8 +206,11 @@ public function allApps(Request $request)
 
         // Get user plan limits
         $userPlanLimits = null;
-        if ($isAuthenticated) {
-            $userPlanLimits = $this->getUserPlanLimits(auth()->user());
+        $currentPlan = null;
+
+        if ($isAuthenticated && $user) {
+            $userPlanLimits = $this->getUserPlanLimits($user);
+            $currentPlan = $this->getCurrentPlan($user);
         }
 
         // Get ALL industries (not just those in variants)
@@ -305,7 +297,7 @@ public function allApps(Request $request)
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
+            'currentPlan' => $currentPlan,
         ]);
     }
 
@@ -355,10 +347,13 @@ public function allElements(Request $request)
     $user = auth()->user();
 
     // Get user plan limits
-    $userPlanLimits = null;
-    if ($isAuthenticated) {
-        $userPlanLimits = $this->getUserPlanLimits(auth()->user());
-    }
+        $userPlanLimits = null;
+        $currentPlan = null;
+
+        if ($isAuthenticated && $user) {
+            $userPlanLimits = $this->getUserPlanLimits($user);
+            $currentPlan = $this->getCurrentPlan($user);
+        }
 
     // Get ALL interactions (not just those in variants)
     $allInteractions = Interaction::select(['id', 'name', 'slug'])
@@ -444,7 +439,7 @@ public function allElements(Request $request)
         'userLibraryIds' => $userLibraryIds,
         'viewedLibraryIds' => $viewedLibraryIds,
         'userPlanLimits' => $userPlanLimits,
-        'currentPlan' => $this->getCurrentPlan($user),
+        'currentPlan' => $currentPlan,
     ]);
 }
 

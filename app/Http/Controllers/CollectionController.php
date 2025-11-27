@@ -36,33 +36,21 @@ class CollectionController extends Controller
         if (!$user) {
             return null;
         }
-
-        // Get current plan details
-        if ($user->pricingPlan) {
-            return [
-                'id' => $user->pricingPlan->id,
-                'name' => $user->pricingPlan->name,
-                'slug' => $user->pricingPlan->slug ?? null,
-                'price' => $user->pricingPlan->price ?? 0,
-                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
-                'expires_at' => $user->subscription_ends_at ?? null,
-                'days_until_expiry' => $user->daysUntilExpiry(),
-            ];
-        }
-
-        return null;
+        return $user->getCurrentPlan(); // Now cached in model
     }
 
     public function index(Request $request): Response
     {
         $boards = [];
         $userPlanLimits = null;
+        $currentPlan = null;
 
         $filters = $this->getFilters();
 
         if (auth()->check()) {
             $user = auth()->user();
             $userPlanLimits = $this->getUserPlanLimits($user);
+            $currentPlan = $this->getCurrentPlan($user);
 
             $allBoards = Board::forUser(auth()->id())
                 ->orderBy('created_at', 'desc')
@@ -113,7 +101,7 @@ class CollectionController extends Controller
             'boards' => $boards,
             'filters' => $filters,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
+            'currentPlan' => $currentPlan,
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
         ]);
@@ -420,11 +408,15 @@ class CollectionController extends Controller
         if ($board->user_id !== auth()->id()) {
             return redirect()->route('collections.index')->withErrors(['error' => 'Unauthorized']);
         }
-
+        $userPlanLimits = null;
+        $currentPlan = null;
         $user = auth()->user();
         $userPlanLimits = $this->getUserPlanLimits($user);
+        $currentPlan = $this->getCurrentPlan($user);
+
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
+
 
         $allLibraries = $board->libraries()
             ->with(['categories', 'platforms', 'industries', 'interactions'])
@@ -475,14 +467,17 @@ class CollectionController extends Controller
             'filters' => $filters,
             'userLibraryIds' => $userLibraryIds,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
+            'currentPlan' => $currentPlan,
             'viewedLibraryIds' => $viewedLibraryIds,
         ]);
     }
 
     public function shared(Request $request, string $token): Response
     {
+        $currentPlan = null;
         $user = auth()->user();
+        $currentPlan = $this->getCurrentPlan($user);
+
         $board = Board::where('share_token', $token)
             ->whereNotNull('share_token')
             ->where(function($query) {
@@ -521,7 +516,7 @@ class CollectionController extends Controller
                 'userLibraryIds' => $userLibraryIds,
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => auth()->check() ? $this->getUserPlanLimits(auth()->user()) : null,
-                'currentPlan' => $this->getCurrentPlan($user),
+                'currentPlan' => $currentPlan,
                 'isPrivate' => true,
                 'isOwner' => false,
             ]);
@@ -574,7 +569,7 @@ class CollectionController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
+            'currentPlan' => $currentPlan,
             'isPrivate' => false,
             'isOwner' => $isOwner,
         ]);

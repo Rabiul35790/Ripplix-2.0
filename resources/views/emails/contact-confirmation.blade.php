@@ -42,6 +42,7 @@
             background: #ffffff;
             border-radius: 12px;
             overflow: hidden;
+            border: 1px solid purple;
         }
 
         .header {

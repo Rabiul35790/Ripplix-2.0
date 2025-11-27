@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Cache;
 
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
@@ -211,17 +212,24 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     // NEW: Get Plan Limits Array (for easy frontend consumption)
     public function getPlanLimits(): array
     {
-        return [
-            'isFree' => $this->isFreePlan(),
-            'isPaid' => $this->isPaidPlan(),
-            'maxBoards' => $this->getMaxBoardsAllowed(),
-            'maxLibrariesPerBoard' => $this->getMaxLibrariesPerBoard(),
-            'canShare' => $this->canShareBoards(),
-            'planName' => $this->pricingPlan ? $this->pricingPlan->name : 'No Plan',
-            'planSlug' => $this->pricingPlan ? $this->pricingPlan->slug : null,
-            'currentBoardCount' => $this->getCurrentBoardCount(),
-            'canCreateMoreBoards' => $this->canCreateMoreBoards(),
-        ];
+        $cacheKey = "user_limits_{$this->id}_{$this->pricing_plan_id}";
+
+        return Cache::remember($cacheKey, 600, function () {
+            $isFree = $this->isFreePlan();
+            $isPaid = !$isFree;
+
+            return [
+                'isFree' => $isFree,
+                'isPaid' => $isPaid,
+                'maxBoards' => $isPaid ? PHP_INT_MAX : ($this->isVisitorPlan() ? 0 : 3),
+                'maxLibrariesPerBoard' => $isPaid ? PHP_INT_MAX : ($this->isVisitorPlan() ? 0 : 6),
+                'canShare' => $isPaid,
+                'planName' => $this->pricingPlan ? $this->pricingPlan->name : 'No Plan',
+                'planSlug' => $this->pricingPlan ? $this->pricingPlan->slug : null,
+                'currentBoardCount' => $this->getCurrentBoardCount(),
+                'canCreateMoreBoards' => $this->canCreateMoreBoards(),
+            ];
+        });
     }
 
     // Subscription Management Methods
@@ -257,29 +265,21 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         $currentTime = now();
         $expiresAt = null;
 
-        // Detect renewal: same plan with future expiry date
         $isRenewal = $this->pricing_plan_id === $plan->id &&
                     $this->plan_expires_at &&
                     $this->plan_expires_at->isFuture();
 
-        // Calculate expiry date
         if ($plan->billing_period === 'monthly') {
-            if ($isRenewal) {
-                $expiresAt = $this->plan_expires_at->addMonth();
-            } else {
-                $expiresAt = $currentTime->copy()->addMonth();
-            }
+            $expiresAt = $isRenewal
+                ? $this->plan_expires_at->addMonth()
+                : $currentTime->copy()->addMonth();
         } elseif ($plan->billing_period === 'yearly') {
-            if ($isRenewal) {
-                $expiresAt = $this->plan_expires_at->addYear();
-            } else {
-                $expiresAt = $currentTime->copy()->addYear();
-            }
+            $expiresAt = $isRenewal
+                ? $this->plan_expires_at->addYear()
+                : $currentTime->copy()->addYear();
         }
-        // Lifetime and free plans don't expire (expiresAt stays null)
 
-        // Direct database update with transaction
-        DB::transaction(function () use ($plan, $currentTime, $expiresAt, $isRenewal) {
+        DB::transaction(function () use ($plan, $currentTime, $expiresAt) {
             DB::table('users')
                 ->where('id', $this->id)
                 ->update([
@@ -289,11 +289,20 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
                     'updated_at' => $currentTime,
                 ]);
 
-            // Refresh the model
+            // Clear caches after plan change
+            $this->clearPlanCaches();
             $this->refresh();
         });
 
-        Log::info("User {$this->id} subscription " . ($isRenewal ? 'renewed' : 'upgraded') . " to plan {$plan->slug}, expires: " . ($expiresAt ? $expiresAt->toDateString() : 'never'));
+        Log::info("User {$this->id} subscription " . ($isRenewal ? 'renewed' : 'upgraded'));
+    }
+
+
+
+    public function clearPlanCaches(): void
+    {
+        Cache::forget("user_plan_{$this->id}_{$this->pricing_plan_id}");
+        Cache::forget("user_limits_{$this->id}_{$this->pricing_plan_id}");
     }
 
     /**
@@ -347,6 +356,33 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->roles()->exists();
     }
 
+
+     public function getCurrentPlan()
+    {
+        if (!$this->pricing_plan_id) {
+            return null;
+        }
+
+        // Cache key unique to user and plan
+        $cacheKey = "user_plan_{$this->id}_{$this->pricing_plan_id}";
+
+        return Cache::remember($cacheKey, 300, function () {
+            if (!$this->pricingPlan) {
+                return null;
+            }
+
+            return [
+                'id' => $this->pricingPlan->id,
+                'name' => $this->pricingPlan->name,
+                'slug' => $this->pricingPlan->slug ?? null,
+                'price' => $this->pricingPlan->price ?? 0,
+                'billing_period' => $this->pricingPlan->billing_period ?? 'monthly',
+                'expires_at' => $this->plan_expires_at ?? null,
+                'days_until_expiry' => $this->daysUntilExpiry(),
+            ];
+        });
+    }
+
     public function getAvatarUrlAttribute(): string
     {
         if ($this->avatar) {
@@ -373,28 +409,30 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         parent::boot();
 
-        // Auto-assign plans when user is created
         static::created(function ($user) {
             $user->assignAutomaticPlan();
         });
 
-        // Auto-handle subscription expiry whenever user model is accessed
         static::retrieved(function ($user) {
             if ($user->isSubscriptionExpired()) {
                 $user->downgradeToFreeMember();
             }
         });
 
-        // Handle lifetime plans for role users
         static::saved(function ($user) {
+            // Clear caches when user data changes
+            $user->clearPlanCaches();
+
             if ($user->shouldHaveLifetimePlan() &&
                 (!$user->pricingPlan || $user->pricingPlan->slug !== 'lifetime-pro')) {
                 $user->assignLifetimePlan();
             }
         });
 
-        // Cleanup avatar files
         static::deleting(function ($user) {
+            // Clear caches on delete
+            $user->clearPlanCaches();
+
             if ($user->hasUploadedAvatar()) {
                 $avatarPath = str_replace('/storage/', '', $user->avatar);
                 if (\Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath)) {

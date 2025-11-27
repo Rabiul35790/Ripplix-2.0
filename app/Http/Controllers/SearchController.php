@@ -42,21 +42,7 @@ class SearchController extends Controller
         if (!$user) {
             return null;
         }
-
-        // Get current plan details
-        if ($user->pricingPlan) {
-            return [
-                'id' => $user->pricingPlan->id,
-                'name' => $user->pricingPlan->name,
-                'slug' => $user->pricingPlan->slug ?? null,
-                'price' => $user->pricingPlan->price ?? 0,
-                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
-                'expires_at' => $user->subscription_ends_at ?? null,
-                'days_until_expiry' => $user->daysUntilExpiry(),
-            ];
-        }
-
-        return null;
+        return $user->getCurrentPlan(); // Now cached in model
     }
     public function index(Request $request): Response
     {
@@ -80,8 +66,11 @@ class SearchController extends Controller
         }
 
         $userPlanLimits = null;
-        if ($isAuthenticated) {
-            $userPlanLimits = $this->getUserPlanLimits(auth()->user());
+        $currentPlan = null;
+
+        if ($isAuthenticated && $user) {
+            $userPlanLimits = $this->getUserPlanLimits($user);
+            $currentPlan = $this->getCurrentPlan($user);
         }
 
         if (empty($query)) {
@@ -97,7 +86,7 @@ class SearchController extends Controller
                 'userLibraryIds' => $userLibraryIds,
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => $userPlanLimits,
-                'currentPlan' => $this->getCurrentPlan($user),
+                'currentPlan' => $currentPlan,
             ]);
         }
 
@@ -150,7 +139,7 @@ class SearchController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
+            'currentPlan' => $currentPlan,
         ]);
     }
 
@@ -191,7 +180,6 @@ class SearchController extends Controller
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'is_authenticated' => $isAuthenticated,
                 'userPlanLimits' => $userPlanLimits,
-                'currentPlan' => $this->getCurrentPlan($user),
             ]);
         }
 
@@ -248,7 +236,6 @@ class SearchController extends Controller
             'viewedLibraryIds' => $viewedLibraryIds,
             'is_authenticated' => $isAuthenticated,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 
@@ -279,7 +266,6 @@ class SearchController extends Controller
                 'userLibraryIds' => [],
                 'viewedLibraryIds' => $viewedLibraryIds,
                 'userPlanLimits' => $userPlanLimits,
-                'currentPlan' => $this->getCurrentPlan($user),
             ]);
         }
 
@@ -338,7 +324,6 @@ class SearchController extends Controller
             'userLibraryIds' => $userLibraryIds,
             'viewedLibraryIds' => $viewedLibraryIds,
             'userPlanLimits' => $userPlanLimits,
-            'currentPlan' => $this->getCurrentPlan($user),
         ]);
     }
 
