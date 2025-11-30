@@ -247,7 +247,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
 
   return (
     <>
-      <Head title={filterName ? `${filterName} - All Categories` : 'All Categories'} />
+      <Head title={filterName ? `${filterName} - All Industries` : 'All Industries'} />
       <Layout
         libraries={libraries}
         currentRoute={url}

@@ -188,7 +188,7 @@ const AllElements: React.FC<AllElementsProps> = ({
 
     // Add "All Elements" section
     if (filteredInteractionsNotInVariants.length > 0) {
-      allItems.push({ type: 'heading', variantName: 'All Elements' });
+      allItems.push({ type: 'heading', variantName: 'Other Elements' });
       filteredInteractionsNotInVariants.forEach(interaction => {
         allItems.push({ type: 'interaction', interaction });
       });

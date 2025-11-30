@@ -76,7 +76,7 @@ export default function VerifyEmailCode({ email, status, message, settings }: Pr
         });
     };
 
-    console.log('Settings:', settings);
+    // console.log('Settings:', settings);
 
     return (
         <>

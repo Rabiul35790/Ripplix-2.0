@@ -135,10 +135,10 @@ const AllApps: React.FC<AllAppsProps> = ({
 
   // Console log product URLs on mount
   useEffect(() => {
-    console.log('=== Category Product URLs ===');
+    // console.log('=== Category Product URLs ===');
     allCategories.forEach(category => {
       if (category.product_url) {
-        console.log(`${category.name}: ${category.product_url}`);
+        // console.log(`${category.name}: ${category.product_url}`);
       }
     });
   }, [allCategories]);
@@ -254,7 +254,7 @@ const AllApps: React.FC<AllAppsProps> = ({
             {/* Header with search */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 md:mb-7 gap-3 sm:gap-4 md:gap-3">
               <h3 className="text-xl sm:text-[26px] md:text-2xl font-semibold text-gray-900 focus:outline-none outline-none dark:text-white animate-slide-in-down">
-                {totalCategoriesCount} + {filterName ? `${filterName} Apps` : 'Products'}
+                {totalCategoriesCount} + {filterName ? `${filterName} Apps` : 'Apps'}
               </h3>
 
               <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -314,7 +314,7 @@ const AllApps: React.FC<AllAppsProps> = ({
                 {filteredCategoriesNotInVariants.length > 0 && (
                   <div className="animate-fade-in" style={{ animationDelay: `${filteredVariants.length * 0.1}s` }}>
                     <h4 className="text-lg sm:text-xl md:text-[19px] font-semibold text-[#2B235A] dark:text-white mb-4">
-                      All Categories
+                      Other Apps
                     </h4>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-11 gap-3 sm:gap-4 md:gap-3.5 font-sora">
                       {filteredCategoriesNotInVariants.map((category, index) => renderCategoryCard(category, index))}

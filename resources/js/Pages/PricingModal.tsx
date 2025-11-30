@@ -173,7 +173,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
                 const freshData = await response.json();
                 if (JSON.stringify(freshData) !== JSON.stringify(plans)) {
                     setPlans(Array.isArray(freshData) ? freshData : []);
-                    console.log('Plans updated:', freshData.length, 'plans at', new Date().toLocaleTimeString());
+                    // console.log('Plans updated:', freshData.length, 'plans at', new Date().toLocaleTimeString());
                 }
                 setLastFetched(new Date());
             }

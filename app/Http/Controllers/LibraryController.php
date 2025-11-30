@@ -620,7 +620,7 @@ class LibraryController extends Controller
         ]);
     }
 
- public function browseByCategory(Request $request, $slug)
+    public function browseByCategory(Request $request, $slug)
     {
         $isAuthenticated = auth()->check();
         $user = auth()->user();

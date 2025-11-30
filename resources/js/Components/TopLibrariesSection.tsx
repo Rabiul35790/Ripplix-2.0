@@ -89,7 +89,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
   };
 
   return (
-    <a
+    <Link
       href={getBrowseUrl()}
       className={`w-full font-sora ${getBgColor(cardIndex)} rounded-lg border border-[#E3E2FF] overflow-hidden focus:outline-none focus:ring-0 block`}
     >
@@ -179,7 +179,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
           )}
         </div>
       </div>
-    </a>
+    </Link>
   );
 };
 

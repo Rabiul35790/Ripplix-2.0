@@ -294,9 +294,9 @@ const getUnlockProButtonText = () => {
   };
 
   const shouldShowAvatar = currentUser?.avatar && !avatarError;
-  console.log("main header button text",getUnlockProButtonText())
-  console.log("main header limit", userPlanLimits)
-  console.log("main header current",currentPlan)
+//   console.log("main header button text",getUnlockProButtonText())
+//   console.log("main header limit", userPlanLimits)
+//   console.log("main header current",currentPlan)
 
   return (
     <>

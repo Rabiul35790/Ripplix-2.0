@@ -239,10 +239,10 @@ const getUnlockProButtonText = () => {
 
   const shouldShowAvatar = currentUser?.avatar && !avatarError;
 
-  console.log("Blog header button text",getUnlockProButtonText())
-  console.log("Blog header limit", userPlanLimits)
-  console.log("Blog header current",currentPlan)
-  console.log("Blog header current expiry",currentPlan?.days_until_expiry)
+//   console.log("Blog header button text",getUnlockProButtonText())
+//   console.log("Blog header limit", userPlanLimits)
+//   console.log("Blog header current",currentPlan)
+//   console.log("Blog header current expiry",currentPlan?.days_until_expiry)
 
 
   return (
