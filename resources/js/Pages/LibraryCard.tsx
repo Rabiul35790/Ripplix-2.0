@@ -33,8 +33,8 @@ interface Library {
   logo?: string;
   platforms: Array<{ id: number; name: string }>;
   categories: Array<Category>;
-  industries: Array<{ id: number; name: string }>;
-  interactions: Array<{ id: number; name: string }>;
+  industries: Array<{ id: number; name: string; slug?: string }>;
+  interactions: Array<{ id: number; name: string; slug?: string }>;
   created_at: string;
 }
 
@@ -554,9 +554,9 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                           }`}
                         >
                           <Link
-                            href={`/browse?interaction=${interaction.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            href={`/browse?interaction=${interaction.slug}`}
                             className={`outline-none focus:outline-none focus:ring-0 hover:text-[#9943EE] transition-color duration-500 ${
-                              filterValue === interaction.name.toLowerCase().replace(/\s+/g, '-') ? '' : ''
+                              filterValue === interaction.slug
                             }`}
                           >
                             {interaction.name}

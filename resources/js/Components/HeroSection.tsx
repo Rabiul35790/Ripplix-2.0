@@ -275,7 +275,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 lg:gap-6 pt-2 w-full">
               <button
                 onClick={handleBookmark}
-                className="group holographic-link2 relative px-5 sm:px-6 lg:px-7 py-2.5 sm:py-3 bg-[#9943EE] text-white font-semibold rounded-lg transition-all duration-300 w-full sm:w-auto hover:bg-[#8534d4] shadow-[0_0_60px_10px_rgba(59,130,246,0.25)]"
+                className="group holographic-link2 relative px-5 sm:px-6 lg:px-7 py-2.5 sm:py-3 bg-[#9943EE] text-white font-semibold rounded-lg transition-all duration-300 w-full sm:w-auto hover:bg-[#8534d4] shadow-[0_0_60px_10px_rgba(59,130,246,0.25)] outline-none focus:outline-none focus:ring-0"
               >
                 <span className="relative z-10 text-sm sm:text-base lg:text-lg font-semibold">Bookmark Now</span>
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-400 to-pink-400 blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>

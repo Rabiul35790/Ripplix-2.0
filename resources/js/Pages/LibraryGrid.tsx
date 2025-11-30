@@ -23,9 +23,9 @@ interface Library {
   description?: string;
   logo?: string;
   platforms: Array<{ id: number; name: string }>;
-  categories: Array<{ id: number; name: string }>;
-  industries: Array<{ id: number; name: string }>;
-  interactions: Array<{ id: number; name: string }>;
+  categories: Array<{ id: number; name: string; slug?: string }>;
+  industries: Array<{ id: number; name: string; slug?: string }>;
+  interactions: Array<{ id: number; name: string; slug?: string }>;
   created_at: string;
 }
 

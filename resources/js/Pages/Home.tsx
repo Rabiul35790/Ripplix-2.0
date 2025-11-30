@@ -49,8 +49,8 @@ interface Library {
   logo?: string;
   platforms: Array<{ id: number; name: string }>;
   categories: Category[];
-  industries: Array<{ id: number; name: string; is_top: boolean }>;
-  interactions: Array<{ id: number; name: string; is_top: boolean }>;
+  industries: Array<{ id: number; name: string; slug?: string; is_top: boolean }>;
+  interactions: Array<{ id: number; name: string; slug?: string; is_top: boolean }>;
   created_at: string;
   published_date: string;
 }

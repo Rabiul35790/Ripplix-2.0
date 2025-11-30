@@ -89,8 +89,8 @@ class LibraryController extends Controller
             ->with([
                 'platforms:id,name',
                 'categories:id,name,image,slug,is_top',
-                'industries:id,name,is_top',
-                'interactions:id,name,is_top'
+                'industries:id,name,slug,is_top',
+                'interactions:id,name,slug,is_top'
             ])
             ->where('libraries.is_active', true);
 
@@ -308,8 +308,8 @@ class LibraryController extends Controller
             ->with([
                 'platforms:id,name',
                 'categories:id,name,image,slug',
-                'industries:id,name',
-                'interactions:id,name'
+                'industries:id,name,slug',
+                'interactions:id,name,slug'
             ])
             ->where('libraries.is_active', true);
 
