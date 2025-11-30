@@ -7,6 +7,7 @@ import MembershipModal from './Website/Components/MembershipModal';
 import LibrarySelectionModal from './LibrarySelectionModal';
 import BoardModal from '../Components/BoardModal';
 import axios from 'axios';
+import { Button } from '@headlessui/react';
 
 interface Category {
     id: number;
@@ -679,13 +680,12 @@ return (
                         </h3>
                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
                           {library.platforms.map((platform) => (
-                            <Link
+                            <p
                               key={platform.id}
-                              href={`/browse?platform=${getPlatformSlug(platform.name)}`}
                               className="px-2 sm:px-3 py-1 bg-[#FFFFFF] text-[#443B82] dark:bg-gray-800 dark:text-[#FFFFFF] text-sm sm:text-base rounded-[4px] border border-[#E3E2FF] font-sora hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none"
                             >
                               {platform.name}
-                            </Link>
+                            </p>
                           ))}
                         </div>
                       </div>

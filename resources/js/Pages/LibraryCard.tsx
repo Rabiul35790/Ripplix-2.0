@@ -32,7 +32,7 @@ interface Library {
   description?: string;
   logo?: string;
   platforms: Array<{ id: number; name: string }>;
-  categories: Array<Category>;
+  categories: Category[];
   industries: Array<{ id: number; name: string; slug?: string }>;
   interactions: Array<{ id: number; name: string; slug?: string }>;
   created_at: string;
@@ -65,7 +65,63 @@ interface LibraryCardProps extends PageProps {
   onLibraryViewed?: (libraryId: number) => void;
 }
 
-// Global video manager to handle all videos efficiently
+// ============================================
+// IMAGE CACHE MANAGER - PREVENTS RELOADING
+// ============================================
+class ImageCacheManager {
+  // Static properties - shared across all instances
+  private static cache = new Map<string, string>();
+  private static loading = new Set<string>();
+  private static loadingPromises = new Map<string, Promise<string>>();
+
+  static async loadImage(url: string): Promise<string> {
+    // 1. Check if image is already in cache
+    if (this.cache.has(url)) {
+      return this.cache.get(url)!;
+    }
+
+    // 2. Check if image is currently being loaded
+    if (this.loadingPromises.has(url)) {
+      return this.loadingPromises.get(url)!;
+    }
+
+    // 3. Start loading the image
+    const promise = new Promise<string>((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        this.cache.set(url, url);
+        this.loading.delete(url);
+        this.loadingPromises.delete(url);
+        resolve(url);
+      };
+
+      img.onerror = () => {
+        this.loading.delete(url);
+        this.loadingPromises.delete(url);
+        reject(new Error(`Failed to load image: ${url}`));
+      };
+
+      img.src = url;
+    });
+
+    this.loading.add(url);
+    this.loadingPromises.set(url, promise);
+    return promise;
+  }
+
+  static isLoading(url: string): boolean {
+    return this.loading.has(url);
+  }
+
+  static isCached(url: string): boolean {
+    return this.cache.has(url);
+  }
+}
+
+// ============================================
+// GLOBAL VIDEO MANAGER
+// ============================================
 class VideoManager {
   private static instance: VideoManager;
   private videos: Set<HTMLVideoElement> = new Set();
@@ -96,7 +152,6 @@ class VideoManager {
             this.playVideo(video);
           } else {
             this.visibleVideos.delete(video);
-            // Optionally pause videos that are out of view to save resources
             if (video && !video.paused) {
               video.pause();
             }
@@ -105,13 +160,12 @@ class VideoManager {
       },
       {
         threshold: 0.1,
-        rootMargin: '50px' // Start loading slightly before entering viewport
+        rootMargin: '50px'
       }
     );
   }
 
   private startMonitoring() {
-    // Monitor only visible videos every 3 seconds
     this.monitorInterval = setInterval(() => {
       this.visibleVideos.forEach((video) => {
         if (video.paused && !video.ended && video.readyState >= 2) {
@@ -124,7 +178,6 @@ class VideoManager {
   private playVideo(video: HTMLVideoElement) {
     if (video && video.paused && !video.ended) {
       video.play().catch((err) => {
-        // Silently handle autoplay restrictions
         if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
           console.error('Video play error:', err);
         }
@@ -159,6 +212,9 @@ class VideoManager {
   }
 }
 
+// ============================================
+// LIBRARY CARD COMPONENT
+// ============================================
 const LibraryCard: React.FC<LibraryCardProps> = ({
   library,
   onClick,
@@ -172,34 +228,72 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   auth
 }) => {
   const { props, url: currentUrl } = usePage<PageProps>();
-
-  // Use auth from props if passed directly, otherwise fall back to props.auth from usePage
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
+  // Video state
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoManagerRef = useRef<VideoManager>(VideoManager.getInstance());
+
+  // NEW: Category image state
+  const [categoryImageUrl, setCategoryImageUrl] = useState<string | null>(null);
+  const [isCategoryImageLoading, setIsCategoryImageLoading] = useState(true);
+  const [categoryImageError, setCategoryImageError] = useState(false);
+
+  // Modal states
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showLibrarySelectionModal, setShowLibrarySelectionModal] = useState(false);
   const [showBoardModal, setShowBoardModal] = useState(false);
   const [userBoards, setUserBoards] = useState<Board[]>([]);
   const [isLoadingBoards, setIsLoadingBoards] = useState(false);
+
+  // Library IDs
   const [localUserLibraryIds, setLocalUserLibraryIds] = useState<number[]>(userLibraryIds);
   const [localViewedLibraryIds, setLocalViewedLibraryIds] = useState<number[]>(viewedLibraryIds);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const videoManagerRef = useRef<VideoManager>(VideoManager.getInstance());
 
-  // Lazy loading with intersection observer
+  // Lazy loading
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
+
+  // ============================================
+  // NEW: LOAD CATEGORY IMAGE PROGRESSIVELY
+  // ============================================
+  useEffect(() => {
+    const categoryImage = getCategoryImage();
+
+    if (!categoryImage) {
+      setIsCategoryImageLoading(false);
+      return;
+    }
+
+    // Check if already cached
+    if (ImageCacheManager.isCached(categoryImage)) {
+      setCategoryImageUrl(categoryImage);
+      setIsCategoryImageLoading(false);
+      return;
+    }
+
+    // Load image in background
+    ImageCacheManager.loadImage(categoryImage)
+      .then((url) => {
+        setCategoryImageUrl(url);
+        setIsCategoryImageLoading(false);
+      })
+      .catch((error) => {
+        console.error('Failed to load category image:', error);
+        setCategoryImageError(true);
+        setIsCategoryImageLoading(false);
+      });
+  }, [library.categories]);
 
   // Update local state when props change
   useEffect(() => {
     setLocalUserLibraryIds(userLibraryIds);
   }, [userLibraryIds]);
 
-  // Update viewed library IDs when props change
   useEffect(() => {
     setLocalViewedLibraryIds(viewedLibraryIds);
   }, [viewedLibraryIds]);
@@ -209,22 +303,21 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     const video = videoRef.current;
     if (video && inView) {
       videoManagerRef.current.register(video);
-
       return () => {
         videoManagerRef.current.unregister(video);
       };
     }
   }, [inView, isVideoLoaded]);
 
-  // Check if library is starred based on local state
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
   const isStarred = localUserLibraryIds.includes(library.id);
 
-  // Check if library is new (NOT viewed yet)
   const isNewLibrary = () => {
     return !localViewedLibraryIds.includes(library.id);
   };
 
-  // Function to track library view
   const trackLibraryView = async (libraryId: number) => {
     try {
       await fetch(`/api/libraries/${libraryId}/view`, {
@@ -235,13 +328,11 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
         },
       });
 
-      // Update local state immediately
       setLocalViewedLibraryIds(prev => {
         if (prev.includes(libraryId)) return prev;
         return [...prev, libraryId];
       });
 
-      // Notify parent component
       if (onLibraryViewed) {
         onLibraryViewed(libraryId);
       }
@@ -250,7 +341,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     }
   };
 
-  // Function to refresh user library IDs
   const refreshUserLibraryIds = useCallback(async () => {
     if (!authData?.user) return;
 
@@ -269,22 +359,16 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     setIsVideoLoaded(true);
   };
 
-  // Handle video click without page reload
   const handleVideoClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Track the view immediately
     await trackLibraryView(library.id);
 
     try {
-      // Store the current URL as the previous URL (before opening modal)
       const previousUrl = window.location.pathname + window.location.search;
-
-      // Update URL to /library/{slug} without page reload
       const newUrl = `/library/${library.slug}`;
       window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
 
-      // Fetch library data
       const response = await fetch(`/api/libraries/${library.slug}`);
       if (!response.ok) {
         throw new Error('Failed to fetch library data');
@@ -292,14 +376,12 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
       const data = await response.json();
 
-      // Call the onClick handler with the library data
       if (onClick) {
         onClick(data.library);
       }
     } catch (error) {
       console.error('Error opening library modal:', error);
 
-      // Fallback to the old method if API fails
       const libraryUrl = `/library/${library.slug}`;
       router.visit(libraryUrl, {
         preserveScroll: true,
@@ -341,7 +423,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
       return;
     }
 
-    // For authenticated users, fetch boards and show selection modal
     await fetchUserBoards();
     setShowLibrarySelectionModal(true);
   };
@@ -353,7 +434,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
   const handleBoardModalClose = () => {
     setShowBoardModal(false);
-    // Refresh boards and show selection modal again
     fetchUserBoards().then(() => {
       setShowLibrarySelectionModal(true);
     });
@@ -361,11 +441,8 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
   const handleLibrarySelectionClose = async () => {
     setShowLibrarySelectionModal(false);
-
-    // Refresh the user's library IDs to update star states
     await refreshUserLibraryIds();
 
-    // Notify parent component about the star state change if callback provided
     if (onStarClick) {
       const newIsStarred = localUserLibraryIds.includes(library.id);
       onStarClick(library, newIsStarred);
@@ -373,12 +450,10 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   };
 
   const handleLibraryAdded = async () => {
-    // Immediately refresh user library IDs when library is added
     await refreshUserLibraryIds();
 
-    // Notify parent component about the change
     if (onStarClick) {
-      onStarClick(library, true); // Library was just added, so it's starred
+      onStarClick(library, true);
     }
   };
 
@@ -386,7 +461,9 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     setShowMembershipModal(false);
   };
 
-  // Dynamic sizing based on cardSize prop
+  // ============================================
+  // STYLING FUNCTIONS
+  // ============================================
   const getCardClasses = () => {
     return "bg-[#F8F8F9] p-[1px] dark:bg-gray-900 rounded-lg overflow-hidden border border-transparent";
   };
@@ -415,14 +492,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     return cardSize === 'large' ? 'w-10 h-10 rounded-md' : 'w-8 h-8 rounded-md';
   };
 
-  const getFallbackIconSize = () => {
-    return cardSize === 'large' ? 'w-16 h-16' : 'w-12 h-12';
-  };
-
-  const getFallbackIconInnerSize = () => {
-    return cardSize === 'large' ? 'w-8 h-8' : 'w-6 h-6';
-  };
-
   const getStarSize = () => {
     return cardSize === 'large' ? 26 : 20;
   };
@@ -431,7 +500,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     return library.categories.length > 0 ? library.categories[0].image : null;
   };
 
-    const getCategoryName = () => {
+  const getCategoryName = () => {
     return library.categories.length > 0 ? library.categories[0].name : '';
   };
 
@@ -443,22 +512,22 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     return '';
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <>
-        <div
+      <div
         ref={ref}
         className={`relative overflow-hidden group border border-transparent bg-transparent hover:bg-white transition-colors duration-500 ease-in-out hover:border-[#F2F2FF] ${getCardClasses()}`}
-        >
-        {/* Animated hover background */}
+      >
         <div className="absolute"></div>
 
-        {/* Keep the rest of your card content inside this next wrapper */}
         <div className="relative z-[8]">
           <div
             className={`${getVideoContainerClasses()}`}
             onClick={handleVideoClick}
           >
-            {/* Only load video when card is in view */}
             {inView && library.video_url && (
               <video
                 ref={videoRef}
@@ -475,14 +544,13 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               />
             )}
 
-            {/* Fallback when video is not loaded or not in view */}
             {(!inView || !isVideoLoaded) && (
               <div className="absolute inset-0 flex items-center justify-center bg-white">
                 <div
                   className="flex items-center justify-center bg-[#F7F7FB] rounded-xl"
                   style={{
-                    width: 'calc(100% - 36px)', // 18px left + 18px right
-                    height: 'calc(100% - 120px)', // 60px top + 60px bottom
+                    width: 'calc(100% - 36px)',
+                    height: 'calc(100% - 120px)',
                   }}
                 >
                   <img
@@ -495,7 +563,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               </div>
             )}
 
-            {/* New Tag - Shows if library has NOT been viewed */}
             {isNewLibrary() && (
               <div className="absolute top-3 right-3 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
                 New
@@ -503,11 +570,10 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
             )}
           </div>
 
-          {/* Content - Not clickable */}
           <div className={getContentPadding()}>
             <div className="flex items-start gap-2">
-              {/* Category Image */}
-              {getCategoryImage() ? (
+              {/* OPTIMIZED: Category Image with Progressive Loading */}
+              {getCategoryImage() && !categoryImageError ? (
                 <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] hover:shadow-[6px_0px_24px_-1px_#6D16C321,0px_6px_20px_-1px_#6D16C321] transition-shadow duration-300 overflow-hidden flex-shrink-0 ${getCategoryImageSize()}`}>
                   <Link
                     href={`/browse?category=${getCategorySlug()}`}
@@ -515,11 +581,20 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                       filterValue === getCategorySlug() ? '' : ''
                     }`}
                   >
-                    <img
-                      src={getCategoryImage()}
-                      alt="Category"
-                      className="w-full h-full object-cover"
-                    />
+                    {isCategoryImageLoading ? (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 animate-pulse" />
+                    ) : categoryImageUrl ? (
+                      <img
+                        src={categoryImageUrl}
+                        alt="Category"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#F7F7FB] flex items-center justify-center">
+                        <Atom className='text-[#CECCFF] h-4 w-4'/>
+                      </div>
+                    )}
                   </Link>
                 </div>
               ) : (
@@ -528,21 +603,18 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                 </div>
               )}
 
-              {/* Title and Interactions Container */}
               <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
-                {/* Title */}
                 <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
-                    <Link
+                  <Link
                     href={`/browse?category=${getCategorySlug()}`}
                     className={`font-sora !font-bold outline-none focus:outline-none focus:ring-0 ${
                       filterValue === getCategorySlug() ? '' : ''
                     }`}
                   >
                     {getCategoryName()}
-                </Link>
+                  </Link>
                 </h3>
 
-                {/* Interactions */}
                 <div className="font-medium text-[#8787A8] opacity-70">
                   {library.interactions.length > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -576,7 +648,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                 </div>
               </div>
 
-              {/* Star Icon - Clickable */}
               <button
                 onClick={handleStarClick}
                 disabled={isLoadingBoards}
@@ -594,7 +665,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
         </div>
       </div>
 
-      {/* Membership Modal for unauthenticated users */}
       <MembershipModal
         isOpen={showMembershipModal}
         onClose={closeMembershipModal}
@@ -604,7 +674,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
         redirectUrl="/login"
       />
 
-      {/* Library Selection Modal for authenticated users */}
       <LibrarySelectionModal
         isOpen={showLibrarySelectionModal}
         onClose={handleLibrarySelectionClose}
@@ -616,7 +685,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
         userPlanLimits={userPlanLimits}
       />
 
-      {/* Board Creation Modal */}
       <BoardModal
         isOpen={showBoardModal}
         onClose={handleBoardModalClose}

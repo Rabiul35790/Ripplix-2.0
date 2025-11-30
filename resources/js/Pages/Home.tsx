@@ -13,7 +13,6 @@ import Overview from '../Components/Overview';
 import Testimonials from './Testimonial';
 import FAQ from '../Components/Faq';
 
-
 interface Category {
   id: number;
   name: string;
@@ -127,6 +126,29 @@ const Home: React.FC<HomeProps> = ({
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
+  // ============================================
+  // NEW: SPINNER CONTROL WITH TIMEOUT
+  // ============================================
+  const [showInitialSpinner, setShowInitialSpinner] = useState(true);
+  const [isPageReady, setIsPageReady] = useState(false);
+
+  // Force hide spinner after max 2 seconds
+  useEffect(() => {
+    const spinnerTimeout = setTimeout(() => {
+      setShowInitialSpinner(false);
+      setIsPageReady(true);
+    }, 2000); // 2 second maximum
+
+    // If page loads faster, hide spinner early
+    if (initialLibraries && initialLibraries.length > 0) {
+      setShowInitialSpinner(false);
+      setIsPageReady(true);
+      clearTimeout(spinnerTimeout);
+    }
+
+    return () => clearTimeout(spinnerTimeout);
+  }, [initialLibraries]);
+
   // State management with proper fallback for pagination
   const [libraries, setLibraries] = useState<Library[]>(initialLibraries || []);
   const [pagination, setPagination] = useState<Pagination>(
@@ -161,7 +183,7 @@ const Home: React.FC<HomeProps> = ({
   // Ref to prevent multiple simultaneous requests
   const loadingRef = useRef(false);
 
-  // NEW: Use requestIdleCallback for non-critical updates
+  // Use requestIdleCallback for non-critical updates
   const scheduleUpdate = useCallback((callback: () => void) => {
     if ('requestIdleCallback' in window) {
       requestIdleCallback(callback);
@@ -190,10 +212,9 @@ const Home: React.FC<HomeProps> = ({
     });
   }, [scheduleUpdate]);
 
-  // NEW: Fetch top libraries after page loads (only for unauthenticated users)
+  // Fetch top libraries after page loads (only for unauthenticated users)
   useEffect(() => {
     const fetchTopLibraries = async () => {
-      // Only fetch if unauthenticated and don't have data yet
       if (isAuthenticated || topLibrariesByCategory.length > 0) {
         setIsLoadingTopLibraries(false);
         return;
@@ -210,7 +231,6 @@ const Home: React.FC<HomeProps> = ({
 
         const data = await response.json();
 
-        // Use requestAnimationFrame for smooth state updates
         requestAnimationFrame(() => {
           setTopLibrariesByCategory(data.topLibrariesByCategory || []);
           setTopLibrariesByInteraction(data.topLibrariesByInteraction || []);
@@ -223,7 +243,6 @@ const Home: React.FC<HomeProps> = ({
       }
     };
 
-    // Delay fetching top libraries slightly to prioritize main content
     const timer = setTimeout(fetchTopLibraries, 100);
     return () => clearTimeout(timer);
   }, [isAuthenticated]);
@@ -262,7 +281,7 @@ const Home: React.FC<HomeProps> = ({
     }
   };
 
-  // Handle platform filter change - reset libraries and fetch new data
+  // Handle platform filter change
   const handlePlatformChange = useCallback(async (platform: string) => {
     setSelectedPlatform(platform);
     setIsLoadingMore(true);
@@ -282,7 +301,6 @@ const Home: React.FC<HomeProps> = ({
 
       const data = await response.json();
 
-      // Use requestAnimationFrame for smooth updates
       requestAnimationFrame(() => {
         setLibraries(data.libraries);
         setPagination(data.pagination);
@@ -300,7 +318,7 @@ const Home: React.FC<HomeProps> = ({
     }
   }, []);
 
-  // Filter libraries based on search only (platform filter is handled by backend)
+  // Filter libraries based on search
   const filteredLibraries = useMemo(() => {
     let filtered = [...libraries];
 
@@ -315,7 +333,7 @@ const Home: React.FC<HomeProps> = ({
     return filtered;
   }, [libraries, searchQuery]);
 
-  // Load more libraries function with filter awareness and null checks
+  // Load more libraries
   const loadMoreLibraries = useCallback(async () => {
     if (loadingRef.current || isLoadingMore || !pagination?.has_more) {
       return;
@@ -341,7 +359,6 @@ const Home: React.FC<HomeProps> = ({
       const data = await response.json();
 
       if (data.libraries && data.libraries.length > 0) {
-        // Use requestAnimationFrame for smooth append
         requestAnimationFrame(() => {
           setLibraries(prev => [...prev, ...data.libraries]);
           setPagination(data.pagination);
@@ -363,7 +380,7 @@ const Home: React.FC<HomeProps> = ({
     }
   }, [pagination, isLoadingMore, selectedPlatform]);
 
-  // Event handlers with debouncing for search
+  // Event handlers
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const handleSearch = useCallback((query: string) => {
     if (searchTimeoutRef.current) {
@@ -371,7 +388,7 @@ const Home: React.FC<HomeProps> = ({
     }
     searchTimeoutRef.current = setTimeout(() => {
       setSearchQuery(query);
-    }, 150); // Debounce search by 150ms
+    }, 150);
   }, []);
 
   const handleCardsPerRowChange = useCallback((count: number) => {
@@ -399,13 +416,57 @@ const Home: React.FC<HomeProps> = ({
     }
   }, [authData]);
 
-  // Modal libraries for authenticated/unauthenticated users
+  // Modal libraries
   const modalLibraries = useMemo(() => {
     return isAuthenticated ? filteredLibraries : filteredLibraries.slice(0, 12);
   }, [isAuthenticated, filteredLibraries]);
 
   const LayoutComponent = isAuthenticated ? Layout : LayoutUnauth;
 
+  // ============================================
+  // RENDER INITIAL SPINNER
+  // ============================================
+  if (showInitialSpinner && !isPageReady) {
+    return (
+      <>
+        <Head title="Inspiring for better Interaction" />
+        <LayoutComponent
+          currentRoute={url}
+          onSearch={handleSearch}
+          searchQuery={searchQuery}
+          filters={filters}
+          libraries={initialLibraries}
+          auth={authData}
+          ziggy={ziggyData}
+          userLibraryIds={userLibraryIds}
+          viewedLibraryIds={viewedLibraryIds}
+          onLibraryViewed={handleLibraryViewed}
+          userPlanLimits={userPlanLimits}
+          currentPlan={currentPlan}
+          settings={settings}
+        >
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="flex flex-col items-center gap-4">
+              <img
+                src="images/Spin.gif"
+                height={80}
+                width={80}
+                alt="Loading..."
+                className="opacity-75"
+              />
+              <p className="text-gray-600 dark:text-gray-400 text-sm animate-pulse">
+                Loading your experience...
+              </p>
+            </div>
+          </div>
+        </LayoutComponent>
+      </>
+    );
+  }
+
+  // ============================================
+  // RENDER MAIN CONTENT
+  // ============================================
   return (
     <>
       <Head title="Inspiring for better Interaction" />
@@ -427,9 +488,7 @@ const Home: React.FC<HomeProps> = ({
 
         {!isAuthenticated && (
         <>
-            {/* <HeroSection settings={settings} /> */}
-
-            {/* Top Libraries Sections - Show skeleton while loading */}
+            {/* Top Libraries Sections */}
             {isLoadingTopLibraries ? (
               <div className="mx-4 sm:mx-6 lg:mx-8 py-8">
                 <div className="animate-pulse space-y-8">
@@ -457,7 +516,6 @@ const Home: React.FC<HomeProps> = ({
 
         {/* Library Grid Section with Sticky Filter */}
         <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12 relative">
-          {/* Sticky Filter - Now contained within this section */}
           <div className="sticky top-[60px] md:top-[68px] lg:top-[68px] z-10" style={{ contain: 'layout style paint' }}>
             <FilterWrapper
               filters={filters}
@@ -518,7 +576,7 @@ const Home: React.FC<HomeProps> = ({
           />
         </div>
 
-        {/* Rest of the unauthenticated sections remain outside */}
+        {/* Unauthenticated sections */}
         {!isAuthenticated && (
           <>
             <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
