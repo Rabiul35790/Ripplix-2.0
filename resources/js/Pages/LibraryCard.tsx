@@ -318,28 +318,28 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     return !localViewedLibraryIds.includes(library.id);
   };
 
-  const trackLibraryView = async (libraryId: number) => {
-    try {
-      await fetch(`/api/libraries/${libraryId}/view`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-      });
+const trackLibraryView = async (libraryId: number) => {
+  // Update local state optimistically first (immediate UI feedback)
+  setLocalViewedLibraryIds(prev => {
+    if (prev.includes(libraryId)) return prev;
+    return [...prev, libraryId];
+  });
 
-      setLocalViewedLibraryIds(prev => {
-        if (prev.includes(libraryId)) return prev;
-        return [...prev, libraryId];
-      });
+  if (onLibraryViewed) {
+    onLibraryViewed(libraryId);
+  }
 
-      if (onLibraryViewed) {
-        onLibraryViewed(libraryId);
-      }
-    } catch (error) {
-      console.error('Error tracking library view:', error);
-    }
-  };
+  // Track view in background (fire and forget - no await, no error handling needed)
+  fetch(`/api/libraries/${libraryId}/view`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+    },
+  }).catch(() => {
+    // Silently ignore errors - view tracking is non-critical
+  });
+};
 
   const refreshUserLibraryIds = useCallback(async () => {
     if (!authData?.user) return;
@@ -359,42 +359,45 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     setIsVideoLoaded(true);
   };
 
-  const handleVideoClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+const handleVideoClick = async (e: React.MouseEvent) => {
+  e.stopPropagation();
 
-    await trackLibraryView(library.id);
+  // 1. Update URL immediately for instant feedback
+  const previousUrl = window.location.pathname + window.location.search;
+  const newUrl = `/library/${library.slug}`;
+  window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
 
-    try {
-      const previousUrl = window.location.pathname + window.location.search;
-      const newUrl = `/library/${library.slug}`;
-      window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
+  // 2. Open modal immediately with current library data
+  if (onClick) {
+    onClick(library);
+  }
 
-      const response = await fetch(`/api/libraries/${library.slug}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch library data');
+  // 3. Track view in background (non-blocking, fire-and-forget)
+  trackLibraryView(library.id);
+
+  // 4. Optionally fetch fresh data in background (without blocking or errors)
+  fetch(`/api/libraries/${library.slug}`, {
+    headers: {
+      'Accept': 'application/json',
+    },
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
       }
-
-      const data = await response.json();
-
-      if (onClick) {
+      throw new Error('Response not ok');
+    })
+    .then(data => {
+      // Update with fresh data if available and matching
+      if (onClick && data.library && data.library.id === library.id) {
         onClick(data.library);
       }
-    } catch (error) {
-      console.error('Error opening library modal:', error);
-
-      const libraryUrl = `/library/${library.slug}`;
-      router.visit(libraryUrl, {
-        preserveScroll: true,
-        preserveState: true,
-        only: ['selectedLibrary', 'libraries'],
-        onSuccess: () => {
-          if (onClick) {
-            onClick(library);
-          }
-        }
-      });
-    }
-  };
+    })
+    .catch(() => {
+      // Silently fail - modal is already open with existing data
+      // No console logs needed - this is expected behavior
+    });
+};
 
   const fetchUserBoards = async () => {
     if (isLoadingBoards) return;

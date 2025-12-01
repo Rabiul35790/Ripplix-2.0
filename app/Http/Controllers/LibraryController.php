@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LibraryController extends Controller
 {
@@ -943,6 +944,55 @@ class LibraryController extends Controller
             'topLibrariesByInteraction' => [],
             'topLibrariesByIndustry' => [],
         ]);
+    }
+
+    public function getSuggestedLibraries(Request $request, $slug)
+    {
+        try {
+            // Get the current library
+            $currentLibrary = Library::where('slug', $slug)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$currentLibrary) {
+                return response()->json(['error' => 'Library not found'], 404);
+            }
+
+            // Get 6 random suggested libraries (excluding current)
+            $suggestedLibraries = Library::select([
+                    'id',
+                    'title',
+                    'slug',
+                    'url',
+                    'video_url',
+                    'logo',
+                    'created_at',
+                    'published_date'
+                ])
+                ->with([
+                    'platforms:id,name',
+                    'categories:id,name,slug,image',
+                    'industries:id,name,slug',
+                    'interactions:id,name,slug'
+                ])
+                ->where('is_active', true)
+                ->where('id', '!=', $currentLibrary->id)
+                ->inRandomOrder()
+                ->limit(6)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'libraries' => $suggestedLibraries
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching suggested libraries: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch suggested libraries'
+            ], 500);
+        }
     }
 
     private function getFilters()

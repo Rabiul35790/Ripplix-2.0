@@ -11,6 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FollowingController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\LibraryViewController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
@@ -71,10 +72,23 @@ Route::post('/sponsor-us', [SponsorController::class, 'store']);
 //     Route::get('/{slug}', [LibraryController::class, 'showModal'])->name('modal'); // CHANGED: from 'show' to 'modal'
 // });
 
-Route::get('/api/libraries/{slug}', [LibraryController::class, 'getLibrary'])->name('api.library');
+Route::get('/api/libraries/{slug}', [LibraryController::class, 'getLibrary'])
+    ->name('api.library');
 
-// Main library detail route - this will handle both direct access and modal
-Route::get('/library/{slug}', [LibraryController::class, 'show'])->name('library.show');
+// API route for tracking library views - FIXED to use ID instead of model binding
+Route::post('/api/libraries/{libraryId}/view', [LibraryViewController::class, 'trackView'])
+    ->name('api.library.track-view');
+
+// API route for getting viewed library IDs
+Route::get('/api/viewed-library-ids', [LibraryViewController::class, 'getViewedLibraryIds'])
+    ->name('api.viewed-library-ids');
+
+// Regular route for direct library access
+Route::get('/library/{slug}', [LibraryController::class, 'show'])
+    ->name('library.show');
+
+Route::get('/api/libraries/{slug}/suggested', [LibraryController::class, 'getSuggestedLibraries'])
+    ->name('api.library.suggested');
 
 
 // Add this route for the home page load more functionality

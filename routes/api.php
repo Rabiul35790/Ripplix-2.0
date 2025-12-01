@@ -35,7 +35,7 @@ Route::middleware(['web'])->group(function () {
 });
 
 
-Route::post('/libraries/{library}/view', [LibraryViewController::class, 'trackView']);
+// Route::post('/libraries/{library}/view', [LibraryViewController::class, 'trackView']);
 
-// Get viewed library IDs
-Route::get('/viewed-library-ids', [LibraryViewController::class, 'getViewedLibraryIds']);
+// // Get viewed library IDs
+// Route::get('/viewed-library-ids', [LibraryViewController::class, 'getViewedLibraryIds']);
