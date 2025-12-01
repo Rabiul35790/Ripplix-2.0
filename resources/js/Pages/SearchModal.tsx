@@ -537,13 +537,13 @@ const SearchModal: React.FC<SearchModalProps> = ({
                           {[...Array(2)].map((_, i) => (
                             <div key={i} className="flex items-center gap-8 shrink-0 px-3">
                               {[
-                                { src: "images/brand/atlas.png", alt: "Atlassian" },
-                                { src: "images/brand/air.png", alt: "Airbnb" },
-                                { src: "images/brand/monday.png", alt: "Monday" },
-                                { src: "images/brand/klarna.png", alt: "Klarna" },
-                                { src: "images/brand/spotify.png", alt: "Spotify" },
-                                { src: "images/brand/plaid.png", alt: "Plaid" },
-                                { src: "images/brand/linktree.png", alt: "Linktree" },
+                                { src: "/images/brand/atlas.png", alt: "Atlassian" },
+                                { src: "/images/brand/air.png", alt: "Airbnb" },
+                                { src: "/images/brand/monday.png", alt: "Monday" },
+                                { src: "/images/brand/klarna.png", alt: "Klarna" },
+                                { src: "/images/brand/spotify.png", alt: "Spotify" },
+                                { src: "/images/brand/plaid.png", alt: "Plaid" },
+                                { src: "/images/brand/linktree.png", alt: "Linktree" },
                               ].map((brand, index) => (
                                 <div
                                   key={index}

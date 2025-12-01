@@ -208,7 +208,7 @@ const Error: React.FC<ErrorPageProps> = ({
             <div className="flex justify-center md:justify-start">
               <div className="w-56 h-56 flex items-center justify-center">
                 {/* {getErrorIcon(status)} */}
-                <img src='images/error.png' alt='Error Illustration' className="w-full h-full object-contain" />
+                <img src='/images/error.png' alt='Error Illustration' className="w-full h-full object-contain" />
               </div>
             </div>
           </div>

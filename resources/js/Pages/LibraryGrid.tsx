@@ -124,13 +124,13 @@ BrandLogo.displayName = 'BrandLogo';
 // Scrolling brands section
 const ScrollingBrands = memo(() => {
   const brands = useMemo(() => [
-    { src: "images/brand/atlas.png", alt: "Atlassian" },
-    { src: "images/brand/air.png", alt: "Airbnb" },
-    { src: "images/brand/monday.png", alt: "Monday" },
-    { src: "images/brand/klarna.png", alt: "Klarna" },
-    { src: "images/brand/spotify.png", alt: "Spotify" },
-    { src: "images/brand/plaid.png", alt: "Plaid" },
-    { src: "images/brand/linktree.png", alt: "Linktree" },
+    { src: "/images/brand/atlas.png", alt: "Atlassian" },
+    { src: "/images/brand/air.png", alt: "Airbnb" },
+    { src: "/images/brand/monday.png", alt: "Monday" },
+    { src: "/images/brand/klarna.png", alt: "Klarna" },
+    { src: "/images/brand/spotify.png", alt: "Spotify" },
+    { src: "/images/brand/plaid.png", alt: "Plaid" },
+    { src: "/images/brand/linktree.png", alt: "Linktree" },
   ], []);
 
   return (

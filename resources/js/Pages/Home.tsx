@@ -448,15 +448,15 @@ const Home: React.FC<HomeProps> = ({
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-4">
               <img
-                src="images/Spin.gif"
+                src="/images/Spin.gif"
                 height={80}
                 width={80}
                 alt="Loading..."
                 className="opacity-75"
               />
-              <p className="text-gray-600 dark:text-gray-400 text-sm animate-pulse">
+              {/* <p className="text-gray-600 dark:text-gray-400 text-sm animate-pulse">
                 Loading your experience...
-              </p>
+              </p> */}
             </div>
           </div>
         </LayoutComponent>

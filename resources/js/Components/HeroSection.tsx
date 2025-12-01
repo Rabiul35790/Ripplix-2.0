@@ -31,9 +31,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
   ], []);
 
   const avats = useMemo(() => [
-    'images/hero/tes1.jpg',
-    'images/hero/tes2.jpg',
-    'images/hero/tes3.jpg',
+    '/images/hero/tes1.jpg',
+    '/images/hero/tes2.jpg',
+    '/images/hero/tes3.jpg',
   ], []);
 
   const colors = useMemo(() => [

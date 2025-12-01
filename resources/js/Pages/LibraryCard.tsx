@@ -554,7 +554,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                   }}
                 >
                   <img
-                    src="images/Spin.gif"
+                    src="/images/Spin.gif"
                     height={60}
                     width={60}
                     alt="Loading..."

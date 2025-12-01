@@ -85,7 +85,7 @@ const Overview: React.FC<OverviewProps> = ({
             {/* Image Placeholder for App Screenshots */}
             <div className="-mt-4 h-60 sm:h-72 md:h-80 -mr-6 md:-mr-8 -mb-6 md:-mb-8 overflow-hidden rounded-br-2xl shadow-[2px_-1px_32px_-5px_#EA40FD1F,-2px_1px_32px_-5px_#6D33D91F] rounded-lg">
               <img
-                src='images/others/apps.png'
+                src="/images/others/apps.png"
                 alt="App Icons"
                 className="w-full h-full object-cover rounded-lg"
               />
