@@ -551,7 +551,7 @@ const getUnlockProButtonText = () => {
                           href={'/blog'}
                           className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
-                          <div className="flex items-center mb-1">
+                          <div className="flex items-center">
                             <span className="font-medium text-[#2B235A]">Blog</span>
                           </div>
                           {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
@@ -562,7 +562,7 @@ const getUnlockProButtonText = () => {
                           href={'/privacy'}
                           className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
-                          <div className="flex items-center mb-1">
+                          <div className="flex items-center">
                             <span className="font-medium text-[#2B235A]">Privacy Policy</span>
                           </div>
                           {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
@@ -573,7 +573,7 @@ const getUnlockProButtonText = () => {
                           href={'/terms'}
                           className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
-                          <div className="flex items-center mb-1">
+                          <div className="flex items-center">
                             <span className="font-medium text-[#2B235A]">Terms of Service</span>
                           </div>
                           {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
@@ -584,7 +584,7 @@ const getUnlockProButtonText = () => {
                           href={'/cookie-policy'}
                           className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
-                          <div className="flex items-center mb-1">
+                          <div className="flex items-center">
                             <span className="font-medium text-[#2B235A]">Cookie Policy</span>
                           </div>
                           {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
@@ -595,7 +595,7 @@ const getUnlockProButtonText = () => {
                           href={'/disclaimer'}
                           className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
-                          <div className="flex items-center mb-1">
+                          <div className="flex items-center">
                             <span className="font-medium text-[#2B235A]">Disclaimer</span>
                           </div>
                           {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
@@ -606,7 +606,7 @@ const getUnlockProButtonText = () => {
                           href={'/report-content-policy'}
                           className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                         >
-                          <div className="flex items-center mb-1">
+                          <div className="flex items-center">
                             <span className="font-medium text-[#2B235A]">Report Content Policy</span>
                           </div>
                           {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
