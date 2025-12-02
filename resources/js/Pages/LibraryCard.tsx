@@ -65,27 +65,21 @@ interface LibraryCardProps extends PageProps {
   onLibraryViewed?: (libraryId: number) => void;
 }
 
-// ============================================
-// IMAGE CACHE MANAGER - PREVENTS RELOADING
-// ============================================
+// Image Cache Manager
 class ImageCacheManager {
-  // Static properties - shared across all instances
   private static cache = new Map<string, string>();
   private static loading = new Set<string>();
   private static loadingPromises = new Map<string, Promise<string>>();
 
   static async loadImage(url: string): Promise<string> {
-    // 1. Check if image is already in cache
     if (this.cache.has(url)) {
       return this.cache.get(url)!;
     }
 
-    // 2. Check if image is currently being loaded
     if (this.loadingPromises.has(url)) {
       return this.loadingPromises.get(url)!;
     }
 
-    // 3. Start loading the image
     const promise = new Promise<string>((resolve, reject) => {
       const img = new Image();
 
@@ -119,9 +113,7 @@ class ImageCacheManager {
   }
 }
 
-// ============================================
-// GLOBAL VIDEO MANAGER
-// ============================================
+// Global Video Manager
 class VideoManager {
   private static instance: VideoManager;
   private videos: Set<HTMLVideoElement> = new Set();
@@ -212,9 +204,6 @@ class VideoManager {
   }
 }
 
-// ============================================
-// LIBRARY CARD COMPONENT
-// ============================================
 const LibraryCard: React.FC<LibraryCardProps> = ({
   library,
   onClick,
@@ -231,36 +220,28 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
 
-  // Video state
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoManagerRef = useRef<VideoManager>(VideoManager.getInstance());
 
-  // NEW: Category image state
   const [categoryImageUrl, setCategoryImageUrl] = useState<string | null>(null);
   const [isCategoryImageLoading, setIsCategoryImageLoading] = useState(true);
   const [categoryImageError, setCategoryImageError] = useState(false);
 
-  // Modal states
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showLibrarySelectionModal, setShowLibrarySelectionModal] = useState(false);
   const [showBoardModal, setShowBoardModal] = useState(false);
   const [userBoards, setUserBoards] = useState<Board[]>([]);
   const [isLoadingBoards, setIsLoadingBoards] = useState(false);
 
-  // Library IDs
   const [localUserLibraryIds, setLocalUserLibraryIds] = useState<number[]>(userLibraryIds);
   const [localViewedLibraryIds, setLocalViewedLibraryIds] = useState<number[]>(viewedLibraryIds);
 
-  // Lazy loading
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
 
-  // ============================================
-  // NEW: LOAD CATEGORY IMAGE PROGRESSIVELY
-  // ============================================
   useEffect(() => {
     const categoryImage = getCategoryImage();
 
@@ -269,14 +250,12 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
       return;
     }
 
-    // Check if already cached
     if (ImageCacheManager.isCached(categoryImage)) {
       setCategoryImageUrl(categoryImage);
       setIsCategoryImageLoading(false);
       return;
     }
 
-    // Load image in background
     ImageCacheManager.loadImage(categoryImage)
       .then((url) => {
         setCategoryImageUrl(url);
@@ -289,7 +268,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
       });
   }, [library.categories]);
 
-  // Update local state when props change
   useEffect(() => {
     setLocalUserLibraryIds(userLibraryIds);
   }, [userLibraryIds]);
@@ -298,7 +276,16 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     setLocalViewedLibraryIds(viewedLibraryIds);
   }, [viewedLibraryIds]);
 
-  // Register video with global manager
+  const handleLibraryViewed = useCallback((libraryId: number) => {
+    setLocalViewedLibraryIds(prev => {
+      if (prev.includes(libraryId)) return prev;
+      return [...prev, libraryId];
+    });
+    if (onLibraryViewed) {
+      onLibraryViewed(libraryId);
+    }
+  }, [onLibraryViewed]);
+
   useEffect(() => {
     const video = videoRef.current;
     if (video && inView) {
@@ -309,37 +296,30 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     }
   }, [inView, isVideoLoaded]);
 
-  // ============================================
-  // HELPER FUNCTIONS
-  // ============================================
   const isStarred = localUserLibraryIds.includes(library.id);
 
   const isNewLibrary = () => {
     return !localViewedLibraryIds.includes(library.id);
   };
 
-const trackLibraryView = async (libraryId: number) => {
-  // Update local state optimistically first (immediate UI feedback)
-  setLocalViewedLibraryIds(prev => {
-    if (prev.includes(libraryId)) return prev;
-    return [...prev, libraryId];
-  });
+  const trackLibraryView = async (libraryId: number) => {
+    setLocalViewedLibraryIds(prev => {
+      if (prev.includes(libraryId)) return prev;
+      return [...prev, libraryId];
+    });
 
-  if (onLibraryViewed) {
-    onLibraryViewed(libraryId);
-  }
+    if (onLibraryViewed) {
+      onLibraryViewed(libraryId);
+    }
 
-  // Track view in background (fire and forget - no await, no error handling needed)
-  fetch(`/api/libraries/${libraryId}/view`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-    },
-  }).catch(() => {
-    // Silently ignore errors - view tracking is non-critical
-  });
-};
+    fetch(`/api/libraries/${libraryId}/view`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+      },
+    }).catch(() => {});
+  };
 
   const refreshUserLibraryIds = useCallback(async () => {
     if (!authData?.user) return;
@@ -355,49 +335,57 @@ const trackLibraryView = async (libraryId: number) => {
     }
   }, [authData?.user]);
 
-  const handleVideoLoad = () => {
-    setIsVideoLoaded(true);
+  const handleVideoClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Get the current URL before opening modal
+    const previousUrl = window.location.pathname + window.location.search;
+    const newUrl = `/library/${library.slug}`;
+
+    // FIXED: Only push state if we're not already in a modal view
+    const isAlreadyInModal = window.location.pathname.startsWith('/library/');
+
+    if (!isAlreadyInModal) {
+      // First time opening modal - push new state with original URL
+      window.history.pushState({
+        fromModal: true,
+        originalUrl: previousUrl // Store the ORIGINAL URL
+      }, '', newUrl);
+    } else {
+      // Already in modal - replace state to avoid history pollution
+      window.history.replaceState({
+        fromModal: true,
+        originalUrl: window.history.state?.originalUrl || previousUrl
+      }, '', newUrl);
+    }
+
+    // Open modal immediately
+    if (onClick) {
+      onClick(library);
+    }
+
+    // Track view in background
+    trackLibraryView(library.id);
+
+    // Fetch fresh data in background
+    fetch(`/api/libraries/${library.slug}`, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Response not ok');
+      })
+      .then(data => {
+        if (onClick && data.library && data.library.id === library.id) {
+          onClick(data.library);
+        }
+      })
+      .catch(() => {});
   };
-
-const handleVideoClick = async (e: React.MouseEvent) => {
-  e.stopPropagation();
-
-  // 1. Update URL immediately for instant feedback
-  const previousUrl = window.location.pathname + window.location.search;
-  const newUrl = `/library/${library.slug}`;
-  window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
-
-  // 2. Open modal immediately with current library data
-  if (onClick) {
-    onClick(library);
-  }
-
-  // 3. Track view in background (non-blocking, fire-and-forget)
-  trackLibraryView(library.id);
-
-  // 4. Optionally fetch fresh data in background (without blocking or errors)
-  fetch(`/api/libraries/${library.slug}`, {
-    headers: {
-      'Accept': 'application/json',
-    },
-  })
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Response not ok');
-    })
-    .then(data => {
-      // Update with fresh data if available and matching
-      if (onClick && data.library && data.library.id === library.id) {
-        onClick(data.library);
-      }
-    })
-    .catch(() => {
-      // Silently fail - modal is already open with existing data
-      // No console logs needed - this is expected behavior
-    });
-};
 
   const fetchUserBoards = async () => {
     if (isLoadingBoards) return;
@@ -464,9 +452,10 @@ const handleVideoClick = async (e: React.MouseEvent) => {
     setShowMembershipModal(false);
   };
 
-  // ============================================
-  // STYLING FUNCTIONS
-  // ============================================
+  const handleVideoLoad = () => {
+    setIsVideoLoaded(true);
+  };
+
   const getCardClasses = () => {
     return "bg-[#F8F8F9] p-[1px] dark:bg-gray-900 rounded-lg overflow-hidden border border-transparent";
   };
@@ -515,9 +504,6 @@ const handleVideoClick = async (e: React.MouseEvent) => {
     return '';
   };
 
-  // ============================================
-  // RENDER
-  // ============================================
   return (
     <>
       <div
@@ -575,7 +561,6 @@ const handleVideoClick = async (e: React.MouseEvent) => {
 
           <div className={getContentPadding()}>
             <div className="flex items-start gap-2">
-              {/* OPTIMIZED: Category Image with Progressive Loading */}
               {getCategoryImage() && !categoryImageError ? (
                 <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] hover:shadow-[6px_0px_24px_-1px_#6D16C321,0px_6px_20px_-1px_#6D16C321] transition-shadow duration-300 overflow-hidden flex-shrink-0 ${getCategoryImageSize()}`}>
                   <Link

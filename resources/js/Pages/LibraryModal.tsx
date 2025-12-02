@@ -282,17 +282,18 @@ const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
   }, [isOpen]);
 
   // UPDATED: Handle close modal without page reload
-  const handleCloseModal = () => {
-    // Get the previous URL from history state, or construct a default
-    const state = window.history.state;
-    const previousUrl = state?.previousUrl || '/';
+const handleCloseModal = () => {
+  const state = window.history.state;
 
-    // Navigate back to the previous URL
-    window.history.pushState({}, '', previousUrl);
+  // Use the original URL stored when modal was first opened
+  const originalUrl = state?.originalUrl || '/';
 
-    // Call the onClose callback
-    onClose();
-  };
+  // Replace current state to go back to original URL
+  window.history.replaceState({}, '', originalUrl);
+
+  // Call the onClose callback
+  onClose();
+};
 
   // UPDATED: Handle navigation without page reload
 const handlePrevNext = (direction: 'prev' | 'next') => {
@@ -308,19 +309,24 @@ const handlePrevNext = (direction: 'prev' | 'next') => {
   }
 
   const newLibrary = allLibraries[newIndex];
-
-  // 1. Update URL immediately
   const newUrl = `/library/${newLibrary.slug}`;
-  const currentState = window.history.state;
-  const previousUrl = currentState?.previousUrl || '/';
-  window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
 
-  // 2. Update modal immediately with existing data
+  // FIXED: Get the original URL from current state
+  const currentState = window.history.state;
+  const originalUrl = currentState?.originalUrl || '/';
+
+  // REPLACE state instead of PUSH - this prevents history pollution
+  window.history.replaceState({
+    fromModal: true,
+    originalUrl: originalUrl // Preserve the original URL
+  }, '', newUrl);
+
+  // Update modal immediately with existing data
   if (onNavigate) {
     onNavigate(newLibrary);
   }
 
-  // 3. Fetch fresh data in background (fire-and-forget)
+  // Fetch fresh data in background (fire-and-forget)
   fetch(`/api/libraries/${newLibrary.slug}`, {
     headers: { 'Accept': 'application/json' },
   })
@@ -331,7 +337,7 @@ const handlePrevNext = (direction: 'prev' | 'next') => {
       }
     })
     .catch(() => {
-      // Silently fail - navigation already happened with existing data
+      // Silently fail
     });
 };
 
@@ -432,18 +438,28 @@ const handlePrevNext = (direction: 'prev' | 'next') => {
   // UPDATED: Handle suggested library click without page reload
 const handleSuggestedLibraryClick = (suggestedLibrary: Library) => {
   const newUrl = `/library/${suggestedLibrary.slug}`;
-  const currentState = window.history.state;
-  const previousUrl = currentState?.previousUrl || '/';
-  window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
 
+  // FIXED: Get the original URL from current state
+  const currentState = window.history.state;
+  const originalUrl = currentState?.originalUrl || '/';
+
+  // REPLACE state instead of PUSH
+  window.history.replaceState({
+    fromModal: true,
+    originalUrl: originalUrl // Preserve the original URL
+  }, '', newUrl);
+
+  // Scroll to top
   if (modalContentRef.current) {
     modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // Update modal content
   if (onClick) {
     onClick(suggestedLibrary);
   }
 
+  // Fetch fresh data in background
   fetch(`/api/libraries/${suggestedLibrary.slug}`, {
     headers: { 'Accept': 'application/json' },
   })

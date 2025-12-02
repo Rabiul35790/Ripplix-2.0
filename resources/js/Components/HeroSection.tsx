@@ -244,9 +244,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       `}</style>
 
       <div className="relative z-10 max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-16 2xl:px-20 w-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 xl:gap-12 2xl:gap-16 items-center lg:min-h-[70vh]">
+        <div className="grid lg:grid-cols-[1fr_1.1fr] gap-8 lg:gap-4 xl:gap-8 2xl:gap-12 items-center lg:min-h-[70vh]">
           {/* Left Content */}
-          <div className="text-left lg:text-left flex flex-col space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8 items-start font-sora order-1 lg:order-1 lg:pr-4 xl:pr-8 lg:max-w-[700px] xl:max-w-[800px] 2xl:max-w-[850px]">
+          <div className="text-left lg:text-left flex flex-col space-y-4 sm:space-y-6 md:space-y-7 lg:space-y-8 items-start font-sora order-1 lg:order-1 lg:pr-2 xl:pr-4 lg:max-w-[650px] xl:max-w-[800px] 2xl:max-w-[850px]">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#080921] border border-[#858B984D] font-inter">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
@@ -261,12 +261,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
             {/* Heading */}
             <div className='space-y-3 sm:space-y-4 lg:space-y-5'>
-                <h1 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-[54px] font-bold leading-tight sm:leading-[1.2] md:leading-[1.2] lg:leading-[68px] xl:leading-[78px] bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent whitespace-nowrap">
+                <h1 className="text-2xl sm:text-2xl md:text-4xl lg:text-[40px] xl:text-[54px] font-bold leading-tight sm:leading-[1.2] md:leading-[1.2] lg:leading-[52px] xl:leading-[78px] bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent whitespace-nowrap">
                     Your Netflix for UI Animation <br />& Micro-Interaction Design
                 </h1>
 
                 {/* Description */}
-                <p className="font-inter text-sm sm:text-base md:text-lg lg:text-base xl:text-lg text-white/85 leading-relaxed max-w-xl font-light">
+                <p className="font-inter text-sm sm:text-base md:text-lg lg:text-[15px] xl:text-lg text-white/85 leading-relaxed max-w-xl font-light">
                     A curated, evolving library of the world's best UI animations. Stream inspiration, study motion systems, and design experiences users feel.
                 </p>
             </div>
@@ -306,7 +306,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
           {/* Right - Animated Card Stack */}
           <div className="relative h-[300px] sm:h-[380px] md:h-[450px] lg:h-[500px] xl:h-[540px] 2xl:h-[580px] flex items-center justify-center lg:justify-end order-2 lg:order-2 overflow-visible">
-            <div className="relative w-full h-full lg:ml-12 xl:ml-20 2xl:ml-28">
+            <div className="relative w-full h-full lg:ml-0 xl:ml-8 2xl:ml-16">
               {videos.map((videoSrc, idx) => {
                 const style = getCardStyle(idx, activeIndex);
                 const colorIndex = idx % colors.length;
