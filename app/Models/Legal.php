@@ -38,12 +38,31 @@ class Legal extends Model
         return $query->where('type', 'terms_conditions');
     }
 
+    public function scopeCookiePolicy($query)
+    {
+        return $query->where('type', 'cookie_policy');
+    }
+
+    public function scopeDisclaimer($query)
+    {
+        return $query->where('type', 'disclaimer');
+    }
+        public function scopeReportContentPolicy($query)
+    {
+        return $query->where('type', 'report_content_policy');
+    }
+
+
+
     // Get type label
     public function getTypeLabelAttribute()
     {
         return match ($this->type) {
             'privacy_policy' => 'Privacy Policy',
-            'terms_conditions' => 'Terms & Conditions',
+            'terms_conditions' => 'Terms of Service',
+            'cookie_policy' => 'Cookie Policy',
+            'disclaimer' => 'Disclaimer',
+            'report_content_policy' => 'Report Content Policy',
             default => ucfirst(str_replace('_', ' ', $this->type)),
         };
     }

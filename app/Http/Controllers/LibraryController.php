@@ -566,13 +566,14 @@ class LibraryController extends Controller
                 'libraries.published_date'
             ])
             ->with([
-                'platforms:id,name',
+                'platforms:id,name,slug',
                 'categories:id,name,slug,image',
                 'industries:id,name,slug',
                 'interactions:id,name,slug'
             ])
             ->where('libraries.is_active', true);
 
+        // Apply filters
         if ($request->has('category') && $request->category !== 'all') {
             $category = Category::where('slug', $request->category)->first(['id']);
             if ($category) {
@@ -600,12 +601,16 @@ class LibraryController extends Controller
             }
         }
 
+        // Clone the query before pagination
+        $allLibrariesQuery = clone $query;
+
         $libraries = $query->inRandomOrder()->paginate($perPage);
 
-        $allLibraries = Library::select(['id', 'slug', 'title'])
-            ->where('is_active', true)
+        // OPTIMIZED: Return 500 libraries for smooth circular suggestions
+        // This ensures even near the end, we have plenty of suggestions
+        $allLibraries = $allLibrariesQuery
             ->inRandomOrder()
-            ->limit(100)
+            ->limit(500)
             ->get();
 
         return response()->json([
@@ -792,9 +797,9 @@ class LibraryController extends Controller
             return response()->json(['error' => 'Library not found'], 404);
         }
 
-        $userId = auth()->id();
-        $sessionId = $request->session()->getId();
-        LibraryView::trackView($library->id, $userId, $sessionId);
+        // $userId = auth()->id();
+        // $sessionId = $request->session()->getId();
+        // LibraryView::trackView($library->id, $userId, $sessionId);
 
         return response()->json([
             'library' => $library,
@@ -944,55 +949,6 @@ class LibraryController extends Controller
             'topLibrariesByInteraction' => [],
             'topLibrariesByIndustry' => [],
         ]);
-    }
-
-    public function getSuggestedLibraries(Request $request, $slug)
-    {
-        try {
-            // Get the current library
-            $currentLibrary = Library::where('slug', $slug)
-                ->where('is_active', true)
-                ->first();
-
-            if (!$currentLibrary) {
-                return response()->json(['error' => 'Library not found'], 404);
-            }
-
-            // Get 6 random suggested libraries (excluding current)
-            $suggestedLibraries = Library::select([
-                    'id',
-                    'title',
-                    'slug',
-                    'url',
-                    'video_url',
-                    'logo',
-                    'created_at',
-                    'published_date'
-                ])
-                ->with([
-                    'platforms:id,name',
-                    'categories:id,name,slug,image',
-                    'industries:id,name,slug',
-                    'interactions:id,name,slug'
-                ])
-                ->where('is_active', true)
-                ->where('id', '!=', $currentLibrary->id)
-                ->inRandomOrder()
-                ->limit(6)
-                ->get();
-
-            return response()->json([
-                'success' => true,
-                'libraries' => $suggestedLibraries
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error fetching suggested libraries: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to fetch suggested libraries'
-            ], 500);
-        }
     }
 
     private function getFilters()

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import BlogLayout from './BlogLayout';
-import { ArrowLeft, FileText, Calendar, Shield, ScrollText, Sparkles } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Shield, ScrollText, Sparkles, Cookie, AlertTriangle, Flag } from 'lucide-react';
 
 interface Legal {
   id: number;
@@ -49,12 +49,21 @@ const LegalShow: React.FC<LegalShowProps> = ({
     });
   };
 
-  const getBackRoute = () => {
-    return legal.type === 'privacy_policy' ? '/privacy' : '/terms';
-  };
-
   const getDocumentIcon = () => {
-    return legal.type === 'privacy_policy' ? Shield : ScrollText;
+    switch (legal.type) {
+      case 'privacy_policy':
+        return Shield;
+      case 'terms_conditions':
+        return ScrollText;
+      case 'cookie_policy':
+        return Cookie;
+      case 'disclaimer':
+        return AlertTriangle;
+      case 'report_content_policy':
+        return Flag;
+      default:
+        return FileText;
+    }
   };
 
   const DocumentIcon = getDocumentIcon();
@@ -127,6 +136,40 @@ const LegalShow: React.FC<LegalShowProps> = ({
         p.style.marginBottom = '1rem';
       });
 
+      // Style unordered lists (ul)
+      const ulElements = contentRef.current.querySelectorAll('ul');
+      ulElements.forEach(ul => {
+        ul.style.fontFamily = 'Poppins, sans-serif';
+        ul.style.color = '#62626C';
+        ul.style.lineHeight = '1.8';
+        ul.style.marginTop = '1rem';
+        ul.style.marginBottom = '1rem';
+        ul.style.paddingLeft = '1.5rem';
+        ul.style.listStyleType = 'disc';
+      });
+
+      // Style ordered lists (ol)
+      const olElements = contentRef.current.querySelectorAll('ol');
+      olElements.forEach(ol => {
+        ol.style.fontFamily = 'Poppins, sans-serif';
+        ol.style.color = '#62626C';
+        ol.style.lineHeight = '1.8';
+        ol.style.marginTop = '1rem';
+        ol.style.marginBottom = '1rem';
+        ol.style.paddingLeft = '1.5rem';
+        ol.style.listStyleType = 'decimal';
+      });
+
+      // Style list items (li)
+      const liElements = contentRef.current.querySelectorAll('li');
+      liElements.forEach(li => {
+        li.style.fontFamily = 'Poppins, sans-serif';
+        li.style.color = '#62626C';
+        li.style.lineHeight = '1.8';
+        li.style.marginBottom = '0.5rem';
+        li.style.paddingLeft = '0.25rem';
+      });
+
       // Style tables
       const tables = contentRef.current.querySelectorAll('table');
       tables.forEach(table => {
@@ -159,6 +202,15 @@ const LegalShow: React.FC<LegalShowProps> = ({
   const handleBack = () => {
     window.history.back();
   };
+
+  // Legal pages configuration
+  const legalPages = [
+    { type: 'privacy_policy', label: 'Privacy Policy', icon: Shield, route: '/privacy' },
+    { type: 'terms_conditions', label: 'Terms of Service', icon: ScrollText, route: '/terms' },
+    { type: 'cookie_policy', label: 'Cookie Policy', icon: Cookie, route: '/cookie-policy' },
+    { type: 'disclaimer', label: 'Disclaimer', icon: AlertTriangle, route: '/disclaimer' },
+    { type: 'report_content_policy', label: 'Report Content Policy', icon: Flag, route: '/report-content-policy' }
+  ];
 
   return (
     <>
@@ -235,28 +287,23 @@ const LegalShow: React.FC<LegalShowProps> = ({
                       Important Policies
                     </h3>
                     <div className="space-y-2 sm:space-y-3">
-                      <Link
-                        href="/privacy"
-                        className={`flex items-center gap-3 p-3 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 ${
-                          legal.type === 'privacy_policy'
-                            ? 'bg-[#F9F5FF] text-[#8941D1]'
-                            : 'hover:bg-gray-50 text-[#62626C]'
-                        }`}
-                      >
-                        <Shield size={20} className="flex-shrink-0" />
-                        <span className="font-poppins text-sm font-medium">Privacy Policy</span>
-                      </Link>
-                      <Link
-                        href="/terms"
-                        className={`flex items-center gap-3 p-3 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 ${
-                          legal.type === 'terms_conditions'
-                            ? 'bg-[#F9F5FF] text-[#8941D1]'
-                            : 'hover:bg-gray-50 text-[#62626C]'
-                        }`}
-                      >
-                        <ScrollText size={20} className="flex-shrink-0" />
-                        <span className="font-poppins text-sm font-medium">Terms & Conditions</span>
-                      </Link>
+                      {legalPages.map((page) => {
+                        const Icon = page.icon;
+                        return (
+                          <Link
+                            key={page.type}
+                            href={page.route}
+                            className={`flex items-center gap-3 p-3 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 ${
+                              legal.type === page.type
+                                ? 'bg-[#F9F5FF] text-[#8941D1]'
+                                : 'hover:bg-gray-50 text-[#62626C]'
+                            }`}
+                          >
+                            <Icon size={20} className="flex-shrink-0" />
+                            <span className="font-poppins text-sm font-medium">{page.label}</span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -268,8 +315,6 @@ const LegalShow: React.FC<LegalShowProps> = ({
                       boxShadow: '0px 10px 30px -5px rgba(137, 65, 209, 0.3)'
                     }}
                   >
-
-
                     <h3 className="font-sora text-lg sm:text-xl lg:text-2xl !font-bold max-w-[280px] mb-2 sm:mb-3 leading-tight">
                       Discover Thousands of Real UI Interactions
                     </h3>

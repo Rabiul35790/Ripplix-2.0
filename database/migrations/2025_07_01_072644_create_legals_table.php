@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('legals', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['privacy_policy', 'terms_conditions'])->unique();
+            $table->enum('type', ['privacy_policy', 'terms_conditions', 'cookie_policy', 'disclaimer', 'report_content_policy'])->unique();
             $table->string('title');
             $table->longText('content');
             $table->boolean('is_active')->default(true);

@@ -130,7 +130,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
 
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const modalContentRef = useRef<HTMLDivElement>(null);
+  const modalContentRef = useRef<HTMLDivElement>(null); // Ref for modal content
   const [linkCopied, setLinkCopied] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showLibrarySelectionModal, setShowLibrarySelectionModal] = useState(false);
@@ -139,14 +139,9 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
   const [isLoadingBoards, setIsLoadingBoards] = useState(false);
   const [localUserLibraryIds, setLocalUserLibraryIds] = useState<number[]>(userLibraryIds);
 
-  // NEW: Suggested libraries states
-  const [suggestedLibraries, setSuggestedLibraries] = useState<Library[]>([]);
-  const [isLoadingSuggested, setIsLoadingSuggested] = useState(false);
-  const [suggestedError, setSuggestedError] = useState(false);
-
   // Modal ad states
-  const [modalAd, setModalAd] = useState<Ad | null>(null);
-  const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
+const [modalAd, setModalAd] = useState<Ad | null>(null);
+const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
 
   // Update local state when props change
   useEffect(() => {
@@ -155,46 +150,6 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
 
   // Check if library is starred based on local state
   const isStarred = library ? localUserLibraryIds.includes(library.id) : false;
-
-  // NEW: Fetch suggested libraries independently
-  useEffect(() => {
-    const fetchSuggestedLibraries = async () => {
-      if (!isOpen || !library) {
-        return;
-      }
-
-      setIsLoadingSuggested(true);
-      setSuggestedError(false);
-
-      try {
-        const response = await fetch(`/api/libraries/${library.slug}/suggested`, {
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch suggested libraries');
-        }
-
-        const data = await response.json();
-
-        if (data.success && data.libraries) {
-          setSuggestedLibraries(data.libraries);
-        } else {
-          setSuggestedError(true);
-        }
-      } catch (error) {
-        console.error('Error fetching suggested libraries:', error);
-        setSuggestedError(true);
-      } finally {
-        setIsLoadingSuggested(false);
-      }
-    };
-
-    // Fetch suggested libraries when modal opens
-    fetchSuggestedLibraries();
-  }, [isOpen, library?.slug]);
 
   // Function to refresh user library IDs
   const refreshUserLibraryIds = async () => {
@@ -212,22 +167,22 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
   };
 
   // Fetch modal ad for all users when modal opens
-  useEffect(() => {
+    useEffect(() => {
     if (isOpen) {
         fetchModalAd();
     }
-  }, [isOpen]);
+    }, [isOpen]);
 
-  const fetchModalAd = async () => {
+    const fetchModalAd = async () => {
     try {
         setIsLoadingModalAd(true);
         const response = await fetch(`/ads/modal?t=${Date.now()}`);
         const result = await response.json();
 
         if (result.success && result.data && result.data !== null) {
-          setModalAd(result.data);
+        setModalAd(result.data);
         } else {
-          setModalAd(null);
+        setModalAd(null);
         }
     } catch (error) {
         console.error('Failed to fetch modal ad:', error);
@@ -235,31 +190,50 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
     } finally {
         setIsLoadingModalAd(false);
     }
-  };
+    };
 
-  const trackModalAdClick = async (adId: number) => {
+    const trackModalAdClick = async (adId: number) => {
     try {
         await fetch(`/ads/${adId}/click`, {
-          method: 'POST',
-          headers: {
+        method: 'POST',
+        headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-          },
+        },
         });
     } catch (error) {
         console.error('Failed to track modal ad click:', error);
     }
-  };
+    };
 
-  const handleModalAdClick = (ad: Ad) => {
+    const handleModalAdClick = (ad: Ad) => {
     trackModalAdClick(ad.id);
     window.open(ad.target_url, '_blank');
-  };
+    };
 
   // Find current library index for navigation
   const currentIndex = allLibraries.findIndex(lib => lib.id === library?.id);
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < allLibraries.length - 1;
+
+  // Get suggested libraries (next 3 libraries, wrapping around if needed)
+  const getSuggestedLibraries = (): Library[] => {
+    if (!library || allLibraries.length <= 1) return [];
+
+    const suggestions: Library[] = [];
+    const totalLibraries = allLibraries.length;
+
+    for (let i = 1; i <= 6 && suggestions.length < 6; i++) {
+      const nextIndex = (currentIndex + i) % totalLibraries;
+      if (nextIndex !== currentIndex) {
+        suggestions.push(allLibraries[nextIndex]);
+      }
+    }
+
+    return suggestions;
+  };
+
+  const suggestedLibraries = getSuggestedLibraries();
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
@@ -269,6 +243,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
 
   // Handle outside click to close modal
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only close if clicking on the backdrop itself, not on the modal content
     if (e.target === e.currentTarget) {
       handleCloseModal();
     }
@@ -281,8 +256,10 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
       }
     };
 
+    // Handle browser back/forward button
     const handlePopState = (e: PopStateEvent) => {
       if (isOpen) {
+        // Check if we're navigating away from the library URL
         if (!window.location.pathname.startsWith('/library/')) {
           onClose();
         }
@@ -304,46 +281,59 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
     };
   }, [isOpen]);
 
+  // UPDATED: Handle close modal without page reload
   const handleCloseModal = () => {
+    // Get the previous URL from history state, or construct a default
     const state = window.history.state;
     const previousUrl = state?.previousUrl || '/';
+
+    // Navigate back to the previous URL
     window.history.pushState({}, '', previousUrl);
+
+    // Call the onClose callback
     onClose();
   };
 
-  const handlePrevNext = (direction: 'prev' | 'next') => {
-    if (!allLibraries.length || currentIndex === -1) return;
+  // UPDATED: Handle navigation without page reload
+const handlePrevNext = (direction: 'prev' | 'next') => {
+  if (!allLibraries.length || currentIndex === -1) return;
 
-    let newIndex;
-    if (direction === 'prev' && hasPrev) {
-      newIndex = currentIndex - 1;
-    } else if (direction === 'next' && hasNext) {
-      newIndex = currentIndex + 1;
-    } else {
-      return;
-    }
+  let newIndex;
+  if (direction === 'prev' && hasPrev) {
+    newIndex = currentIndex - 1;
+  } else if (direction === 'next' && hasNext) {
+    newIndex = currentIndex + 1;
+  } else {
+    return;
+  }
 
-    const newLibrary = allLibraries[newIndex];
-    const newUrl = `/library/${newLibrary.slug}`;
-    const currentState = window.history.state;
-    const previousUrl = currentState?.previousUrl || '/';
-    window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
+  const newLibrary = allLibraries[newIndex];
 
-    if (onNavigate) {
-      onNavigate(newLibrary);
-    }
+  // 1. Update URL immediately
+  const newUrl = `/library/${newLibrary.slug}`;
+  const currentState = window.history.state;
+  const previousUrl = currentState?.previousUrl || '/';
+  window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
 
-    fetch(`/api/libraries/${newLibrary.slug}`, {
-      headers: { 'Accept': 'application/json' },
+  // 2. Update modal immediately with existing data
+  if (onNavigate) {
+    onNavigate(newLibrary);
+  }
+
+  // 3. Fetch fresh data in background (fire-and-forget)
+  fetch(`/api/libraries/${newLibrary.slug}`, {
+    headers: { 'Accept': 'application/json' },
+  })
+    .then(response => response.ok ? response.json() : null)
+    .then(data => {
+      if (onNavigate && data?.library && data.library.id === newLibrary.id) {
+        onNavigate(data.library);
+      }
     })
-      .then(response => response.ok ? response.json() : null)
-      .then(data => {
-        if (onNavigate && data?.library && data.library.id === newLibrary.id) {
-          onNavigate(data.library);
-        }
-      })
-      .catch(() => {});
-  };
+    .catch(() => {
+      // Silently fail - navigation already happened with existing data
+    });
+};
 
   const fetchUserBoards = async () => {
     if (isLoadingBoards) return;
@@ -366,6 +356,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
 
   const isNewLibrary = () => {
     if (!library) return false;
+    // Check if library has NOT been viewed yet
     return !viewedLibraryIds.includes(library.id);
   };
 
@@ -377,6 +368,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
       return;
     }
 
+    // For authenticated users, fetch boards and show selection modal
     await fetchUserBoards();
     setShowLibrarySelectionModal(true);
   };
@@ -388,6 +380,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
 
   const handleBoardModalClose = () => {
     setShowBoardModal(false);
+    // Refresh boards and show selection modal again
     fetchUserBoards().then(() => {
       setShowLibrarySelectionModal(true);
     });
@@ -395,8 +388,11 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
 
   const handleLibrarySelectionClose = async () => {
     setShowLibrarySelectionModal(false);
+
+    // Refresh the user's library IDs to update star states
     await refreshUserLibraryIds();
 
+    // Notify parent component about the star state change if callback provided
     if (onStarClick && library) {
       const newIsStarred = localUserLibraryIds.includes(library.id);
       onStarClick(library, newIsStarred);
@@ -404,50 +400,23 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
   };
 
   const handleLibraryAdded = async () => {
+    // Immediately refresh user library IDs when library is added
     await refreshUserLibraryIds();
 
+    // Notify parent component about the change
     if (onStarClick && library) {
-      onStarClick(library, true);
+      onStarClick(library, true); // Library was just added, so it's starred
     }
   };
 
-  const handleSuggestedLibraryClick = (suggestedLibrary: Library) => {
-    const newUrl = `/library/${suggestedLibrary.slug}`;
-    const currentState = window.history.state;
-    const previousUrl = currentState?.previousUrl || '/';
-    window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
-
-    if (modalContentRef.current) {
-      modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    if (onClick) {
-      onClick(suggestedLibrary);
-    }
-
-    fetch(`/api/libraries/${suggestedLibrary.slug}`, {
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(response => response.ok ? response.json() : null)
-      .then(data => {
-        if (onClick && data?.library && data.library.id === suggestedLibrary.id) {
-          onClick(data.library);
-        }
-      })
-      .catch(() => {});
-  };
-
-  const handleSuggestedLibraryStarClick = (suggestedLibrary: Library, isStarred: boolean) => {
-    if (onStarClick) {
-      onStarClick(suggestedLibrary, isStarred);
-    }
-  };
-
+  // UPDATED: Handle copy link with dynamic URL
   const handleCopyLink = async () => {
     if (!library) return;
 
     try {
+      // Get the current URL with the library path
       const currentUrl = window.location.origin + `/library/${library.slug}`;
+
       await navigator.clipboard.writeText(currentUrl);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
@@ -460,40 +429,40 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
     setShowMembershipModal(false);
   };
 
-  // NEW: Retry function for suggested libraries
-  const retrySuggestedLibraries = async () => {
-    if (!library) return;
+  // UPDATED: Handle suggested library click without page reload
+const handleSuggestedLibraryClick = (suggestedLibrary: Library) => {
+  const newUrl = `/library/${suggestedLibrary.slug}`;
+  const currentState = window.history.state;
+  const previousUrl = currentState?.previousUrl || '/';
+  window.history.pushState({ fromModal: true, previousUrl: previousUrl }, '', newUrl);
 
-    setIsLoadingSuggested(true);
-    setSuggestedError(false);
+  if (modalContentRef.current) {
+    modalContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
-    try {
-      const response = await fetch(`/api/libraries/${library.slug}/suggested`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
+  if (onClick) {
+    onClick(suggestedLibrary);
+  }
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch suggested libraries');
+  fetch(`/api/libraries/${suggestedLibrary.slug}`, {
+    headers: { 'Accept': 'application/json' },
+  })
+    .then(response => response.ok ? response.json() : null)
+    .then(data => {
+      if (onClick && data?.library && data.library.id === suggestedLibrary.id) {
+        onClick(data.library);
       }
+    })
+    .catch(() => {});
+};
 
-      const data = await response.json();
-
-      if (data.success && data.libraries) {
-        setSuggestedLibraries(data.libraries);
-      } else {
-        setSuggestedError(true);
-      }
-    } catch (error) {
-      console.error('Error fetching suggested libraries:', error);
-      setSuggestedError(true);
-    } finally {
-      setIsLoadingSuggested(false);
+  const handleSuggestedLibraryStarClick = (suggestedLibrary: Library, isStarred: boolean) => {
+    if (onStarClick) {
+      onStarClick(suggestedLibrary, isStarred);
     }
   };
 
-  // Helper functions to get filter slugs
+  // Helper functions to get filter slugs from filters array
   const getInteractionSlug = (interactionName: string) => {
     if (!filters?.interactions) return interactionName.toLowerCase().replace(/\s+/g, '-');
     const interaction = filters.interactions.find(i => i.name === interactionName);
@@ -530,6 +499,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
     return '';
   };
 
+  // Use the standardized auth pattern from PageProps
   const isUserAuthenticated = !!authData.user;
 
 return (
@@ -738,21 +708,21 @@ return (
 
             {/* Video Section - Full Width */}
             <div className="w-full px-4 bg-[#F8F8F9] dark:bg-gray-800 relative">
-              {isNewLibrary() && (
+            {isNewLibrary() && (
                 <div className="absolute top-6 right-7 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide z-10">
-                  New
+                New
                 </div>
-              )}
-              <video
+            )}
+            <video
                 ref={videoRef}
                 src={library.video_url}
-                className="w-full h-full object-cover rounded-xl"
+                className="w-full rounded-xl"
                 autoPlay
                 muted
                 loop
                 playsInline
-                style={{ minHeight: '400px', maxHeight: '700px'}}
-              />
+                style={{ minHeight: '400px', maxHeight: '1000px' }}
+            />
             </div>
 
             <div className="p-4 sm:p-6">
@@ -826,76 +796,29 @@ return (
             </div>
 
               {/* Suggested Libraries Section - Shows for all users */}
-              <div className="min-h-[300px]">
-  <h3 className="text-lg sm:font-bold font-bold sm:text-3xl text-[#2E241C] dark:text-white mb-4 sm:mb-6">
-    You might also like
-  </h3>
-
-  {isLoadingSuggested ? (
-    // Loading state
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-      {[...Array(6)].map((_, index) => (
-        <div key={index} className="animate-pulse">
-          <div className="bg-gray-200 dark:bg-gray-700 rounded-lg aspect-[3/2.1] mb-3"></div>
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : suggestedError ? (
-    // Error state
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <p className="text-gray-500 dark:text-gray-400 mb-4">
-        Unable to load suggestions at the moment
-      </p>
-      <button
-        onClick={() => {
-          setIsLoadingSuggested(true);
-          setSuggestedError(false);
-          fetch(`/api/libraries/${library?.slug}/suggested`)
-            .then(res => res.json())
-            .then(data => {
-              if (data.success && data.libraries) {
-                setSuggestedLibraries(data.libraries);
-              }
-            })
-            .catch(() => setSuggestedError(true))
-            .finally(() => setIsLoadingSuggested(false));
-        }}
-        className="px-4 py-2 bg-[#2B235A] text-white rounded-md hover:bg-[#1a1535] transition-colors"
-      >
-        Try Again
-      </button>
-    </div>
-  ) : suggestedLibraries.length > 0 ? (
-    // Success state with libraries
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-      {suggestedLibraries.map((suggestedLibrary) => (
-        <LibraryCard
-          ziggy={ziggyData}
-          key={suggestedLibrary.id}
-          library={suggestedLibrary}
-          onClick={handleSuggestedLibraryClick}
-          cardSize="normal"
-          auth={authData}
-          userLibraryIds={localUserLibraryIds}
-          viewedLibraryIds={viewedLibraryIds}
-          userPlanLimits={userPlanLimits}
-          onStarClick={handleSuggestedLibraryStarClick}
-        />
-      ))}
-    </div>
-  ) : (
-    // Empty state
-    <div className="flex items-center justify-center py-12">
-      <p className="text-gray-500 dark:text-gray-400">
-        No suggestions available at the moment
-      </p>
-    </div>
-  )}
-</div>
+              {suggestedLibraries.length > 0 && (
+                <>
+                  <h3 className="text-lg sm:font-bold font-bold sm:text-3xl text-[#2E241C] dark:text-white mb-4 sm:mb-6">
+                    You might also like
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    {suggestedLibraries.map((suggestedLibrary) => (
+                      <LibraryCard
+                        ziggy={ziggyData}
+                        key={suggestedLibrary.id}
+                        library={suggestedLibrary}
+                        onClick={handleSuggestedLibraryClick}
+                        cardSize="normal"
+                        auth={authData}
+                        userLibraryIds={localUserLibraryIds}
+                        viewedLibraryIds={viewedLibraryIds}
+                        userPlanLimits={userPlanLimits}
+                        onStarClick={handleSuggestedLibraryStarClick}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -106,6 +106,8 @@ const Browse: React.FC<BrowseProps> = ({
   const [modalLibrary, setModalLibrary] = useState<Library | null>(initialSelectedLibrary);
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
 
+  const [isFetchingMoreForSuggestions, setIsFetchingMoreForSuggestions] = useState(false);
+
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -177,64 +179,129 @@ const Browse: React.FC<BrowseProps> = ({
   }, [url, fetchLibraryForModal, modalLibrary, isModalOpen]);
 
   // UPDATED: Fetch libraries with pagination
-  const fetchLibraries = useCallback(async (page: number = 1, append: boolean = false) => {
+const fetchLibraries = useCallback(async (page: number = 1, append: boolean = false) => {
+  try {
+    if (!append) {
+      setIsLoadingLibraries(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+
+    const params = new URLSearchParams();
+
+    if (filterValue) {
+      if (filterType === 'category') params.set('category', filterValue);
+      if (filterType === 'industry') params.set('industry', filterValue);
+      if (filterType === 'interaction') params.set('interaction', filterValue);
+    }
+
+    params.set('page', page.toString());
+
+    const response = await fetch(`/api/browse/libraries?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch libraries');
+    }
+
+    const data = await response.json();
+
+    const librariesWithDefaults = data.libraries.map((lib: any) => ({
+      ...lib,
+      platforms: lib.platforms || [],
+      categories: lib.categories || [],
+      industries: lib.industries || [],
+      interactions: lib.interactions || []
+    }));
+
+    const allLibrariesWithDefaults = data.allLibraries.map((lib: any) => ({
+      ...lib,
+      platforms: lib.platforms || [],
+      categories: lib.categories || [],
+      industries: lib.industries || [],
+      interactions: lib.interactions || []
+    }));
+
+    if (append) {
+      setLibraries(prev => [...prev, ...librariesWithDefaults]);
+      setAllLibraries(prev => {
+        const existingIds = new Set(prev.map(l => l.id));
+        const newLibraries = allLibrariesWithDefaults.filter((lib: Library) => !existingIds.has(lib.id));
+        return [...prev, ...newLibraries];
+      });
+    } else {
+      setLibraries(librariesWithDefaults);
+      setAllLibraries(allLibrariesWithDefaults);
+    }
+
+    setPagination(data.pagination);
+  } catch (error) {
+    console.error('Error fetching libraries:', error);
+  } finally {
+    setIsLoadingLibraries(false);
+    setIsLoadingMore(false);
+  }
+}, [filterType, filterValue]);
+
+
+
+
+const ensureSufficientLibrariesForSuggestions = useCallback(async (currentLibraryId: number) => {
+  const currentIndex = allLibraries.findIndex(lib => lib.id === currentLibraryId);
+  const remainingAfterCurrent = allLibraries.length - currentIndex - 1;
+
+  // If we have less than 6 libraries after current, fetch more in background
+  if (remainingAfterCurrent < 6 && pagination.has_more && !isFetchingMoreForSuggestions) {
+    setIsFetchingMoreForSuggestions(true);
     try {
-      if (!append) {
-        setIsLoadingLibraries(true);
-      } else {
-        setIsLoadingMore(true);
-      }
-
       const params = new URLSearchParams();
-
       if (filterValue) {
         if (filterType === 'category') params.set('category', filterValue);
         if (filterType === 'industry') params.set('industry', filterValue);
         if (filterType === 'interaction') params.set('interaction', filterValue);
       }
-
-      params.set('page', page.toString());
+      params.set('page', (pagination.current_page + 1).toString());
 
       const response = await fetch(`/api/browse/libraries?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const newLibraries = data.allLibraries.map((lib: any) => ({
+          ...lib,
+          platforms: lib.platforms || [],
+          categories: lib.categories || [],
+          industries: lib.industries || [],
+          interactions: lib.interactions || []
+        }));
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch libraries');
+        setAllLibraries(prev => {
+          const existingIds = new Set(prev.map(l => l.id));
+          const uniqueNew = newLibraries.filter((lib: Library) => !existingIds.has(lib.id));
+          return [...prev, ...uniqueNew];
+        });
       }
-
-      const data = await response.json();
-
-      // CRITICAL FIX: Ensure all libraries have required structure
-      const librariesWithDefaults = data.libraries.map((lib: any) => ({
-        ...lib,
-        platforms: lib.platforms || [],
-        categories: lib.categories || [],
-        industries: lib.industries || [],
-        interactions: lib.interactions || []
-      }));
-
-      const allLibrariesWithDefaults = data.allLibraries.map((lib: any) => ({
-        ...lib,
-        platforms: lib.platforms || [],
-        categories: lib.categories || [],
-        industries: lib.industries || [],
-        interactions: lib.interactions || []
-      }));
-
-      if (append) {
-        setLibraries(prev => [...prev, ...librariesWithDefaults]);
-      } else {
-        setLibraries(librariesWithDefaults);
-        setAllLibraries(allLibrariesWithDefaults);
-      }
-
-      setPagination(data.pagination);
     } catch (error) {
-      console.error('Error fetching libraries:', error);
+      console.error('Error fetching more for suggestions:', error);
     } finally {
-      setIsLoadingLibraries(false);
-      setIsLoadingMore(false);
+      setIsFetchingMoreForSuggestions(false);
     }
-  }, [filterType, filterValue]);
+  }
+}, [allLibraries, pagination, filterType, filterValue, isFetchingMoreForSuggestions]);
+
+
+useEffect(() => {
+  if (libraries.length > 0) {
+    setAllLibraries(prev => {
+      // Merge libraries into allLibraries
+      const allIds = new Set(prev.map(l => l.id));
+      const newLibs = libraries.filter(lib => !allIds.has(lib.id));
+
+      if (newLibs.length > 0) {
+        return [...prev, ...newLibs];
+      }
+      return prev;
+    });
+  }
+}, [libraries]);
+
 
   // Initial fetch
   useEffect(() => {
@@ -297,19 +364,65 @@ const Browse: React.FC<BrowseProps> = ({
   };
 
   // UPDATED: Ensure library has full data structure before opening modal
-  const handleLibraryClick = (library: Library) => {
-    // Add safety checks
-    const libraryWithDefaults = {
-      ...library,
-      platforms: library.platforms || [],
-      categories: library.categories || [],
-      industries: library.industries || [],
-      interactions: library.interactions || []
-    };
-
-    setModalLibrary(libraryWithDefaults);
-    setIsModalOpen(true);
+const handleLibraryClick = useCallback(async (library: Library) => {
+  const libraryWithDefaults = {
+    ...library,
+    platforms: library.platforms || [],
+    categories: library.categories || [],
+    industries: library.industries || [],
+    interactions: library.interactions || []
   };
+
+  setModalLibrary(libraryWithDefaults);
+  setIsModalOpen(true);
+
+  // Ensure we have enough libraries for suggestions
+  ensureSufficientLibrariesForSuggestions(library.id);
+
+  // Fetch full library data in background
+  try {
+    const response = await fetch(`/api/libraries/${library.slug}`);
+    if (response.ok) {
+      const data = await response.json();
+      const fullLibrary = {
+        ...data.library,
+        platforms: data.library.platforms || [],
+        categories: data.library.categories || [],
+        industries: data.library.industries || [],
+        interactions: data.library.interactions || []
+      };
+      setModalLibrary(fullLibrary);
+    }
+  } catch (error) {
+    console.error('Error fetching full library data:', error);
+  }
+}, [ensureSufficientLibrariesForSuggestions]);
+
+
+
+const effectiveAllLibraries = useMemo(() => {
+  if (allLibraries.length === 0) {
+    return libraries;
+  }
+
+  // If we need more libraries for smooth suggestions, duplicate the array
+  // This creates a circular effect
+  const minRequiredForSmooth = 20; // Minimum to ensure 6 suggestions always available
+
+  if (allLibraries.length < minRequiredForSmooth && allLibraries.length > 0) {
+    // Create circular array by repeating libraries
+    const multiplier = Math.ceil(minRequiredForSmooth / allLibraries.length);
+    const circularArray: Library[] = [];
+
+    for (let i = 0; i < multiplier; i++) {
+      circularArray.push(...allLibraries);
+    }
+
+    return circularArray;
+  }
+
+  return allLibraries;
+}, [allLibraries, libraries]);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -317,17 +430,20 @@ const Browse: React.FC<BrowseProps> = ({
   };
 
   // UPDATED: Ensure library has full data structure for navigation
-  const handleLibraryNavigation = (library: Library) => {
-    const libraryWithDefaults = {
-      ...library,
-      platforms: library.platforms || [],
-      categories: library.categories || [],
-      industries: library.industries || [],
-      interactions: library.interactions || []
-    };
-
-    setModalLibrary(libraryWithDefaults);
+const handleLibraryNavigation = useCallback((library: Library) => {
+  const libraryWithDefaults = {
+    ...library,
+    platforms: library.platforms || [],
+    categories: library.categories || [],
+    industries: library.industries || [],
+    interactions: library.interactions || []
   };
+
+  setModalLibrary(libraryWithDefaults);
+
+  // Ensure we have enough libraries for next suggestions
+  ensureSufficientLibrariesForSuggestions(library.id);
+}, [ensureSufficientLibrariesForSuggestions]);
 
   const handleStarClick = (library: Library, isStarred: boolean) => {
     if (!authData.user) {
@@ -534,7 +650,7 @@ const Browse: React.FC<BrowseProps> = ({
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onClick={handleLibraryClick}
-          allLibraries={allLibraries}
+          allLibraries={effectiveAllLibraries}
           onNavigate={handleLibraryNavigation}
           onStarClick={handleStarClick}
           auth={authData}

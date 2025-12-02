@@ -87,8 +87,6 @@ Route::get('/api/viewed-library-ids', [LibraryViewController::class, 'getViewedL
 Route::get('/library/{slug}', [LibraryController::class, 'show'])
     ->name('library.show');
 
-Route::get('/api/libraries/{slug}/suggested', [LibraryController::class, 'getSuggestedLibraries'])
-    ->name('api.library.suggested');
 
 
 // Add this route for the home page load more functionality
@@ -302,6 +300,9 @@ Route::middleware(['web'])->prefix('ads')->group(function () {
 
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/cookie-policy', [LegalController::class, 'cookie'])->name('legal.cookie');
+Route::get('/disclaimer', [LegalController::class, 'disclaimer'])->name('legal.disclaimer');
+Route::get('/report-content-policy', [LegalController::class, 'reportContentPolicy'])->name('legal.report_content_policy');
 /*
 |--------------------------------------------------------------------------
 | Contact Routes

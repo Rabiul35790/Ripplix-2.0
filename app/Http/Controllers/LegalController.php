@@ -97,4 +97,73 @@ class LegalController extends Controller
             'filters' => $this->getFilters(),
         ]);
     }
+    public function cookie(Request $request)
+    {
+        $user = auth()->user();
+        $settings = Setting::getInstance();
+
+        // Get the active terms and conditions
+        $legal = Legal::where('type', 'cookie_policy')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        return Inertia::render('LegalShow', [
+            'legal' => $legal,
+            'userPlanLimits' => $this->getUserPlanLimits($user),
+            'currentPlan' => $this->getCurrentPlan($user),
+            'settings' => [
+                'logo' => $settings->logo_url,
+                'copyright_text' => $settings->copyright_text,
+                'site_name' => $settings->site_name,
+            ],
+            'filters' => $this->getFilters(),
+        ]);
+    }
+
+
+    public function disclaimer(Request $request)
+    {
+        $user = auth()->user();
+        $settings = Setting::getInstance();
+
+        // Get the active terms and conditions
+        $legal = Legal::where('type', 'disclaimer')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        return Inertia::render('LegalShow', [
+            'legal' => $legal,
+            'userPlanLimits' => $this->getUserPlanLimits($user),
+            'currentPlan' => $this->getCurrentPlan($user),
+            'settings' => [
+                'logo' => $settings->logo_url,
+                'copyright_text' => $settings->copyright_text,
+                'site_name' => $settings->site_name,
+            ],
+            'filters' => $this->getFilters(),
+        ]);
+    }
+
+    public function reportcontentpolicy(Request $request)
+    {
+        $user = auth()->user();
+        $settings = Setting::getInstance();
+
+        // Get the active terms and conditions
+        $legal = Legal::where('type', 'report_content_policy')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        return Inertia::render('LegalShow', [
+            'legal' => $legal,
+            'userPlanLimits' => $this->getUserPlanLimits($user),
+            'currentPlan' => $this->getCurrentPlan($user),
+            'settings' => [
+                'logo' => $settings->logo_url,
+                'copyright_text' => $settings->copyright_text,
+                'site_name' => $settings->site_name,
+            ],
+            'filters' => $this->getFilters(),
+        ]);
+    }
 }

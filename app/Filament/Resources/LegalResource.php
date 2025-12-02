@@ -43,7 +43,10 @@ class LegalResource extends Resource
                             ->label('Document Type')
                             ->options([
                                 'privacy_policy' => 'Privacy Policy',
-                                'terms_conditions' => 'Terms & Conditions',
+                                'terms_conditions' => 'Terms of Service',
+                                'cookie_policy' => 'Cookie Policy',
+                                'disclaimer' => 'Disclaimer',
+                                'report_content_policy' => 'Report Content Policy',
                             ])
                             ->required()
                             ->unique(ignoreRecord: true)
@@ -120,7 +123,7 @@ class LegalResource extends Resource
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'privacy_policy' => 'Privacy Policy',
-                        'terms_conditions' => 'Terms & Conditions',
+                        'terms_conditions' => 'Terms of Service',
                         default => ucfirst(str_replace('_', ' ', $state)),
                     })
                     ->sortable(),
@@ -158,7 +161,10 @@ class LegalResource extends Resource
                     ->label('Document Type')
                     ->options([
                         'privacy_policy' => 'Privacy Policy',
-                        'terms_conditions' => 'Terms & Conditions',
+                        'terms_conditions' => 'Terms of Service',
+                        'cookie_policy' => 'Cookie Policy',
+                        'disclaimer' => 'Disclaimer',
+                        'report_content_policy' => 'Report Content Policy',
                     ]),
 
                 Tables\Filters\TernaryFilter::make('is_active')
