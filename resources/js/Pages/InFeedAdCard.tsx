@@ -109,7 +109,7 @@ const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad, cardSize = 'normal' }) 
           )}
 
           {/* Fallback loader */}
-          {(!inView || !isVideoLoaded) && (
+          {/* {(!inView || !isVideoLoaded) && (
             <div className="absolute inset-0 flex items-center justify-center bg-white">
               <div
                 className="flex items-center justify-center bg-[#F7F7FB] rounded-xl"
@@ -126,7 +126,7 @@ const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad, cardSize = 'normal' }) 
                 />
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Sponsored badge */}
           <div className="absolute top-3 right-3 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide">

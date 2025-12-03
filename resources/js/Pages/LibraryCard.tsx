@@ -461,7 +461,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   };
 
   const getVideoContainerClasses = () => {
-    const baseClasses = "relative rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 cursor-pointer";
+    const baseClasses = "relative rounded-lg overflow-hidden bg-transparent cursor-pointer";
     if (cardSize === 'large') {
       return `${baseClasses} aspect-[3/2.1]`;
     }
@@ -521,8 +521,8 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               <video
                 ref={videoRef}
                 src={library.video_url}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${
-                  isVideoLoaded ? 'opacity-100' : 'opacity-0'
+                className={`w-full h-full object-cover transition-all duration-500 ${
+                  isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
                 }`}
                 autoPlay
                 muted
@@ -531,25 +531,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                 preload="metadata"
                 onLoadedData={handleVideoLoad}
               />
-            )}
-
-            {(!inView || !isVideoLoaded) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white">
-                <div
-                  className="flex items-center justify-center bg-[#F7F7FB] rounded-xl"
-                  style={{
-                    width: 'calc(100% - 36px)',
-                    height: 'calc(100% - 120px)',
-                  }}
-                >
-                  <img
-                    src="/images/Spin.gif"
-                    height={60}
-                    width={60}
-                    alt="Loading..."
-                  />
-                </div>
-              </div>
             )}
 
             {isNewLibrary() && (
