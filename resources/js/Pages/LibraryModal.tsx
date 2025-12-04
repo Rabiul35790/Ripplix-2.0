@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Star, ChevronLeft, ChevronRight, Copy, Heart, Phone, Link2, Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, Copy, Heart, Phone, Link2, Check, ArrowRight, ArrowLeft, X } from 'lucide-react';
 import { router, Link, usePage, Head } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
@@ -544,10 +544,10 @@ return (
         onClick={handleBackdropClick}
       >
         <div className="relative max-w-7xl w-full">
-          {/* Close Button - Just Outside Modal Right Side */}
+          {/* Close Button - Desktop (outside modal) / Mobile (inside modal top-right) */}
           <button
             onClick={handleCloseModal}
-            className="absolute -top-6 -right-8 hover:bg-[#e5e5e4] rounded-[4px] p-[2px] dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-500 focus:outline-none z-50"
+            className="hidden sm:block absolute -top-6 -right-8 hover:bg-[#e5e5e4] rounded-[4px] p-[2px] dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors duration-500 focus:outline-none z-50"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#89859e] hover:text-[#6e6694] transition-color duration-300 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -556,14 +556,22 @@ return (
 
           <div
             ref={modalContentRef}
-            className="bg-[#F8F8F9] border border-[#C3C3C9] dark:bg-gray-900 rounded-lg sm:rounded-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto font-sora scrollbar-hide"
+            className="bg-[#F8F8F9] border border-[#C3C3C9] dark:bg-gray-900 rounded-lg sm:rounded-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto font-sora scrollbar-hide relative"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none'
             }}
           >
+            {/* Mobile Close Button - Top Right Inside Modal */}
+            <button
+              onClick={handleCloseModal}
+              className="sm:hidden absolute top-0 right-0 z-50 dark:bg-gray-800/90 dark:hover:bg-gray-700 p-1 transition-colors duration-300 focus:outline-none"
+            >
+              <X className="w-5 h-5 text-[#89859e] hover:text-[#6e6694] dark:text-gray-400" />
+            </button>
+
             {/* NEW LAYOUT: Top Header Section */}
-            <div className="p-4 sm:p-6 dark:border-gray-800">
+            <div className="p-4 sm:p-6 dark:border-gray-800 mt-4 sm:mt-0">
               {/* First Row: Category Image/Name (Left) and Prev/Next Buttons (Right) */}
               <div className="flex items-center justify-between mb-4">
                 {/* Left: Category Image and Name */}
@@ -722,10 +730,10 @@ return (
               </div>
             </div>
 
-            {/* Video Section - Full Width */}
-            <div className="w-full px-4 bg-[#F8F8F9] dark:bg-gray-800 relative">
+            {/* Video Section - Full Width with reduced padding on mobile */}
+            <div className="w-full px-2 py-2 sm:px-4 sm:py-0 bg-[#F8F8F9] dark:bg-gray-800 relative">
             {isNewLibrary() && (
-                <div className="absolute top-6 right-7 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide z-10">
+                <div className="absolute top-4 right-4 sm:top-6 sm:right-7 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide z-10">
                 New
                 </div>
             )}
@@ -737,15 +745,15 @@ return (
                 muted
                 loop
                 playsInline
-                style={{ minHeight: '400px', maxHeight: '1000px' }}
+                style={{ minHeight: '300px', maxHeight: '1000px' }}
             />
             </div>
 
             <div className="p-4 sm:p-6">
-            <div className="w-full mb-12">
+            <div className="w-full mb-6 sm:mb-12">
                 {isLoadingModalAd ? (
-                <div className="w-full h-80 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
-                    <div className="w-3/4 h-60 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div className="w-full h-48 sm:h-80 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
+                    <div className="w-3/4 h-40 sm:h-60 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                 </div>
                 ) : modalAd ? (
                 <button
@@ -760,7 +768,7 @@ return (
                     {modalAd.media_type === 'video' ? (
                     <video
                         src={modalAd.video_url || ''}
-                        className="w-full h-80 object-cover rounded-lg"
+                        className="w-full h-48 sm:h-80 object-cover rounded-lg"
                         autoPlay
                         loop
                         muted
@@ -789,19 +797,19 @@ return (
                     Sponsor
                     </span>
 
-                    <div className="text-center pb-2">
+                    <div className="text-center pb-2 px-4">
                     <div className="w-10 h-10 bg-white dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-[12px]">
                         <Heart className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                     </div>
-                    <h3 className="text-lg !font-bold text-gray-900 dark:text-white mb-2 font-sora">
+                    <h3 className="text-base sm:text-lg !font-bold text-gray-900 dark:text-white mb-2 font-sora">
                         Want to advertise here?
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 font-sora !font-semibold">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-4 font-sora !font-semibold">
                         Reach thousands of design enthusiasts and professionals
                     </p>
                     <Link
                         href="/contact-us"
-                        className="inline-flex items-center space-x-2 px-4 py-2 bg-[#333333] hover:bg-black text-white rounded-lg transition-colors font-sora !font-semibold focus:outline-none outline-none"
+                        className="inline-flex items-center space-x-2 px-3 sm:px-4 py-2 bg-[#333333] hover:bg-black text-white rounded-lg transition-colors font-sora !font-semibold focus:outline-none outline-none text-sm"
                     >
                         <Phone className="w-4 h-4" />
                         <span>Contact Us</span>
