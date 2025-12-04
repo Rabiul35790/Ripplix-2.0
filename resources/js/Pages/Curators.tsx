@@ -44,9 +44,6 @@ interface Settings {
   addresses: string[];
   copyright_text?: string;
   logo?: string;
-  favicon?: string;
-  authentication_page_image?: string;
-  hero_image?: string;
 }
 
 interface Filter {
@@ -175,7 +172,6 @@ const Curators: React.FC<CuratorsProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
-        isAuthenticated={!!authData.user}
       >
         <div className="min-h-screen bg-[#F8F8F9] dark:bg-gray-900 py-8 md:py-12 font-sora">
           <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">

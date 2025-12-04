@@ -92,7 +92,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
     if (!board.libraries || board.libraries.length === 0) return [];
     return board.libraries
       .filter(library => library.video_url)
-      .slice(0, 4)
+      .slice(0, 3)
       .map(library => library.video_url);
   };
 
@@ -103,7 +103,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   const showMenuButton = !isBlurred;
 
   return (
-    <div className={`w-full sm:min-w-[400px] md:min-w-[350px] font-sora bg-[#F8F8F9] transition-shadow rounded-sm duration-200 relative overflow-hidden focus:outline-none focus:ring-0 ${
+    <div className={`w-full font-sora bg-white rounded-lg border border-[#E3E2FF] overflow-hidden focus:outline-none focus:ring-0 relative ${
       isBlurred ? 'opacity-60' : ''
     }`}>
       {showMenuButton && (
@@ -173,93 +173,79 @@ const BoardCard: React.FC<BoardCardProps> = ({
         </div>
       )}
 
-      <Link href={`/boards/${board.id}`} className="block">
-        <div className="p-4 sm:px-6 sm:pt-6 sm:pb-0 md:px-5 md:pt-5 pb-0 pr-5 pl-5 sm:pr-6 sm:pl-6 md:pr-5 md:pl-5 min-h-[250px] sm:min-h-[300px] md:min-h-[280px] flex items-center justify-center rounded-md border bg-[#F5F5FA] border-[#E3E2FF] focus:outline-none focus:ring-0">
-          {libraryVideos.length > 0 ? (
-            <div className="relative w-full min-h-[250px] sm:min-h-[300px] md:min-h-[280px] flex items-center justify-center overflow-hidden rounded-md">
-              {libraryVideos.map((videoUrl, index) => {
-                const isMobile = window.innerWidth < 640;
-                const isTablet = window.innerWidth >= 640 && window.innerWidth < 768;
-                const isLaptop = window.innerWidth >= 768 && window.innerWidth < 1024;
+      <Link href={`/boards/${board.id}`} className="block focus:outline-none focus:ring-0">
+        {/* Stacked Video Section */}
+        <div className="px-4 pt-12 pb-4 sm:px-5 sm:pt-14 sm:pb-5 lg:px-6 lg:pt-16 lg:pb-6">
+          <div className="relative w-full" style={{
+            paddingTop: '60%',
+            marginTop: '4rem'
+          }}>
+            {libraryVideos.length > 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-full h-full" style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%'
+                }}>
+                  {libraryVideos.map((videoUrl, index) => {
+                    const scale = 1 - (index * 0.08);
+                    const offsetY = -index * 2;
+                    const zIndex = libraryVideos.length - index;
 
-                let baseWidth, baseHeight, offset, widthIncrement;
-
-                if (isMobile) {
-                  baseWidth = 180;
-                  baseHeight = 230;
-                  offset = index * 20;
-                  widthIncrement = 40;
-                } else if (isTablet) {
-                  baseWidth = 230;
-                  baseHeight = 280;
-                  offset = index * 25;
-                  widthIncrement = 50;
-                } else if (isLaptop) {
-                  baseWidth = 205;
-                  baseHeight = 260;
-                  offset = index * 22;
-                  widthIncrement = 45;
-                } else {
-                  baseWidth = 230;
-                  baseHeight = 280;
-                  offset = index * 25;
-                  widthIncrement = 50;
-                }
-
-                const width = baseWidth + index * widthIncrement;
-
-                return (
-                  <div
-                    key={index}
-                    className="absolute rounded-lg overflow-hidden shadow-md border border-gray-200 bg-white"
-                    style={{
-                      width: `${width}px`,
-                      height: `${baseHeight}px`,
-                      top: `${offset}px`,
-                      zIndex: index,
-                    }}
-                  >
-                    <video
-                      src={videoUrl}
-                      className="w-full h-full object-cover"
-                      muted
-                      loop
-                      playsInline
-                      onError={(e) => {
-                        const target = e.target as HTMLVideoElement;
-                        target.style.display = 'none';
-                      }}
-                      onLoadedData={(e) => {
-                        const target = e.target as HTMLVideoElement;
-                        target.play().catch(() => {});
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="min-h-[250px] sm:min-h-[300px] md:min-h-[280px] rounded-lg flex items-center justify-center">
-              <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-[#CECCFF]" />
-            </div>
-          )}
+                    return (
+                      <div
+                        key={index}
+                        className="absolute inset-0 rounded-lg overflow-hidden shadow-[0_-2px_3px_-1px_rgba(0,0,0,0.08),0_-1px_2px_-1px_rgba(0,0,0,0.05)] bg-white"
+                        style={{
+                          transform: `scale(${scale}) translateY(${offsetY}rem)`,
+                          transformOrigin: 'center top',
+                          zIndex: zIndex,
+                          transition: 'transform 300ms ease-in-out'
+                        }}
+                      >
+                        <video
+                          src={videoUrl}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          onError={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            target.style.display = 'none';
+                          }}
+                          onLoadedData={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            target.play().catch(() => {});
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="absolute inset-0 rounded-lg flex items-center justify-center bg-[#F5F5FA]">
+                <FolderOpen className="w-8 h-8 text-[#CECCFF]" />
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="bg-[#F8F8F9] p-3 sm:p-4 md:p-3.5 rounded-b-lg focus:outline-none focus:ring-0">
+        {/* Board Info Section */}
+        <div className="px-4 pb-4 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-[#2B235A] text-base sm:text-lg md:text-[17px] truncate mb-1">
                 {board.name}
               </h3>
-              <p className="text-xs sm:text-sm md:text-[13px] text-[#8787A8]">
+              <p className="text-xs sm:text-sm md:text-[13px] text-[#62626C]">
                 {libraryCount <= 9 ? '0' : ''}{libraryCount} Animation{libraryCount !== 1 ? 's' : ''}
               </p>
             </div>
 
             {isFreePlan && !isBlurred && (board.share_via_link || board.share_via_email) && (
               <div className="ml-2 flex items-center gap-1 text-[#9943EE] fill flex-shrink-0" title="Sharing disabled on free plan">
-                {/* <Lock className="w-3 h-3 md:w-2.5 md:h-2.5" />
-                <Crown className="w-3 h-3 md:w-2.5 md:h-2.5 fill-inherit" /> */}
+                {/* Placeholder for future icons if needed */}
               </div>
             )}
           </div>

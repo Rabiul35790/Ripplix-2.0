@@ -263,7 +263,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
                 <h2 className="text-xl lg:text-2xl font-bold text-[#2B235A] mb-2">
                   Top Apps
                 </h2>
-                <p className="text-sm sm:text-base text-[#7F7F8A] max-w-3xl leading-relaxed font-light">
+                <p className="text-sm sm:text-base text-[#7F7F8A] max-w-3xl leading-relaxed font-light hidden md:block">
                   Discover the most-loved digital products, beautifully curated for design inspiration and motion study. Immerse yourself in smooth transitions, thoughtful gestures.
                 </p>
               </div>
@@ -363,7 +363,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
                 <h2 className="text-xl lg:text-2xl font-bold text-[#2B235A] mb-2">
                   Top Elements
                 </h2>
-                <p className="text-sm sm:text-base text-[#7F7F8A] max-w-3xl leading-relaxed font-light">
+                <p className="text-sm sm:text-base text-[#7F7F8A] max-w-3xl leading-relaxed font-light hidden md:block">
                   Explore the most-used UI elements, thoughtfully curated for motion, interaction, and visual inspiration. See how micro-animations and transitions shape seamless.
                 </p>
               </div>
@@ -397,7 +397,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
                 <h2 className="text-xl lg:text-2xl font-bold text-[#2B235A] mb-2">
                   Top Industries
                 </h2>
-                <p className="text-sm sm:text-base text-[#7F7F8A] max-w-3xl leading-relaxed font-light">
+                <p className="text-sm sm:text-base text-[#7F7F8A] max-w-3xl leading-relaxed font-light hidden md:block">
                   Explore leading industries shaping digital design — from fintech to health, travel, and education. Discover how each sector defines its own motion language.
                 </p>
               </div>
