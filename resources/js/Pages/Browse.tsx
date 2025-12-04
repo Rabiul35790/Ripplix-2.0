@@ -7,6 +7,7 @@ import Layout from './Layout';
 import FilterSection from './Website/Components/FilterSection';
 import CategoryHeader from './CategoryHeader';
 import { ArrowBigLeft, ArrowBigRight, ChevronRight, Home, Infinity } from 'lucide-react';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Library {
   id: number;
@@ -40,6 +41,14 @@ interface Filter {
   image?: string;
 }
 
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
+}
+
 interface BrowseProps extends PageProps {
   libraries: Library[];
   selectedLibrary?: Library | null;
@@ -49,6 +58,7 @@ interface BrowseProps extends PageProps {
   totalLibraryCount: number;
   userPlanLimits?: UserPlanLimits | null;
   currentPlan?: any;
+  settings?: Settings;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -72,6 +82,7 @@ const Browse: React.FC<BrowseProps> = ({
   filterType,
   filterValue,
   filterName,
+  settings,
   categoryData,
   userPlanLimits,
   currentPlan,
@@ -481,7 +492,7 @@ const handleLibraryNavigation = useCallback((library: Library) => {
   return (
     <>
       <Head title={getPageTitle()} />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={handleSearch}
@@ -494,6 +505,8 @@ const handleLibraryNavigation = useCallback((library: Library) => {
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        settings={settings}
+        isAuthenticated={isAuthenticated}
       >
 
         {/* Header Section */}
@@ -664,7 +677,7 @@ const handleLibraryNavigation = useCallback((library: Library) => {
           filterName={filterName}
           userPlanLimits={userPlanLimits}
         />
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

@@ -7,6 +7,7 @@ import FilterSection from './Website/Components/FilterSection';
 import Layout from './Layout';
 import { Infinity } from 'lucide-react';
 import FilterSection2 from './Website/Components/FilterSection2';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Filter {
   id: number;
@@ -39,6 +40,17 @@ interface Library {
   published_date:string;
 }
 
+interface Settings {
+  emails: string[];
+  phones: string[];
+  addresses: string[];
+  copyright_text?: string;
+  logo?: string;
+  favicon?: string;
+  authentication_page_image?: string;
+  hero_image?: string;
+}
+
 interface SearchResultsProps extends PageProps {
   libraries: Library[];
   searchQuery: string;
@@ -58,6 +70,7 @@ interface SearchResultsProps extends PageProps {
     industries: Filter[];
     interactions: Filter[];
   };
+  settings: Settings;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
@@ -74,6 +87,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   filters,
   userPlanLimits,
   currentPlan,
+  settings,
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -250,7 +264,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   }, [isAuthenticated, hasMore, isLoadingMore, isLoading, currentQuery, activePlatform, currentPage]);
 
   return (
-    <Layout
+    <LayoutUnauth
       currentRoute="/search"
       onSearch={handleSearch}
       searchQuery={currentQuery}
@@ -263,6 +277,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       viewedLibraryIds={viewedLibraryIds}
       onLibraryViewed={handleLibraryViewed}
       currentPlan={currentPlan}
+      settings={settings}
+      isAuthenticated={isAuthenticated}
     >
       <Head title={`Search Results for "${searchQuery}"`} />
 
@@ -344,7 +360,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         filters={filters}
         userPlanLimits={userPlanLimits}
       />
-    </Layout>
+    </LayoutUnauth>
   );
 };
 

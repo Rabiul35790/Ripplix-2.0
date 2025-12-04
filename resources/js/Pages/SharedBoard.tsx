@@ -6,6 +6,7 @@ import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
 import LibraryModal from './LibraryModal';
 import FilterSection from './Website/Components/FilterSection';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Category {
   id: number;
@@ -54,6 +55,18 @@ interface Board {
   created_at: string;
 }
 
+
+interface Settings {
+  emails: string[];
+  phones: string[];
+  addresses: string[];
+  copyright_text?: string;
+  logo?: string;
+  favicon?: string;
+  authentication_page_image?: string;
+  hero_image?: string;
+}
+
 interface SharedBoardProps extends PageProps {
   board: Board;
   libraries: Library[];
@@ -69,6 +82,7 @@ interface SharedBoardProps extends PageProps {
     industries: Filter[];
     interactions: Filter[];
   };
+  settings?: Settings;
 }
 
 const SharedBoard: React.FC<SharedBoardProps> = ({
@@ -80,7 +94,8 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
   userPlanLimits,
   isPrivate = false,
   isOwner = false,
-  filters
+  filters,
+    settings,
 }) => {
   const { url, props } = usePage<PageProps>();
   const authData = props.auth;
@@ -240,18 +255,20 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
     return (
       <>
         <Head title={`${board.name} - Private Collection`} />
-        <Layout
+        <LayoutUnauth
           currentRoute="collections"
           onSearch={() => {}}
           searchQuery=""
           filters={filters || { platforms: [], categories: [], industries: [], interactions: [] }}
           libraries={[]}
           auth={authData}
+          settings={settings}
           ziggy={ziggyData}
           userPlanLimits={userPlanLimits}
           userLibraryIds={userLibraryIds}
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={handleLibraryViewed}
+          isAuthenticated={!!authData.user}
         >
           {/* Header Section */}
           <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora">
@@ -313,7 +330,7 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
               </div>
             </div>
           </div>
-        </Layout>
+        </LayoutUnauth>
       </>
     );
   }
@@ -322,7 +339,7 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
   return (
     <>
       <Head title={`${board.name} - Shared Collection`} />
-      <Layout
+      <LayoutUnauth
         currentRoute="collections"
         onSearch={handleSearch}
         searchQuery={searchQuery}
@@ -330,10 +347,12 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
         libraries={libraries}
         auth={authData}
         ziggy={ziggyData}
+        settings={settings}
         userPlanLimits={userPlanLimits}
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        isAuthenticated={!!authData.user}
       >
         {/* Header Section */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora">
@@ -486,7 +505,7 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
           isSharedBoard={true}
           userPlanLimits={userPlanLimits}
         />
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

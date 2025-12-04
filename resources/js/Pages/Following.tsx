@@ -7,6 +7,7 @@ import LibraryGrid from './LibraryGrid';
 import { Home, ChevronRight, BookmarkCheck, Star, User } from 'lucide-react';
 import EmptyState from '../Components/EmptyState';
 import FilterSection2 from './Website/Components/FilterSection2';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Library {
   id: number;
@@ -22,6 +23,14 @@ interface Library {
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
   published_date: string;
+}
+
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
 }
 
 interface UserPlanLimits {
@@ -55,6 +64,7 @@ interface FollowingProps extends PageProps {
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
   currentPlan?: any;
+  settings?: Settings;
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -96,6 +106,7 @@ const Following: React.FC<FollowingProps> = ({
   followedCategories: initialFollowedCategories,
   userPlanLimits,
   currentPlan,
+  settings,
   auth,
   initialLoad = false,
 }) => {
@@ -366,7 +377,7 @@ const Following: React.FC<FollowingProps> = ({
     return (
       <>
         <Head title="Following" />
-        <Layout
+        <LayoutUnauth
           libraries={libraries}
           currentRoute={url}
           onSearch={handleSearch}
@@ -379,6 +390,8 @@ const Following: React.FC<FollowingProps> = ({
           onLibraryViewed={handleLibraryViewed}
           userPlanLimits={userPlanLimits}
           currentPlan={currentPlan}
+          settings={settings}
+          isAuthenticated={!!authData.user}
         >
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
             <div className="mb-4 sm:mb-6 md:mb-5">
@@ -401,7 +414,7 @@ const Following: React.FC<FollowingProps> = ({
               />
             </div>
           </div>
-        </Layout>
+        </LayoutUnauth>
       </>
     );
   }
@@ -409,7 +422,7 @@ const Following: React.FC<FollowingProps> = ({
   return (
     <>
       <Head title="Following" />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={handleSearch}
@@ -422,6 +435,8 @@ const Following: React.FC<FollowingProps> = ({
         onLibraryViewed={handleLibraryViewed}
         userPlanLimits={userPlanLimits}
         currentPlan={currentPlan}
+        isAuthenticated={!!authData.user}
+        settings={settings}
       >
         <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
           {/* Breadcrumb & Heading */}
@@ -604,7 +619,7 @@ const Following: React.FC<FollowingProps> = ({
           filters={filters}
           userPlanLimits={userPlanLimits}
         />
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

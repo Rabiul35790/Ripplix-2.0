@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, Home, Search } from 'lucide-react';
 import Layout from './Layout';
 import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
+import LayoutUnauth from './LayoutUnauth';
 
 const animationStyles = `
   @keyframes slideInDown {
@@ -47,6 +48,15 @@ interface Industry {
   id: number;
   name: string;
   slug: string;
+}
+
+
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
 }
 
 interface IndustryVariant {
@@ -111,6 +121,7 @@ interface AllCategoriesProps extends PageProps {
   filterType?: 'industry';
   filterValue?: string;
   filterName?: string;
+  settings?: Settings;
 }
 
 const AllCategories: React.FC<AllCategoriesProps> = ({
@@ -126,6 +137,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
   currentPlan,
   filterValue,
   filterName,
+  settings,
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -248,7 +260,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
   return (
     <>
       <Head title={filterName ? `${filterName} - All Industries` : 'All Industries'} />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={handleSearch}
@@ -261,6 +273,8 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        settings={settings}
+        isAuthenticated={!!authData.user}
       >
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
@@ -359,7 +373,7 @@ const AllCategories: React.FC<AllCategoriesProps> = ({
             )}
           </div>
         </div>
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

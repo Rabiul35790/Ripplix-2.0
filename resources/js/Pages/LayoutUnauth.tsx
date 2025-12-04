@@ -55,6 +55,7 @@ interface LayoutUnauthProps extends PageProps {
   onSearch?: (query: string) => void;
   searchQuery?: string;
   userPlanLimits?: UserPlanLimits | null;
+  currentPlan?: any;
   filters?: {
     platforms: Filter[];
     categories: Filter[];
@@ -63,6 +64,7 @@ interface LayoutUnauthProps extends PageProps {
   };
   settings?: Settings;
   showHero?: boolean;
+  isAuthenticated?: boolean;
 }
 
 const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
@@ -79,6 +81,8 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
   auth,
   settings,
   showHero = true,
+    isAuthenticated,
+    currentPlan,
 }) => {
   const { props } = usePage<PageProps>();
   const authData = auth || props.auth;
@@ -92,6 +96,13 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
   const closeMobileSidebar = () => {
     setIsMobileSidebarOpen(false);
   };
+
+  const route = () => {
+    if(currentRoute === '/') {
+      return true;
+    }
+    return false;
+  }
 
   useEffect(() => {
     const header = document.getElementById('main-header');
@@ -185,6 +196,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
     };
   }, [isMobileSidebarOpen]);
 
+
   return (
     <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F8F8F9] dark:bg-gray-900">
 
@@ -202,6 +214,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={onLibraryViewed}
           settings={settings}
+          currentPlan={currentPlan}
           onMobileSidebarToggle={handleMobileSidebarToggle}
         />
       </div>
@@ -238,7 +251,8 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
       </div>
 
       {/* Hero Section - Full Width */}
-      {showHero && <HeroSection settings={settings} />}
+      {showHero && !isAuthenticated && route() && (<HeroSection settings={settings} />)}
+
 
       {/* Content Area with Sidebar */}
       <div id="content-wrapper" className="w-full">
@@ -256,7 +270,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
           </div>
 
           {/* Main Content */}
-          <main className="flex-1 min-h-screen px-4 sm:px-6 lg:px-8 w-full min-w-0">
+          <main className="flex-1 min-h-screen pt-10 lg:pt-0 w-full min-w-0">
             {children}
           </main>
         </div>

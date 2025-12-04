@@ -18,6 +18,7 @@ import {
   Target
 } from 'lucide-react';
 import SimpleCaptcha from './Website/Components/SimpleCaptcha';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Library {
   id: number;
@@ -55,6 +56,9 @@ interface Settings {
   addresses: string[];
   copyright_text?: string;
   logo?: string;
+  favicon?: string;
+  authentication_page_image?: string;
+  hero_image?: string;
 }
 
 interface Filter {
@@ -224,7 +228,7 @@ const SponsorUs: React.FC<SponsorUsProps> = ({
   return (
     <>
       <Head title="Sponsor" />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={() => {}}
@@ -238,6 +242,7 @@ const SponsorUs: React.FC<SponsorUsProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        isAuthenticated={!!authData.user}
       >
         <div className="min-h-screen bg-[#F8F8F9] dark:bg-gray-900 py-6 sm:py-12 md:py-10 font-sora">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8">
@@ -676,7 +681,7 @@ const SponsorUs: React.FC<SponsorUsProps> = ({
             </div>
           </div>
         </div>
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

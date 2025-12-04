@@ -10,6 +10,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { PageProps } from '@/types';
 import PricingModal from './PricingModal';
 import DeleteBoardModal from '../Components/DeleteBoardModal';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Library {
   id: number;
@@ -25,6 +26,14 @@ interface Library {
   interactions: Array<{ id: number; name: string }>;
   created_at: string;
   published_date:string;
+}
+
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
 }
 
 interface Filter {
@@ -83,12 +92,14 @@ interface CollectionProps extends PageProps {
   currentPlan?: any;
   userLibraryIds?: number[];
   viewedLibraryIds?: number[];
+  settings?: Settings;
   filters: {
     platforms: Filter[];
     categories: Filter[];
     industries: Filter[];
     interactions: Filter[];
   };
+  isAuthenticated?: boolean;
 }
 
 const Collections: React.FC<CollectionProps> = ({
@@ -97,9 +108,11 @@ const Collections: React.FC<CollectionProps> = ({
   userPlanLimits,
   currentPlan,
   filters,
+  settings,
   userLibraryIds: initialUserLibraryIds = [],
   viewedLibraryIds: initialViewedLibraryIds = [],
-  auth
+  auth,
+  isAuthenticated,
 }) => {
   const { url, props } = usePage<PageProps>();
 
@@ -193,7 +206,7 @@ const handleCloseDeleteModal = () => {
     return (
       <>
         <Head title="Collections" />
-        <Layout
+        <LayoutUnauth
           libraries={libraries}
           currentRoute={url}
           onSearch={() => {}}
@@ -206,6 +219,8 @@ const handleCloseDeleteModal = () => {
           userLibraryIds={userLibraryIds}
           viewedLibraryIds={viewedLibraryIds}
           onLibraryViewed={handleLibraryViewed}
+          isAuthenticated={!!authData.user}
+          settings={settings}
         >
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6 font-sora">
             <div className="mb-4 sm:mb-6 md:mb-5 font-sora">
@@ -231,7 +246,7 @@ const handleCloseDeleteModal = () => {
               />
             </div>
           </div>
-        </Layout>
+        </LayoutUnauth>
       </>
     );
   }
@@ -239,7 +254,7 @@ const handleCloseDeleteModal = () => {
   return (
     <>
       <Head title="Collections" />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={() => {}}
@@ -252,6 +267,8 @@ const handleCloseDeleteModal = () => {
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        isAuthenticated={!!authData.user}
+        settings={settings}
       >
         <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6 font-sora">
           <div className="mb-4 sm:mb-6 md:mb-5">
@@ -444,7 +461,7 @@ const handleCloseDeleteModal = () => {
             isAuthenticated={!!authData.user}
           />
         </div>
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

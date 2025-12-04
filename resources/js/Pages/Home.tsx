@@ -421,7 +421,7 @@ const Home: React.FC<HomeProps> = ({
     return isAuthenticated ? filteredLibraries : filteredLibraries.slice(0, 12);
   }, [isAuthenticated, filteredLibraries]);
 
-  const LayoutComponent = isAuthenticated ? Layout : LayoutUnauth;
+  const LayoutComponent = isAuthenticated ? LayoutUnauth : LayoutUnauth;
 
   // ============================================
   // RENDER INITIAL SPINNER
@@ -444,6 +444,7 @@ const Home: React.FC<HomeProps> = ({
           userPlanLimits={userPlanLimits}
           currentPlan={currentPlan}
           settings={settings}
+          isAuthenticated={isAuthenticated}
         >
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-4">
@@ -484,6 +485,7 @@ const Home: React.FC<HomeProps> = ({
         userPlanLimits={userPlanLimits}
         currentPlan={currentPlan}
         settings={settings}
+        isAuthenticated={isAuthenticated}
       >
 
         {!isAuthenticated && (

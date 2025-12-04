@@ -67,6 +67,7 @@ interface Header2Props {
   auth: PageProps['auth'];
   ziggy?: PageProps['ziggy'];
   userPlanLimits?: UserPlanLimits | null;
+
   filters?: {
     platforms: Filter[];
     categories: Filter[];
@@ -196,39 +197,47 @@ const Header2: React.FC<Header2Props> = ({
     });
   };
 
-  const getUnlockProButtonText = () => {
-    if (!currentUser) {
-      return { full: 'Unlock Pro', short: 'Pro' };
-    }
+  const formatText = (text = '') => text.charAt(0).toUpperCase() + text.slice(1);
 
-    if (currentPlan?.billing_period === 'lifetime') {
-      return { full: 'Lifetime Pro', short: 'Pro' };
-    }
-
-    if (currentPlan && currentPlan.price > 0) {
-      if (currentPlan.days_until_expiry !== undefined && currentPlan.days_until_expiry <= 7) {
-        return { full: 'Renew Pro', short: 'Renew' };
-      }
-      return { full: 'Manage Pro', short: 'Pro' };
-    }
-
+const getUnlockProButtonText = () => {
+  if (!currentUser) {
     return { full: 'Unlock Pro', short: 'Pro' };
-  };
+  }
 
-  const getUnlockProButtonStyle = () => {
+  if (currentPlan?.billing_period === 'lifetime') {
+    return { full: 'Lifetime Pro', short: 'Pro' };
+  }
+
+  if (currentPlan && currentPlan.price > 0) {
+    if (
+      currentPlan.days_until_expiry !== undefined &&
+      currentPlan.days_until_expiry <= 7
+    ) {
+      return { full: 'Renew Pro', short: 'Renew' };
+    }
+    return {
+      full: `Pro ${formatText(currentPlan.billing_period)}`,
+      short: 'Pro'
+    };
+  }
+
+  return { full: 'Unlock Pro', short: 'Pro' };
+};
+
+    const getUnlockProButtonStyle = () => {
     if (!currentUser) {
       return "animated-gradient-border-button-inner holographic-link2 bg-[#F2EDFF] dark:bg-gray-800 text-[#2B235A] dark:text-gray-300 border border-[#CECCFF] dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700";
     }
 
     if (currentPlan?.billing_period === 'lifetime') {
-      return "bg-purple-600 text-white hover:bg-purple-700 shadow-lg";
+      return "bg-[#F5F5FA] text-[#7F7F8A] pointer-events-none";
     }
 
     if (currentPlan && currentPlan.price > 0) {
       if (currentPlan.days_until_expiry !== undefined && currentPlan.days_until_expiry <= 7) {
-        return "bg-orange-500 text-white hover:bg-orange-600 animate-pulse";
+        return "bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white hover:opacity-95";
       }
-      return "bg-green-600 text-white hover:bg-green-700";
+      return "bg-[#F5F5FA] text-[#7F7F8A] pointer-events-none";
     }
 
     return "holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 sm:px-4 py-2 rounded-[4px] !font-sora !font-medium text-[16px] hover:opacity-95 transition-opacity text-sm whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none";
@@ -475,7 +484,7 @@ const Header2: React.FC<Header2Props> = ({
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-[#F7F7FCE5] dark:bg-gray-800 rounded-lg shadow-lg border border-[#B7B3FF] dark:border-gray-700 z-50 outline-none focus:outline-none">
+                  <div className="absolute right-0 mt-2 w-72 bg-[#F7F7FC] dark:bg-gray-800 rounded-lg shadow-lg border border-[#B7B3FF] dark:border-gray-700 z-50 outline-none focus:outline-none">
                     <div className="p-[6px]">
                       <div className="px-4 py-2 text-sm text-[#2B235A] dark:text-gray-300 border-b border-[#E3E2FF] dark:border-gray-700">
                         <div className="font-medium truncate">{currentUser.name}</div>

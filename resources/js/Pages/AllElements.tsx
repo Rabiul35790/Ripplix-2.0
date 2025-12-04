@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, Home, Search } from 'lucide-react';
 import Layout from './Layout';
 import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
+import LayoutUnauth from './LayoutUnauth';
 
 const animationStyles = `
   @keyframes slideInDown {
@@ -53,6 +54,15 @@ interface InteractionVariant {
   id: number;
   name: string;
   interactions: Interaction[];
+}
+
+
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
 }
 
 interface Library {
@@ -111,6 +121,7 @@ interface AllElementsProps extends PageProps {
   filterType?: 'interaction';
   filterValue?: string;
   filterName?: string;
+  settings?: Settings;
 }
 
 const AllElements: React.FC<AllElementsProps> = ({
@@ -126,6 +137,7 @@ const AllElements: React.FC<AllElementsProps> = ({
   currentPlan,
   filterValue,
   filterName,
+  settings,
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -248,7 +260,7 @@ const AllElements: React.FC<AllElementsProps> = ({
   return (
     <>
       <Head title={filterName ? `${filterName} - All Elements` : 'All Elements'} />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={handleSearch}
@@ -261,6 +273,8 @@ const AllElements: React.FC<AllElementsProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        settings={settings}
+        isAuthenticated={!!authData.user}
       >
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
@@ -359,7 +373,7 @@ const AllElements: React.FC<AllElementsProps> = ({
             )}
           </div>
         </div>
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

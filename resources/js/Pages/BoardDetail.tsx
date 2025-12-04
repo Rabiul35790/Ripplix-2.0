@@ -7,6 +7,7 @@ import LibraryCard from './LibraryCard';
 import LibraryModal from './LibraryModal';
 import FilterSection from './Website/Components/FilterSection';
 import PricingModal from './PricingModal';
+import LayoutUnauth from './LayoutUnauth';
 
 interface Category {
   id: number;
@@ -36,6 +37,14 @@ interface Filter {
   name: string;
   slug: string;
   image?: string;
+}
+
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
 }
 
 interface Board {
@@ -81,6 +90,7 @@ interface BoardDetailProps extends PageProps {
     industries: Filter[];
     interactions: Filter[];
   };
+  settings?: Settings;
 }
 
 const BoardDetail: React.FC<BoardDetailProps> = ({
@@ -91,6 +101,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
   viewedLibraryIds: initialViewedLibraryIds = [], // ADD THIS
   userPlanLimits,
   currentPlan,
+  settings,
   filters
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -313,7 +324,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
   return (
     <>
       <Head title={`${board.name} - Collections`} />
-      <Layout
+      <LayoutUnauth
         currentRoute="collections"
         onSearch={handleSearch}
         searchQuery={searchQuery}
@@ -326,6 +337,8 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
+        settings={settings}
+        isAuthenticated={!!authData.user}
       >
         {/* Header Section */}
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora">
@@ -594,7 +607,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
           isAuthenticated={!!authData.user}
         />
 
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };

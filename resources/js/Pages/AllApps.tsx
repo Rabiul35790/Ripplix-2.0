@@ -5,6 +5,7 @@ import Layout from './Layout';
 import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
 import { ChevronRight, Home, Search } from 'lucide-react';
+import LayoutUnauth from './LayoutUnauth';
 
 const animationStyles = `
   @keyframes slideInDown {
@@ -40,6 +41,15 @@ if (typeof document !== 'undefined' && !document.getElementById('app-animations'
   style.id = 'app-animations';
   style.textContent = animationStyles;
   document.head.appendChild(style);
+}
+
+
+interface Settings {
+    logo?: string;
+    favicon?: string;
+    authentication_page_image?: string;
+    copyright_text?: string;
+    hero_image?: string;
 }
 
 interface Category {
@@ -97,6 +107,7 @@ interface AllAppsProps extends PageProps {
   viewedLibraryIds?: number[];
   userPlanLimits?: UserPlanLimits | null;
   currentPlan?: any;
+
   filters: {
     platforms: Filter[];
     categories: Filter[];
@@ -106,6 +117,7 @@ interface AllAppsProps extends PageProps {
   filterType?: 'category';
   filterValue?: string;
   filterName?: string;
+  settings?: Settings;
 }
 
 const AllApps: React.FC<AllAppsProps> = ({
@@ -121,6 +133,7 @@ const AllApps: React.FC<AllAppsProps> = ({
   currentPlan,
   filterValue,
   filterName,
+    settings,
   auth
 }) => {
   const { url, props } = usePage<PageProps>();
@@ -223,7 +236,7 @@ const AllApps: React.FC<AllAppsProps> = ({
   return (
     <>
       <Head title={filterName ? `${filterName} - All Apps` : 'All Apps'} />
-      <Layout
+      <LayoutUnauth
         libraries={libraries}
         currentRoute={url}
         onSearch={() => {}}
@@ -236,7 +249,8 @@ const AllApps: React.FC<AllAppsProps> = ({
         userLibraryIds={userLibraryIds}
         viewedLibraryIds={viewedLibraryIds}
         onLibraryViewed={handleLibraryViewed}
-
+        isAuthenticated={!!authData.user}
+        settings={settings}
       >
         <div className="bg-[#F8F8F9] dark:bg-gray-900 font-sora overflow-hidden">
           <div className="max-w-full mx-auto px-4 sm:px-6 md:px-7 lg:px-8 py-4 sm:py-8 md:py-6">
@@ -340,7 +354,7 @@ const AllApps: React.FC<AllAppsProps> = ({
             )}
           </div>
         </div>
-      </Layout>
+      </LayoutUnauth>
     </>
   );
 };
