@@ -110,7 +110,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
         <div className="absolute top-3 sm:top-4 md:top-3.5 right-3 sm:right-4 md:right-3.5 z-10 focus:outline-none focus:ring-0">
           <button
             onClick={handleMenuClick}
-            className="p-1 text-[#2B235A] font-semibold opacity-80 hover:opacity-100 bg-[#F5F5FA] border border-[#E3E2FF] rounded transition-all focus:outline-none focus:ring-0"
+            className="p-1 text-[#2B235A] font-semibold opacity-80 hover:opacity-100 bg-[#F5F5FA] border border-[#E3E2FF] rounded transition-all outline-none focus:outline-none focus:ring-0"
           >
             <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 md:w-4.5 md:h-4.5" />
           </button>
