@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Smartphone, Layout, Watch, AppWindow, Glasses, MousePointer2 } from 'lucide-react';
+import { Smartphone, Layout, Watch, AppWindow, MousePointer2, RectangleGogglesIcon } from 'lucide-react';
 
 interface Settings {
   logo?: string;
@@ -15,9 +15,9 @@ interface HeroSectionProps {
 
 const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
   const avats = useMemo(() => [
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-    'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop',
-    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+    '/images/hero/tes1.jpg',
+    '/images/hero/tes2.jpg',
+    '/images/hero/tes3.jpg',
   ], []);
 
   const categories = useMemo(() => [
@@ -28,7 +28,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       iconColor: '#0284C7',
       iconPosition: 'bottom-right',
       desktopPosition: 'top-[16%] left-[11%]',
-      mobilePosition: 'top-[8%] left-[5%]',
+      mobilePosition: 'top-[1%] left-[5%]',
       rotate: '-8deg',
       animationPath: 'circular-top-left',
       border: '#2BB6FF',
@@ -37,12 +37,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
     },
     {
       name: 'AR/VR',
-      Icon: Glasses,
+      Icon: RectangleGogglesIcon,
       bg: '#FCECFF',
       iconColor: '#BE185D',
       iconPosition: 'bottom-right',
       desktopPosition: 'top-[16%] left-[32%]',
-      mobilePosition: 'top-[8%] left-[35%]',
+      mobilePosition: 'top-[1%] left-[38%]',
       rotate: '6deg',
       animationPath: 'circular-top-center',
       border: '#B13BC7',
@@ -56,7 +56,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
       iconColor: '#D97706',
       iconPosition: 'bottom-left',
       desktopPosition: 'top-[22%] left-[50%]',
-      mobilePosition: 'top-[12%] right-[5%]',
+      mobilePosition: 'top-[2%] right-[5%]',
       rotate: '10deg',
       animationPath: 'circular-top-right',
       border: '#E69B0C',
@@ -270,9 +270,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
         /* Mobile positioning for badges */
         @media (max-width: 768px) {
-          .mobile-badge-1 { top: 8%; left: 5%; }
-          .mobile-badge-2 { top: 8%; left: 35%; }
-          .mobile-badge-3 { top: 12%; right: 5%; }
+          .mobile-badge-1 { top: 1%; left: 5%; }
+          .mobile-badge-2 { top: 1%; left: 38%; }
+          .mobile-badge-3 { top: 2%; right: 5%; }
           .mobile-badge-4 { bottom: 32%; left: 5%; }
           .mobile-badge-5 { bottom: 32%; right: 5%; }
         }

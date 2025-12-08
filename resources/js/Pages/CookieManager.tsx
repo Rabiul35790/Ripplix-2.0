@@ -45,17 +45,45 @@ export default function CookieManager() {
         // Save to localStorage immediately (synchronous)
         localStorage.setItem('cookieConsent', JSON.stringify(prefs));
 
+        // Get CSRF token - try multiple methods
+        const csrfToken =
+            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+            (document.querySelector('input[name="_token"]') as HTMLInputElement)?.value ||
+            '';
+
+        if (!csrfToken) {
+            console.error('CSRF token not found. Make sure you have <meta name="csrf-token"> in your HTML head.');
+        }
+
         // Send to backend asynchronously (fire and forget)
         fetch('/api/cookies/store', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
+            credentials: 'same-origin',
             body: JSON.stringify({
                 preferences: prefs,
                 accepted: accepted,
             }),
-        }).catch(error => {
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || `Server error: ${response.status}`);
+                }).catch(() => {
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Cookie preferences saved successfully:', data);
+        })
+        .catch(error => {
             console.error('Failed to save cookie preferences to server:', error);
             // User won't see this error since banner is already gone
             // Preferences are still saved in localStorage

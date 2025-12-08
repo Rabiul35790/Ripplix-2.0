@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdController;
+use App\Http\Controllers\Api\CookieController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BrowseController;
@@ -312,6 +313,11 @@ Route::get('/report-content-policy', [LegalController::class, 'reportContentPoli
 Route::post('/contact', [ContactController::class, 'store'])->middleware('verified')->name('contact.store');
 
 
+
+Route::middleware(['web'])->group(function () {
+    Route::post('/api/cookies/store', [CookieController::class, 'store'])->name('cookies.store');
+    Route::get('/api/cookies/preferences', [CookieController::class, 'getUserPreferences'])->name('cookies.preferences');
+});
 
 // Route::get('/test-429', function () {
 //     abort(429); // Laravel will immediately return a 500 response

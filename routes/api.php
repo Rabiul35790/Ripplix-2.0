@@ -29,11 +29,6 @@ Route::get('/search', [SearchController::class, 'search'])->name('api.search');
 Route::get('/libraries/filter', [LibraryController::class, 'filter'])->name('api.libraries.filter');
 
 
-Route::middleware(['web'])->group(function () {
-    Route::post('/cookies/store', [CookieController::class, 'store'])->name('cookies.store');
-    Route::get('/cookies/preferences', [CookieController::class, 'getUserPreferences'])->name('cookies.preferences');
-});
-
 
 // Route::post('/libraries/{library}/view', [LibraryViewController::class, 'trackView']);
 
