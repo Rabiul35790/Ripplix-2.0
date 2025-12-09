@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Smartphone, Layout, Watch, AppWindow, MousePointer2, RectangleGoggles } from 'lucide-react';
 
 interface Settings {
   logo?: string;
@@ -22,86 +21,39 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
   const categories = useMemo(() => [
     {
-      name: 'Website',
-      Icon: AppWindow,
-      bg: '#E7F7FF',
-      iconColor: '#2BB6FF',
-      iconPosition: 'bottom-right',
-      desktopPosition: 'top-[16%] left-[11%]',
+      svg: '/images/website.svg',
+      desktopPosition: 'top-[20%] left-[11%]',
       laptopPosition: 'top-[14%] left-[8%]',
       mobilePosition: 'top-[1%] left-[5%]',
-      rotate: '-8deg',
-      laptopRotate: '-6deg',
       animationPath: 'circular-top-left',
-      border: '#2BB6FF',
-      pointrot: 'rotate-180',
-      pointfill: '#2BB6FF',
     },
     {
-      name: 'AR/VR',
-      Icon: RectangleGoggles,
-      bg: '#FCECFF',
-      iconColor: '#B13BC7',
-      iconPosition: 'bottom-right',
-      desktopPosition: 'top-[16%] left-[32%]',
+      svg: '/images/vr.svg',
+      desktopPosition: 'top-[20%] left-[32%]',
       laptopPosition: 'top-[14%] left-[26%]',
       mobilePosition: 'top-[1%] left-[38%]',
-      rotate: '6deg',
-      laptopRotate: '5deg',
       animationPath: 'circular-top-center',
-      border: '#B13BC7',
-      pointrot: 'rotate-180',
-      pointfill: '#B13BC7'
     },
     {
-      name: 'Web App',
-      Icon: Layout,
-      bg: '#FFF7E6',
-      iconColor: '#E69B0C',
-      iconPosition: 'bottom-left',
+      svg: '/images/webapp.svg',
       desktopPosition: 'top-[22%] left-[50%]',
       laptopPosition: 'top-[18%] left-[42%]',
       mobilePosition: 'top-[2%] right-[5%]',
-      rotate: '10deg',
-      laptopRotate: '8deg',
       animationPath: 'circular-top-right',
-      border: '#E69B0C',
-      pointrot: 'rotate-[-95deg]',
-      pointfill: '#E69B0C'
     },
     {
-      name: 'Mobile App',
-      Icon: Smartphone,
-      bg: '#E8E4FF',
-      iconColor: '#8E79FF',
-      iconPosition: 'top-right',
+      svg: '/images/mobile.svg',
       desktopPosition: 'bottom-[20%] left-[25%]',
-      laptopPosition: 'bottom-[18%] left-[18%]',
+      laptopPosition: 'bottom-[10%] left-[25%]',
       mobilePosition: 'bottom-[32%] left-[5%]',
-      rotate: '7deg',
-      laptopRotate: '6deg',
-      mobileRotate: '-25deg',
       animationPath: 'circular-bottom-left',
-      border: '#8E79FF',
-      pointrot: 'rotate-[80deg]',
-      pointfill: '#8E79FF'
     },
     {
-      name: 'Smartwatch',
-      Icon: Watch,
-      bg: '#FFEBE9',
-      iconColor: '#F3785D',
-      iconPosition: 'top-left',
+      svg: '/images/watch.svg',
       desktopPosition: 'bottom-[28%] left-[45%]',
-      laptopPosition: 'bottom-[24%] left-[36%]',
+      laptopPosition: 'bottom-[20%] left-[40%]',
       mobilePosition: 'bottom-[32%] right-[5%]',
-      rotate: '-6deg',
-      laptopRotate: '-5deg',
-      mobileRotate: '25deg',
       animationPath: 'circular-bottom-right',
-      border: '#F3785D',
-      pointrot: 'rotate-60',
-      pointfill: '#F3785D'
     }
   ], []);
 
@@ -114,7 +66,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
   };
 
   return (
-    <div className="w-full min-h-[70vh] md:min-h-screen bg-white relative overflow-hidden flex items-center py-8 md:py-12">
+    <div className="w-full min-h-[80vh] md:min-h-screen bg-white relative overflow-hidden flex items-center p-8 md:py-12">
       {/* Layer 2: Hero Image with upward animation */}
       <div className="absolute inset-0 z-0">
         <div className="hero-image-container w-full h-full">
@@ -145,7 +97,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
         }
 
         .hero-image-container {
-          animation: slideUpImage 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: slideUpImage 1.8s ease-out forwards;
         }
 
         .glass-overlay {
@@ -194,62 +146,41 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
         .category-badge {
           cursor: pointer;
           transition: transform 0.3s ease, box-shadow 0.3s ease;
-          animation: badgeCircularAppear 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          opacity: 0;
+          animation: badgeCircularAppear 1.8s ease-out forwards;
         }
 
         @keyframes badgeCircularAppear {
           0% {
-            opacity: 0;
-            transform: translate(var(--start-x), var(--start-y)) scale(0.7) rotate(var(--rotate-start));
-          }
-          70% {
-            transform: translate(0, 0) scale(1.02) rotate(var(--rotate-mid));
+            transform: translate(var(--start-x), var(--start-y)) scale(0.7);
           }
           100% {
-            opacity: 1;
-            transform: translate(0, 0) scale(1) rotate(var(--rotate-end));
+            transform: translate(0, 0) scale(1);
           }
         }
 
         .circular-top-left {
           --start-x: -150px;
           --start-y: -100px;
-          --rotate-start: -45deg;
-          --rotate-mid: -12deg;
-          --rotate-end: -8deg;
         }
 
         .circular-top-center {
           --start-x: 0px;
           --start-y: -150px;
-          --rotate-start: 20deg;
-          --rotate-mid: 12deg;
-          --rotate-end: 11deg;
         }
 
         .circular-top-right {
           --start-x: 150px;
           --start-y: -100px;
-          --rotate-start: -20deg;
-          --rotate-mid: -8deg;
-          --rotate-end: 6deg;
         }
 
         .circular-bottom-left {
           --start-x: -120px;
           --start-y: 120px;
-          --rotate-start: 25deg;
-          --rotate-mid: 10deg;
-          --rotate-end: 7deg;
         }
 
         .circular-bottom-right {
           --start-x: 120px;
           --start-y: 120px;
-          --rotate-start: -25deg;
-          --rotate-mid: -10deg;
-          --rotate-end: -6deg;
         }
 
         /* Mobile-specific animation paths */
@@ -280,22 +211,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           }
         }
 
-        .content-fade-in {
-          animation: contentFadeIn 1.8s ease-out forwards;
-          opacity: 0;
-        }
-
-        @keyframes contentFadeIn {
-          0% {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
         .gradient-text {
           color: #231C50;
         }
@@ -309,23 +224,47 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           .mobile-badge-1 { top: 1%; left: 5%; }
           .mobile-badge-2 { top: 1%; left: 38%; }
           .mobile-badge-3 { top: 2%; right: 5%; }
-          .mobile-badge-4 { bottom: 27%; left: 1%; }
-          .mobile-badge-5 { bottom: 27%; right: 1%; }
+          .mobile-badge-4 { bottom: 25%; left: 1%; }
+          .mobile-badge-5 { bottom: 25%; right: 1%; }
+
+          .mobile-badge-4 img {
+            transform: rotate(-23deg);
+             height: 85px;
+             width: 115px;
+          }
+            .mobile-badge-1 img {
+             height: 70px;
+             width: 100px;
+          }
+            .mobile-badge-2 img {
+             height: 65px;
+             width: 85px;
+          }
+            .mobile-badge-3 img {
+            height: 70px;
+             width: 100px;
+          }
+
+          .mobile-badge-5 img {
+            transform: rotate(23deg);
+             height: 90px;
+             width: 120px;
+          }
         }
 
         /* Laptop positioning for badges (769px - 1280px) */
         @media (min-width: 769px) and (max-width: 1280px) {
-          .laptop-badge-1 { top: 14%; left: 8%; }
-          .laptop-badge-2 { top: 14%; left: 35%; }
-          .laptop-badge-3 { top: 18%; left: 65%; }
-          .laptop-badge-4 { bottom: 18%; left: 18%; }
-          .laptop-badge-5 { bottom: 24%; left: 55%; }
+          .laptop-badge-1 { top: 10%; left: 13%; }
+          .laptop-badge-2 { top: 10%; left: 40%; }
+          .laptop-badge-3 { top: 13%; left: 70%; }
+          .laptop-badge-4 { bottom: 10%; left: 25%; }
+          .laptop-badge-5 { bottom: 22%; left: 60%; }
         }
 
         /* Desktop positioning for badges (1281px+) */
         @media (min-width: 1281px) {
-          .desktop-badge-1 { top: 16%; left: 11%; }
-          .desktop-badge-2 { top: 16%; left: 32%; }
+          .desktop-badge-1 { top: 18%; left: 11%; }
+          .desktop-badge-2 { top: 18%; left: 32%; }
           .desktop-badge-3 { top: 22%; left: 50%; }
           .desktop-badge-4 { bottom: 20%; left: 25%; }
           .desktop-badge-5 { bottom: 28%; left: 50%; }
@@ -334,70 +273,25 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
       {/* Floating Category Badges */}
       {categories.map((category, idx) => {
-        let pointerPosition = '';
-        if (category.iconPosition === 'bottom-right') {
-          pointerPosition = 'absolute -bottom-2 -right-2 sm:-bottom-3 sm:-right-3';
-        } else if (category.iconPosition === 'bottom-left') {
-          pointerPosition = 'absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3';
-        } else if (category.iconPosition === 'top-right') {
-          pointerPosition = 'absolute -top-2 -right-2 sm:-top-3 sm:-right-3';
-        } else if (category.iconPosition === 'top-left') {
-          pointerPosition = 'absolute -top-2 -left-2 sm:-top-3 sm:-left-3';
-        }
-
         return (
           <div
             key={idx}
-            className={`category-badge ${category.animationPath} flex absolute items-center gap-1.5 sm:gap-1.5 md:gap-2 lg:gap-2 px-2.5 sm:px-3 md:px-3.5 lg:px-4 py-2 sm:py-2.5 md:py-2.5 lg:py-2.5 rounded-full z-20 shadow-[0px_1px_3px_0px_#0000000A] flex-row mobile-badge-${idx + 1} laptop-badge-${idx + 1} desktop-badge-${idx + 1}`}
-            style={{
-              backgroundColor: category.bg,
-              transform: `rotate(${category.rotate})`,
-              border: '0.6px solid ' + category.border,
-              position: 'absolute'
-            }}
+            className={`category-badge ${category.animationPath} absolute z-20 mobile-badge-${idx + 1} laptop-badge-${idx + 1} desktop-badge-${idx + 1}`}
           >
-            <style>{`
-              @media (max-width: 768px) {
-                .mobile-badge-${idx + 1} {
-                  transform: rotate(${category.mobileRotate || category.rotate}) !important;
-                }
-              }
-              @media (min-width: 769px) and (max-width: 1280px) {
-                .laptop-badge-${idx + 1} {
-                  transform: rotate(${category.laptopRotate || category.rotate}) !important;
-                }
-              }
-            `}</style>
-            <MousePointer2
-              fill={category.pointfill}
-              className={`w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 transform ${category.pointrot} text-white flex-shrink-0 ${pointerPosition}`}
-
+            <img
+              src={category.svg}
+              alt={`Category ${idx + 1}`}
+              className="w-auto h-auto max-w-none"
+              loading="eager"
+              decoding="async"
             />
-
-            <category.Icon
-              className={`w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 lg:w-5 lg:h-5 flex-shrink-0`}
-              style={{
-                color: category.iconColor,
-              }}
-            />
-            <span
-              className="font-sora text-xs sm:text-sm md:text-sm lg:text-base !font-normal whitespace-nowrap"
-              style={{ color: category.iconColor }}
-            >
-              {category.name}
-            </span>
           </div>
         );
       })}
 
       {/* Main Content */}
       <div className="relative z-10 max-w-[1900px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20 2xl:px-32">
-        <div className="flex flex-col items-center md:items-start justify-center text-left space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6 xl:space-y-8 ml-0 sm:ml-4 md:ml-6 lg:ml-8 xl:ml-12 2xl:ml-20 content-fade-in" style={{ maxWidth: '900px' }}>
-          {/* Badge */}
-          <div className="hidden md:inline-flex items-center gap-2 px-3 md:px-3.5 lg:px-4 py-1.5 md:py-2 rounded-full bg-[#F8F9FC] backdrop-blur-sm border border-[#E5E7EB]">
-            <span className="text-[#7C3AED] text-xs md:text-xs lg:text-sm !font-semibold font-sora">New</span>
-            <span className="text-[#6B7280] text-xs md:text-xs lg:text-sm !font-normal font-sora">5000+ microinteractions just landed</span>
-          </div>
+        <div className="flex flex-col items-center md:items-start justify-center text-left space-y-4 sm:space-y-5 md:space-y-5 lg:space-y-6 xl:space-y-8 ml-0 sm:ml-4 md:ml-6 lg:ml-8 xl:ml-12 2xl:ml-20 mt-8 sm:mt-0" style={{ maxWidth: '900px' }}>
 
           {/* Heading */}
           <h1
@@ -406,7 +300,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
               text-center md:text-left
               !font-semibold md:!font-bold
               leading-tight
-              text-4xl
+              text-[2rem]
+              sm:text-[2rem]
               md:text-[clamp(2rem,4.5vw,3rem)]
               lg:text-[clamp(2.5rem,5vw,3.5rem)]
               xl:text-[clamp(3rem,5vw,3.75rem)]
@@ -418,12 +313,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
               <span className="gradient-text">Netflix for UI</span>
             </span>
 
-            <span className="block md:hidden gradient-text">
-              Animation & Micro-
+            <span className="block md:hidden gradient-text whitespace-nowrap">
+              Animation &amp; Micro-
             </span>
 
-            <span className="block md:hidden gradient-text">
-              Interaction Design
+            <span className="block md:hidden gradient-text whitespace-nowrap">
+              Interaction
+              <span className="text-muted"> Design</span>
             </span>
 
             {/* DESKTOP / md+ — original phrasing */}
@@ -432,7 +328,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
               <span className="gradient-text">Netflix for<br className="md:hidden" /></span>
               <span className="gradient-text hidden md:inline"> UI Animation </span><br className="hidden md:block" />
               <span className="gradient-text md:hidden">UI Animation <br /></span>
-              <span className="gradient-text">& Micro-Interaction</span>
+              <span className="gradient-text">&amp; Micro-Interaction</span>
               <span className="text-muted"> Design</span>
             </span>
           </h1>

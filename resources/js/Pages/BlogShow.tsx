@@ -183,7 +183,7 @@ const BlogShow: React.FC<BlogShowProps> = ({
         ziggy={ziggyData}
       >
         <div className="bg-[#F9F5FF]">
-          <div className="max-w-[1400px] mx-auto py-6 px-4 sm:px-6 lg:px-0 lg:py-12">
+          <div className="max-w-[1400px] mx-auto py-6 px-4 sm:px-6 lg:px-8 lg:py-12">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
               <div>
                 <button
@@ -248,7 +248,7 @@ const BlogShow: React.FC<BlogShowProps> = ({
         </div>
 
         <div className="bg-white dark:bg-gray-900">
-          <div className="max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-0 lg:py-12">
+          <div className="max-w-[1400px] mx-auto py-8 px-4 sm:px-6 lg:px-8 lg:py-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
               <div className="lg:col-span-8">
                 <div
