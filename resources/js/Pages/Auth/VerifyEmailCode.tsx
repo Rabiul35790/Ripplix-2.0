@@ -27,6 +27,31 @@ export default function VerifyEmailCode({ email, status, message, settings }: Pr
     const [resending, setResending] = useState(false);
 
     useEffect(() => {
+        // We look for a flag that indicates the page has already reloaded once
+        const hasReloaded = localStorage.getItem('hasVerifiedEmailReloaded');
+
+        if (!hasReloaded) {
+            // If it hasn't reloaded yet:
+            // 1. Set the flag to true.
+            localStorage.setItem('hasVerifiedEmailReloaded', 'true');
+
+            // 2. Force the browser to reload the page completely.
+            window.location.reload();
+        } else {
+            // If it has reloaded (this is the second visit), remove the flag.
+            // This allows the next *initial* visit to trigger the reload again if necessary.
+            localStorage.removeItem('hasVerifiedEmailReloaded');
+        }
+
+        // Standard useEffect cleanup function
+        return () => {
+            // Ensure the local storage item is cleared if the user navigates away normally
+            localStorage.removeItem('hasVerifiedEmailReloaded');
+        };
+    }, []);
+
+
+    useEffect(() => {
         inputRefs.current[0]?.focus();
     }, []);
 

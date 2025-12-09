@@ -288,13 +288,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
                     'plan_expires_at' => $expiresAt,
                     'updated_at' => $currentTime,
                 ]);
-
-            // Clear caches after plan change
-            $this->clearPlanCaches();
-            $this->refresh();
         });
 
-        Log::info("User {$this->id} subscription " . ($isRenewal ? 'renewed' : 'upgraded'));
+        // Wait for commit before refreshing
+        DB::afterCommit(function () use ($plan) {
+            $this->clearPlanCaches();
+            $this->refresh();
+
+            Log::info("User {$this->id} subscription " .
+                ($this->pricing_plan_id === $plan->id ? 'renewed' : 'upgraded'));
+        });
     }
 
 
@@ -310,7 +313,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
      */
     public function downgradeToFreeMember(): void
     {
-        $freeMemberPlan = PricingPlan::find(2); // Hardcoded to Plan ID 2
+        $freeMemberPlan = PricingPlan::find(2);
 
         if ($freeMemberPlan) {
             DB::transaction(function () use ($freeMemberPlan) {
@@ -322,11 +325,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
                         'plan_expires_at' => null,
                         'updated_at' => now(),
                     ]);
-
-                $this->refresh();
             });
 
-            Log::info("User {$this->id} automatically downgraded to free member plan due to expiry");
+            DB::afterCommit(function () {
+                $this->clearPlanCaches();
+                $this->refresh();
+                Log::info("User {$this->id} automatically downgraded to free member plan");
+            });
         }
     }
 
@@ -410,23 +415,39 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         parent::boot();
 
         static::created(function ($user) {
-            $user->assignAutomaticPlan();
+            // Defer automatic plan assignment to after transaction commits
+            DB::afterCommit(function () use ($user) {
+                $user->assignAutomaticPlan();
+            });
         });
 
         static::retrieved(function ($user) {
+            // Check for expired subscriptions asynchronously
             if ($user->isSubscriptionExpired()) {
-                $user->downgradeToFreeMember();
+                // Use a queued job or defer this to avoid blocking
+                dispatch(function () use ($user) {
+                    $user->downgradeToFreeMember();
+                })->afterResponse();
+            }
+        });
+
+        static::saving(function ($user) {
+            // Clear caches before save to prevent stale reads
+            if ($user->isDirty(['pricing_plan_id', 'plan_expires_at', 'plan_updated_at'])) {
+                $user->clearPlanCaches();
             }
         });
 
         static::saved(function ($user) {
-            // Clear caches when user data changes
-            $user->clearPlanCaches();
+            // Clear caches after save and wait for write
+            DB::afterCommit(function () use ($user) {
+                $user->clearPlanCaches();
 
-            if ($user->shouldHaveLifetimePlan() &&
-                (!$user->pricingPlan || $user->pricingPlan->slug !== 'lifetime-pro')) {
-                $user->assignLifetimePlan();
-            }
+                if ($user->shouldHaveLifetimePlan() &&
+                    (!$user->pricingPlan || $user->pricingPlan->slug !== 'lifetime-pro')) {
+                    $user->assignLifetimePlan();
+                }
+            });
         });
 
         static::deleting(function ($user) {
@@ -537,11 +558,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
                     'trial_taken' => true,
                     'updated_at' => $currentTime,
                 ]);
-
-            $this->refresh();
         });
 
-        Log::info("User {$this->id} started free trial, expires: {$expiresAt->toDateString()}");
+        DB::afterCommit(function () use ($expiresAt) {
+            $this->clearPlanCaches();
+            $this->refresh();
+            Log::info("User {$this->id} started free trial, expires: {$expiresAt->toDateString()}");
+        });
     }
 
 

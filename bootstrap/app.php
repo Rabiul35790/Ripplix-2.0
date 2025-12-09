@@ -27,26 +27,49 @@ return Application::configure(basePath: dirname(__DIR__))
             'auto.expired.subscriptions' => \App\Http\Middleware\AutoHandleExpiredSubscriptions::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'api.admin.access' => \App\Http\Middleware\ApiAdminAccess::class,
-            'cache.static' => \App\Http\Middleware\CacheStaticAssets::class, // Add cache middleware alias
+            'cache.static' => \App\Http\Middleware\CacheStaticAssets::class,
+            'ensure.session' => \App\Http\Middleware\EnsureSessionIsActive::class, // Add new middleware
         ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\EnsureSessionIsActive::class, // Add before other middleware
             \App\Http\Middleware\TrackVisitors::class,
             \App\Http\Middleware\SeoMiddleware::class,
             \App\Http\Middleware\AutoHandleExpiredSubscriptions::class,
             \App\Http\Middleware\TrackCookieConsent::class,
-            \App\Http\Middleware\CacheStaticAssets::class, // Add cache middleware at the end
+            \App\Http\Middleware\CacheStaticAssets::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Handle database errors
+        // Handle database errors with better logging
         $exceptions->render(function (\Illuminate\Database\QueryException $e) {
+            \Illuminate\Support\Facades\Log::error('Database Query Error', [
+                'message' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A',
+                'bindings' => $e->getBindings() ?? [],
+                'trace' => $e->getTraceAsString()
+            ]);
+
             if (str_contains($e->getMessage(), 'pricing_plan_id')) {
-                \Illuminate\Support\Facades\Log::error('Database error in subscription handling: ' . $e->getMessage());
                 return response()->json(['error' => 'Subscription service temporarily unavailable'], 500);
             }
+
+            // Return generic error for other DB issues
+            if (request()->expectsJson()) {
+                return response()->json(['error' => 'Database error occurred'], 500);
+            }
+        });
+
+        // Handle session errors
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e) {
+            \Illuminate\Support\Facades\Log::warning('Session token mismatch', [
+                'url' => request()->fullUrl(),
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()->route('login')->withErrors(['error' => 'Your session has expired. Please login again.']);
         });
 
         // Custom error page rendering for Inertia requests
