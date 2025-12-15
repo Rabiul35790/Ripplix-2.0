@@ -12,6 +12,7 @@ import LayoutUnauth from './LayoutUnauth';
 import Overview from '../Components/Overview';
 import Testimonials from './Testimonial';
 import FAQ from '../Components/Faq';
+import { analytics } from '../services/analytics';
 
 interface Category {
   id: number;
@@ -262,6 +263,70 @@ const Home: React.FC<HomeProps> = ({
     }
   }, [window.location.pathname]);
 
+
+
+
+
+
+
+  useEffect(() => {
+  if (authData?.user) {
+    analytics.identifyUser(authData.user.id, {
+      email: authData.user.email,
+      name: authData.user.name,
+      plan: userPlanLimits?.planName || 'Free',
+      planSlug: userPlanLimits?.planSlug,
+      isAuthenticated: isAuthenticated,
+      maxBoards: userPlanLimits?.maxBoards,
+      canShare: userPlanLimits?.canShare,
+    });
+  }
+}, [authData, userPlanLimits, isAuthenticated]);
+
+
+
+useEffect(() => {
+  analytics.trackPageView(window.location.pathname, 'Home');
+}, []);
+
+
+useEffect(() => {
+  const startTime = Date.now();
+
+  return () => {
+    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+    if (timeSpent > 5) { // Only track if spent more than 5 seconds
+      analytics.trackTimeOnPage('Home', timeSpent);
+    }
+  };
+}, []);
+
+
+
+useEffect(() => {
+  let maxScroll = 0;
+
+  const handleScroll = () => {
+    const scrollPercentage = Math.floor(
+      (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+    );
+
+    if (scrollPercentage > maxScroll && scrollPercentage % 25 === 0) {
+      maxScroll = scrollPercentage;
+      analytics.trackScrollDepth(scrollPercentage, 'Home');
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
+
+
+
+
+
+
   // Function to fetch library data for modal
   const fetchLibraryForModal = async (slug: string) => {
     try {
@@ -282,41 +347,97 @@ const Home: React.FC<HomeProps> = ({
   };
 
   // Handle platform filter change
-  const handlePlatformChange = useCallback(async (platform: string) => {
-    setSelectedPlatform(platform);
-    setIsLoadingMore(true);
-    setError(null);
+//   const handlePlatformChange = useCallback(async (platform: string) => {
+//     setSelectedPlatform(platform);
+//     setIsLoadingMore(true);
+//     setError(null);
 
-    try {
-      const response = await fetch(`/?platform=${platform}&page=1`, {
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      });
+//     try {
+//       const response = await fetch(`/?platform=${platform}&page=1`, {
+//         headers: {
+//           'Accept': 'application/json',
+//           'X-Requested-With': 'XMLHttpRequest'
+//         }
+//       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to load libraries: ${response.status}`);
+//       if (!response.ok) {
+//         throw new Error(`Failed to load libraries: ${response.status}`);
+//       }
+
+//       const data = await response.json();
+
+//       requestAnimationFrame(() => {
+//         setLibraries(data.libraries);
+//         setPagination(data.pagination);
+
+//         if (data.viewedLibraryIds) {
+//           setViewedLibraryIds(data.viewedLibraryIds);
+//         }
+//       });
+
+//     } catch (error) {
+//       console.error('Failed to load libraries:', error);
+//       setError(error instanceof Error ? error.message : 'Failed to load libraries');
+//     } finally {
+//       setIsLoadingMore(false);
+//     }
+//   }, []);
+
+
+
+
+
+
+
+const handlePlatformChange = useCallback(async (platform: string) => {
+  setSelectedPlatform(platform);
+  setIsLoadingMore(true);
+  setError(null);
+
+  // Track filter change
+  analytics.trackFilterChange('platform', platform);
+
+  try {
+    const response = await fetch(`/?platform=${platform}&page=1`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       }
+    });
 
-      const data = await response.json();
-
-      requestAnimationFrame(() => {
-        setLibraries(data.libraries);
-        setPagination(data.pagination);
-
-        if (data.viewedLibraryIds) {
-          setViewedLibraryIds(data.viewedLibraryIds);
-        }
-      });
-
-    } catch (error) {
-      console.error('Failed to load libraries:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load libraries');
-    } finally {
-      setIsLoadingMore(false);
+    if (!response.ok) {
+      throw new Error(`Failed to load libraries: ${response.status}`);
     }
-  }, []);
+
+    const data = await response.json();
+
+    requestAnimationFrame(() => {
+      setLibraries(data.libraries);
+      setPagination(data.pagination);
+
+      if (data.viewedLibraryIds) {
+        setViewedLibraryIds(data.viewedLibraryIds);
+      }
+    });
+
+  } catch (error) {
+    console.error('Failed to load libraries:', error);
+    setError(error instanceof Error ? error.message : 'Failed to load libraries');
+
+    // Track error
+    analytics.trackError('Failed to load libraries', {
+      platform,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+    });
+  } finally {
+    setIsLoadingMore(false);
+  }
+}, []);
+
+
+
+
+
 
   // Filter libraries based on search
   const filteredLibraries = useMemo(() => {
@@ -382,39 +503,136 @@ const Home: React.FC<HomeProps> = ({
 
   // Event handlers
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+
+
+
+//   const handleSearch = useCallback((query: string) => {
+//     if (searchTimeoutRef.current) {
+//       clearTimeout(searchTimeoutRef.current);
+//     }
+//     searchTimeoutRef.current = setTimeout(() => {
+//       setSearchQuery(query);
+//     }, 150);
+//   }, []);
+
+
   const handleSearch = useCallback((query: string) => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
+  if (searchTimeoutRef.current) {
+    clearTimeout(searchTimeoutRef.current);
+  }
+  searchTimeoutRef.current = setTimeout(() => {
+    setSearchQuery(query);
+
+    // Track search if query is not empty
+    if (query.length > 0) {
+      const resultsCount = libraries.filter(library =>
+        library.title.toLowerCase().includes(query.toLowerCase()) ||
+        library.description?.toLowerCase().includes(query.toLowerCase()) ||
+        library.platforms.some(p => p.name.toLowerCase().includes(query.toLowerCase()))
+      ).length;
+
+      analytics.trackSearch(query, resultsCount);
     }
-    searchTimeoutRef.current = setTimeout(() => {
-      setSearchQuery(query);
-    }, 150);
-  }, []);
+  }, 150);
+}, [libraries]);
+
+
+
 
   const handleCardsPerRowChange = useCallback((count: number) => {
     setCardsPerRow(count);
   }, []);
 
-  const handleLibraryCardClick = useCallback((library: Library) => {
-    setModalLibrary(library);
-    setIsModalOpen(true);
-  }, []);
 
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setModalLibrary(null);
-  }, []);
+
+
+//   const handleLibraryCardClick = useCallback((library: Library) => {
+//     setModalLibrary(library);
+//     setIsModalOpen(true);
+//   }, []);
+
+
+
+const handleLibraryCardClick = useCallback((library: Library) => {
+  setModalLibrary(library);
+  setIsModalOpen(true);
+
+  // Track library view and modal open
+  analytics.trackLibraryView(library);
+  analytics.trackModalOpen(library.title, library.id);
+}, []);
+
+
+
+
+
+
+//   const handleModalClose = useCallback(() => {
+//     setIsModalOpen(false);
+//     setModalLibrary(null);
+//   }, []);
+
+
+const handleModalClose = useCallback(() => {
+  if (modalLibrary) {
+    analytics.trackModalClose(modalLibrary.title, modalLibrary.id);
+  }
+
+  setIsModalOpen(false);
+  setModalLibrary(null);
+}, [modalLibrary]);
+
+
+
+
 
   const handleModalNavigation = useCallback((library: Library) => {
     setModalLibrary(library);
   }, []);
 
-  const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
-    if (!authData?.user) {
-      console.log('User not authenticated');
-      return;
-    }
-  }, [authData]);
+
+
+
+
+
+//   const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
+//     if (!authData?.user) {
+//       console.log('User not authenticated');
+//       return;
+//     }
+//   }, [authData]);
+
+
+
+const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
+  if (!authData?.user) {
+    console.log('User not authenticated');
+    // Track attempt to star without auth
+    analytics.trackEvent('Star Attempt Without Auth', {
+      category: 'Library',
+      libraryId: library.id,
+      libraryTitle: library.title,
+    });
+    return;
+  }
+
+  // Track star action
+  analytics.trackLibraryStar(library, isStarred);
+}, [authData]);
+
+
+
+
+
+const handleVideoPlay = useCallback((library: Library) => {
+  if (library.video_url) {
+    analytics.trackVideoPlay(library.title, library.video_url);
+  }
+}, []);
+
+
+
+
 
   // Modal libraries
   const modalLibraries = useMemo(() => {
@@ -575,6 +793,7 @@ const Home: React.FC<HomeProps> = ({
             viewedLibraryIds={viewedLibraryIds}
             onLibraryViewed={handleLibraryViewed}
             isAuthenticated={isAuthenticated}
+            onVideoPlay={handleVideoPlay}
           />
         </div>
 
