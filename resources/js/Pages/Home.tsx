@@ -269,17 +269,21 @@ const Home: React.FC<HomeProps> = ({
 
 
 
-  useEffect(() => {
-  if (authData?.user) {
+useEffect(() => {
+  if (authData?.user?.id) {
+    // Only identify if we have a valid user ID
     analytics.identifyUser(authData.user.id, {
-      email: authData.user.email,
-      name: authData.user.name,
+      email: authData.user.email || undefined,
+      name: authData.user.name || undefined,
       plan: userPlanLimits?.planName || 'Free',
-      planSlug: userPlanLimits?.planSlug,
+      planSlug: userPlanLimits?.planSlug || undefined,
       isAuthenticated: isAuthenticated,
-      maxBoards: userPlanLimits?.maxBoards,
-      canShare: userPlanLimits?.canShare,
+      maxBoards: userPlanLimits?.maxBoards || undefined,
+      canShare: userPlanLimits?.canShare || undefined,
     });
+  } else if (!authData?.user) {
+    // For anonymous users, Amplitude will use the device ID
+    // console.log('📱 Tracking anonymous user with device ID');
   }
 }, [authData, userPlanLimits, isAuthenticated]);
 
@@ -516,10 +520,11 @@ const handlePlatformChange = useCallback(async (platform: string) => {
 //   }, []);
 
 
-  const handleSearch = useCallback((query: string) => {
+const handleSearch = useCallback((query: string) => {
   if (searchTimeoutRef.current) {
     clearTimeout(searchTimeoutRef.current);
   }
+
   searchTimeoutRef.current = setTimeout(() => {
     setSearchQuery(query);
 
@@ -585,7 +590,6 @@ const handleModalClose = useCallback(() => {
 
 
 
-
   const handleModalNavigation = useCallback((library: Library) => {
     setModalLibrary(library);
   }, []);
@@ -624,11 +628,11 @@ const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
 
 
 
-const handleVideoPlay = useCallback((library: Library) => {
-  if (library.video_url) {
-    analytics.trackVideoPlay(library.title, library.video_url);
-  }
-}, []);
+// const handleVideoPlay = useCallback((library: Library) => {
+//   if (library.video_url) {
+//     analytics.trackVideoPlay(library.title, library.video_url);
+//   }
+// }, []);
 
 
 
@@ -793,7 +797,7 @@ const handleVideoPlay = useCallback((library: Library) => {
             viewedLibraryIds={viewedLibraryIds}
             onLibraryViewed={handleLibraryViewed}
             isAuthenticated={isAuthenticated}
-            onVideoPlay={handleVideoPlay}
+            // onVideoPlay={handleVideoPlay}
           />
         </div>
 

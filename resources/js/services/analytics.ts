@@ -26,11 +26,11 @@ class AnalyticsService {
    */
   initialize() {
     if (this.isInitialized) {
-      console.log('⚠️ Analytics already initialized');
+    //   console.log('⚠️ Analytics already initialized');
       return;
     }
 
-    console.log('🚀 Initializing Analytics Services...');
+    // console.log('🚀 Initializing Analytics Services...');
 
     // 1. Initialize Google Analytics
     this.initGoogleAnalytics();
@@ -42,7 +42,7 @@ class AnalyticsService {
     this.initClarity();
 
     this.isInitialized = true;
-    console.log('✅ All Analytics Services Initialized');
+    // console.log('✅ All Analytics Services Initialized');
   }
 
   /**
@@ -52,7 +52,7 @@ class AnalyticsService {
     const gaId = import.meta.env.VITE_GOOGLE_ANALYTICS_ID;
 
     if (!gaId) {
-      console.warn('⚠️ Google Analytics ID not found in environment variables');
+      console.warn('Google Analytics ID not found in environment variables');
       return;
     }
 
@@ -64,9 +64,9 @@ class AnalyticsService {
       });
 
       this.gaInitialized = true;
-      console.log('✅ Google Analytics initialized:', gaId);
+    //   console.log('✅ Google Analytics initialized:', gaId);
     } catch (error) {
-      console.error('❌ Google Analytics initialization failed:', error);
+      console.error('Google Analytics initialization failed:', error);
     }
   }
 
@@ -77,12 +77,16 @@ class AnalyticsService {
     const amplitudeKey = import.meta.env.VITE_AMPLITUDE_API_KEY;
 
     if (!amplitudeKey) {
-      console.warn('⚠️ Amplitude API Key not found in environment variables');
+      console.warn('Amplitude API Key not found in environment variables');
       return;
     }
 
     try {
+      // Generate a device ID for anonymous users
+      const deviceId = this.getOrCreateDeviceId();
+
       amplitude.init(amplitudeKey, undefined, {
+        deviceId: deviceId,
         defaultTracking: {
           sessions: true,
           pageViews: true,
@@ -91,12 +95,40 @@ class AnalyticsService {
         },
         // Add app version if you have it
         appVersion: import.meta.env.VITE_APP_VERSION || '1.0.0',
+        // Important: Set minimum ID length
+        minIdLength: 1,
       });
 
       this.amplitudeInitialized = true;
-      console.log('✅ Amplitude initialized:', amplitudeKey.substring(0, 10) + '...');
+    //   console.log('✅ Amplitude initialized:', amplitudeKey.substring(0, 10) + '...');
+    //   console.log('📱 Device ID:', deviceId);
     } catch (error) {
-      console.error('❌ Amplitude initialization failed:', error);
+      console.error('Amplitude initialization failed:', error);
+    }
+  }
+
+  /**
+   * Generate or retrieve device ID for anonymous tracking
+   */
+  private getOrCreateDeviceId(): string {
+    const DEVICE_ID_KEY = 'amplitude_device_id';
+
+    // Try to get existing device ID from localStorage
+    try {
+      let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+
+      if (!deviceId) {
+        // Generate new device ID
+        deviceId = 'device_' + Math.random().toString(36).substring(2, 15) +
+                   Math.random().toString(36).substring(2, 15) +
+                   '_' + Date.now();
+        localStorage.setItem(DEVICE_ID_KEY, deviceId);
+      }
+
+      return deviceId;
+    } catch (error) {
+      // Fallback if localStorage is not available
+      return 'device_' + Math.random().toString(36).substring(2, 15) + Date.now();
     }
   }
 
@@ -107,7 +139,7 @@ class AnalyticsService {
     const clarityId = import.meta.env.VITE_CLARITY_PROJECT_ID;
 
     if (!clarityId) {
-      console.warn('⚠️ Clarity Project ID not found in environment variables');
+      console.warn('Clarity Project ID not found in environment variables');
       return;
     }
 
@@ -122,9 +154,9 @@ class AnalyticsService {
       })(window, document, "clarity", "script", clarityId);
 
       this.clarityInitialized = true;
-      console.log('✅ Microsoft Clarity initialized (Session Recording Active)');
+    //   console.log('✅ Microsoft Clarity initialized (Session Recording Active)');
     } catch (error) {
-      console.error('❌ Clarity initialization failed:', error);
+      console.error('Clarity initialization failed:', error);
     }
   }
 
@@ -153,14 +185,21 @@ class AnalyticsService {
       });
     }
 
-    console.log('📄 Page view tracked:', path);
+    // console.log('Page view tracked:', path);
   }
 
   /**
    * Identify user across all platforms
    */
   identifyUser(userId: string | number, userProperties?: Record<string, any>) {
-    const userIdStr = String(userId);
+    // Validate and convert userId
+    const userIdStr = userId ? String(userId).trim() : '';
+
+    // Don't identify if userId is empty or invalid
+    if (!userIdStr || userIdStr.length === 0) {
+      console.warn('Cannot identify user: Invalid user ID');
+      return;
+    }
 
     // Google Analytics
     if (this.gaInitialized) {
@@ -169,55 +208,91 @@ class AnalyticsService {
 
     // Amplitude - Set user properties
     if (this.amplitudeInitialized) {
-      const identifyEvent = new amplitude.Identify();
+      try {
+        const identifyEvent = new amplitude.Identify();
 
-      if (userProperties) {
-        Object.entries(userProperties).forEach(([key, value]) => {
-          identifyEvent.set(key, value);
-        });
+        if (userProperties) {
+          Object.entries(userProperties).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              identifyEvent.set(key, value);
+            }
+          });
+        }
+
+        amplitude.setUserId(userIdStr);
+        amplitude.identify(identifyEvent);
+
+        // console.log('User identified in Amplitude:', userIdStr);
+      } catch (error) {
+        console.error('Failed to identify user in Amplitude:', error);
       }
-
-      amplitude.setUserId(userIdStr);
-      amplitude.identify(identifyEvent);
     }
 
     // Microsoft Clarity - Tag user in session recordings
     if (this.clarityInitialized && typeof window !== 'undefined' && window.clarity) {
-      window.clarity("identify", userIdStr, {
-        email: userProperties?.email,
-        name: userProperties?.name,
-        plan: userProperties?.plan,
-      });
+      try {
+        window.clarity("identify", userIdStr, {
+          email: userProperties?.email,
+          name: userProperties?.name,
+          plan: userProperties?.plan,
+        });
+        // console.log('👤 User identified in Clarity:', userIdStr);
+      } catch (error) {
+        console.error('Failed to identify user in Clarity:', error);
+      }
     }
 
-    console.log('👤 User identified:', userIdStr);
+    // console.log('✅ User identified across all platforms:', userIdStr);
   }
 
   /**
    * Track custom events
    */
   trackEvent(eventName: string, properties?: Record<string, any>) {
+    if (!eventName || eventName.trim().length === 0) {
+      console.warn('Cannot track event: Invalid event name');
+      return;
+    }
+
+    // Clean up properties - remove undefined/null values
+    const cleanProperties = properties ?
+      Object.fromEntries(
+        Object.entries(properties).filter(([_, v]) => v !== undefined && v !== null)
+      ) : {};
+
     // Google Analytics
     if (this.gaInitialized) {
-      ReactGA.event({
-        category: properties?.category || 'User Interaction',
-        action: eventName,
-        label: properties?.label,
-        value: properties?.value,
-      });
+      try {
+        ReactGA.event({
+          category: cleanProperties?.category || 'User Interaction',
+          action: eventName,
+          label: cleanProperties?.label,
+          value: cleanProperties?.value,
+        });
+      } catch (error) {
+        console.error('GA event tracking failed:', error);
+      }
     }
 
     // Amplitude
     if (this.amplitudeInitialized) {
-      amplitude.track(eventName, properties);
+      try {
+        amplitude.track(eventName, cleanProperties);
+      } catch (error) {
+        console.error('Amplitude event tracking failed:', error);
+      }
     }
 
     // Microsoft Clarity - Add custom tags
     if (this.clarityInitialized && typeof window !== 'undefined' && window.clarity) {
-      window.clarity("set", eventName, properties?.label || eventName);
+      try {
+        window.clarity("set", eventName, cleanProperties?.label || eventName);
+      } catch (error) {
+        console.error('Clarity tagging failed:', error);
+      }
     }
 
-    console.log('📊 Event tracked:', eventName, properties);
+    // console.log('📊 Event tracked:', eventName, cleanProperties);
   }
 
   /**
@@ -418,7 +493,7 @@ class AnalyticsService {
     if (this.amplitudeInitialized) {
       amplitude.reset();
     }
-    console.log('🔄 User data cleared');
+    // console.log('User data cleared');
   }
 
   /**

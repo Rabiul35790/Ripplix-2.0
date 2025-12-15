@@ -14,7 +14,6 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const token = document.head.querySelector('meta[name="csrf-token"]');
 
 // Initialize analytics when app starts
-console.log('🚀 Initializing application...');
 analytics.initialize();
 
 createInertiaApp({
@@ -54,13 +53,13 @@ router.on('navigate', (event) => {
         (page.props?.title || page.component) as string
     );
 
-    console.log('Navigation:', page.url);
+    // console.log('Navigation:', page.url);
 });
 
 // Track navigation start (loading)
-router.on('start', (event) => {
-    console.log('Navigation started...');
-});
+// router.on('start', (event) => {
+//     console.log('Navigation started...');
+// });
 
 // Track navigation errors
 router.on('error', (event) => {
@@ -80,4 +79,4 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.headers.common['Accept'] = 'application/json';
 
 // Log analytics status
-console.log('Analytics Status:', analytics.getStatus());
+// console.log('Analytics Status:', analytics.getStatus());
