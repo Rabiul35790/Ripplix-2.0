@@ -667,6 +667,7 @@ const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
           currentPlan={currentPlan}
           settings={settings}
           isAuthenticated={isAuthenticated}
+          showHero={true}
         >
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-4">
@@ -708,6 +709,7 @@ const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
         currentPlan={currentPlan}
         settings={settings}
         isAuthenticated={isAuthenticated}
+        showHero={true}
       >
 
         {!isAuthenticated && (

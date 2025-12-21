@@ -80,7 +80,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
   onLibraryViewed,
   auth,
   settings,
-  showHero = true,
+  showHero,
     isAuthenticated,
     currentPlan,
 }) => {
@@ -97,12 +97,12 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
     setIsMobileSidebarOpen(false);
   };
 
-  const route = () => {
-    if(currentRoute === '/') {
-      return true;
-    }
-    return false;
-  }
+//   const route = () => {
+//     if(currentRoute === '/') {
+//       return true;
+//     }
+//     return false;
+//   }
 
   useEffect(() => {
     const header = document.getElementById('main-header');
@@ -251,7 +251,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
       </div>
 
       {/* Hero Section - Full Width */}
-      {showHero && !isAuthenticated && route() && (<HeroSection settings={settings} />)}
+      {showHero && !isAuthenticated && (<HeroSection settings={settings} />)}
 
 
       {/* Content Area with Sidebar */}
