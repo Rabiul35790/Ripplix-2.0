@@ -151,7 +151,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
         @keyframes badgeCircularAppear {
           0% {
-            transform: translate(var(--start-x), var(--start-y)) scale(0.7);
+            transform: translate(var(--start-x), var(--start-y)) scale(1);
           }
           100% {
             transform: translate(0, 0) scale(1);
@@ -228,7 +228,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           .mobile-badge-5 { bottom: 25%; right: 1%; }
 
           .mobile-badge-4 img {
-            transform: rotate(-23deg);
+            transform: rotate(-40deg);
              height: 85px;
              width: 115px;
           }
@@ -246,23 +246,23 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           }
 
           .mobile-badge-5 img {
-            transform: rotate(23deg);
+            transform: rotate(40deg);
              height: 90px;
              width: 120px;
           }
         }
 
         /* Laptop positioning for badges (769px - 1280px) */
-        @media (min-width: 769px) and (max-width: 1280px) {
-          .laptop-badge-1 { top: 10%; left: 13%; }
-          .laptop-badge-2 { top: 10%; left: 40%; }
-          .laptop-badge-3 { top: 13%; left: 70%; }
-          .laptop-badge-4 { bottom: 10%; left: 25%; }
-          .laptop-badge-5 { bottom: 22%; left: 60%; }
+        @media (min-width: 769px) and (max-width: 1399px) {
+          .laptop-badge-1 { top: 6%; left: 13%; }
+          .laptop-badge-2 { top: 6%; left: 40%; }
+          .laptop-badge-3 { top: 8%; left: 70%; }
+          .laptop-badge-4 { bottom: 6%; left: 25%; }
+          .laptop-badge-5 { bottom: 14%; left: 65%; }
         }
 
         /* Desktop positioning for badges (1281px+) */
-        @media (min-width: 1281px) {
+        @media (min-width: 1400px) {
           .desktop-badge-1 { top: 18%; left: 11%; }
           .desktop-badge-2 { top: 18%; left: 32%; }
           .desktop-badge-3 { top: 22%; left: 50%; }
@@ -342,7 +342,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
           <div className="flex flex-col sm:flex-row items-center md:items-start sm:items-center gap-4 sm:gap-5 pt-2 w-full">
             <button
               onClick={handleBookmark}
-              className="holographic-link2 group relative px-6 sm:px-7 md:px-7 lg:px-8 py-3 sm:py-3 md:py-3 lg:py-3.5 bg-[#6343D6] text-white font-semibold rounded-xl transition-all duration-300 w-auto sm:w-auto text-sm md:text-sm lg:text-base outline-none focus:outline-none focus:ring-0"
+              className="holographic-link2 group relative px-3.5 sm:px-7 md:px-7 lg:px-8 py-2 sm:py-3 md:py-3 lg:py-3.5 bg-[#6343D6] text-white font-semibold rounded-xl transition-all duration-300 w-auto sm:w-auto text-sm md:text-sm lg:text-base outline-none focus:outline-none focus:ring-0"
             >
               <span className="font-sora relative z-10 !font-semibold">Bookmark Now</span>
             </button>

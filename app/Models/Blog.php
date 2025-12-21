@@ -22,6 +22,8 @@ class Blog extends Model
         'featured_images',
         'published_date',
         'author',
+        'author_details',
+        'author_social_links',
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -32,6 +34,7 @@ class Blog extends Model
 
     protected $casts = [
         'featured_images' => 'array',
+        'author_social_links' => 'array',
         'published_date' => 'date',
         'is_published' => 'boolean',
         'is_featured' => 'boolean',
@@ -61,6 +64,64 @@ class Blog extends Model
             // Otherwise, assume it's stored in storage/app/public
             return Storage::url($image);
         }, $this->featured_images);
+    }
+
+    /**
+     * Get formatted author social links with icons
+     */
+    public function getFormattedSocialLinksAttribute()
+    {
+        if (empty($this->author_social_links)) {
+            return [];
+        }
+
+        $iconMap = [
+            'facebook' => 'fab fa-facebook',
+            'twitter' => 'fab fa-twitter',
+            'instagram' => 'fab fa-instagram',
+            'linkedin' => 'fab fa-linkedin',
+            'youtube' => 'fab fa-youtube',
+            'github' => 'fab fa-github',
+            'tiktok' => 'fab fa-tiktok',
+            'pinterest' => 'fab fa-pinterest',
+            'website' => 'fas fa-globe',
+            'other' => 'fas fa-link',
+        ];
+
+        return array_map(function ($link) use ($iconMap) {
+            return [
+                'platform' => $link['platform'] ?? 'other',
+                'url' => $link['url'] ?? '',
+                'icon' => $iconMap[$link['platform'] ?? 'other'] ?? 'fas fa-link',
+                'label' => ucfirst($link['platform'] ?? 'Link'),
+            ];
+        }, $this->author_social_links);
+    }
+
+    /**
+     * Get a specific social link by platform
+     */
+    public function getSocialLink(string $platform): ?string
+    {
+        if (empty($this->author_social_links)) {
+            return null;
+        }
+
+        foreach ($this->author_social_links as $link) {
+            if (($link['platform'] ?? '') === $platform) {
+                return $link['url'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if author has any social links
+     */
+    public function hasSocialLinks(): bool
+    {
+        return !empty($this->author_social_links) && count($this->author_social_links) > 0;
     }
 
     protected static function boot()

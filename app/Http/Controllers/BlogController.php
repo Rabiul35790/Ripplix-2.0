@@ -83,7 +83,7 @@ class BlogController extends Controller
         $user = auth()->user();
         $settings = Setting::getInstance();
 
-        // Get the blog post
+        // Get the blog post with author details and social links
         $blog = Blog::with('category:id,name,slug')
             ->where('slug', $slug)
             ->where('is_published', true)
@@ -91,6 +91,11 @@ class BlogController extends Controller
 
         // Increment view count
         $blog->incrementViews();
+
+        // Prepare blog data with formatted social links
+        $blogData = $blog->toArray();
+        $blogData['formatted_social_links'] = $blog->formatted_social_links;
+        $blogData['has_social_links'] = $blog->hasSocialLinks();
 
         // Get related blogs (same category, excluding current blog, limit 3)
         $relatedBlogs = Blog::with('category:id,name,slug')
@@ -104,7 +109,7 @@ class BlogController extends Controller
             ->get();
 
         return Inertia::render('BlogShow', [
-            'blog' => $blog,
+            'blog' => $blogData,
             'relatedBlogs' => $relatedBlogs,
             'userPlanLimits' => $this->getUserPlanLimits($user),
             'currentPlan' => $this->getCurrentPlan($user),

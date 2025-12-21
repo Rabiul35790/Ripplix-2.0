@@ -95,6 +95,12 @@ class BlogResource extends Resource
                             })
                             ->placeholder('Author name'),
 
+                        Forms\Components\Textarea::make('author_details')
+                            ->rows(3)
+                            ->maxLength(1000)
+                            ->placeholder('Author Details or Bio...')
+                            ->columnSpanFull(),
+
                         Forms\Components\Toggle::make('is_published')
                             ->label('Published')
                             ->default(false)
@@ -106,6 +112,52 @@ class BlogResource extends Resource
                             ->helperText('Show this blog in featured section'),
                     ])
                     ->columns(2),
+
+                Forms\Components\Section::make('Author Social Links')
+                    ->schema([
+                        Forms\Components\Repeater::make('author_social_links')
+                            ->label('Social Media Links')
+                            ->schema([
+                                Forms\Components\Select::make('platform')
+                                    ->label('Platform')
+                                    ->options([
+                                        'facebook' => 'Facebook',
+                                        'twitter' => 'Twitter / X',
+                                        'instagram' => 'Instagram',
+                                        'linkedin' => 'LinkedIn',
+                                        'youtube' => 'YouTube',
+                                        'github' => 'GitHub',
+                                        'tiktok' => 'TikTok',
+                                        'pinterest' => 'Pinterest',
+                                        'website' => 'Personal Website',
+                                        'other' => 'Other',
+                                    ])
+                                    ->required()
+                                    ->searchable()
+                                    ->native(false)
+                                    ->columnSpan(1),
+
+                                Forms\Components\TextInput::make('url')
+                                    ->label('Profile URL')
+                                    ->url()
+                                    ->required()
+                                    ->placeholder('https://...')
+                                    ->columnSpan(2),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(0)
+                            ->addActionLabel('Add Social Link')
+                            ->reorderable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string =>
+                                isset($state['platform'])
+                                    ? ucfirst($state['platform'])
+                                    : null
+                            )
+                            ->helperText('Add social media profiles for the author')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsed(),
 
                 Forms\Components\Section::make('Content')
                     ->schema([

@@ -98,16 +98,62 @@ class CuratorResource extends Resource
                             ->columnSpanFull(),
 
                         TextInput::make('image_name')
-                                    ->label('Image Name (Optional)')
-                                    ->maxLength(255)
-                                    ->columnSpan(1)
-                                    ->placeholder('Enter Image Name'),
+                            ->label('Image Name (Optional)')
+                            ->maxLength(255)
+                            ->columnSpan(1)
+                            ->placeholder('Enter Image Name'),
 
                         Toggle::make('is_active')
                             ->label('Active')
                             ->default(true)
                             ->helperText('Only active curators will be displayed on the website'),
+                    ]),
+
+                Section::make('Social Links')
+                    ->schema([
+                        Forms\Components\Repeater::make('social_links')
+                            ->label('Social Media Links')
+                            ->schema([
+                                Forms\Components\Select::make('platform')
+                                    ->label('Platform')
+                                    ->options([
+                                        'facebook' => 'Facebook',
+                                        'twitter' => 'Twitter / X',
+                                        'instagram' => 'Instagram',
+                                        'linkedin' => 'LinkedIn',
+                                        'youtube' => 'YouTube',
+                                        'github' => 'GitHub',
+                                        'tiktok' => 'TikTok',
+                                        'pinterest' => 'Pinterest',
+                                        'website' => 'Personal Website',
+                                        'other' => 'Other',
+                                    ])
+                                    ->required()
+                                    ->searchable()
+                                    ->native(false)
+                                    ->columnSpan(1),
+
+                                Forms\Components\TextInput::make('url')
+                                    ->label('Profile URL')
+                                    ->url()
+                                    ->required()
+                                    ->placeholder('https://...')
+                                    ->columnSpan(2),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(0)
+                            ->addActionLabel('Add Social Link')
+                            ->reorderable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string =>
+                                isset($state['platform'])
+                                    ? ucfirst($state['platform'])
+                                    : null
+                            )
+                            ->helperText('Add social media profiles for the curator')
+                            ->columnSpanFull(),
                     ])
+                    ->collapsed(),
             ]);
     }
 

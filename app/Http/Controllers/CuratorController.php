@@ -47,11 +47,6 @@ class CuratorController extends Controller
     {
         $settings = Setting::getInstance();
 
-        // Get libraries data similar to other pages
-        // $query = Library::with(['platforms', 'categories', 'industries', 'interactions'])
-        //     ->where('is_active', true);
-
-        // $libraries = $query->latest()->get();
         $filters = $this->getFilters();
 
         // Get all active curators ordered by sort_order
@@ -66,6 +61,8 @@ class CuratorController extends Controller
                     'image' => $curator->image ? asset('storage/' . $curator->image) : null,
                     'image_url' => $curator->image_url,
                     'image_name' => $curator->image_name,
+                    'social_links' => $curator->social_links,
+                    'has_social_links' => $curator->hasSocialLinks(),
                     'sort_order' => $curator->sort_order,
                     'created_at' => $curator->created_at,
                     'updated_at' => $curator->updated_at,

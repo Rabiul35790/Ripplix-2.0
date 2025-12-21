@@ -4,12 +4,19 @@ import { PageProps } from '@/types';
 import BlogLayout from './BlogLayout';
 import BlogCard from '@/Components/BlogCard';
 import axios from 'axios';
-import { ArrowLeft, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Globe, Link as LinkIcon } from 'lucide-react';
 
 interface BlogCategory {
   id: number;
   name: string;
   slug: string;
+}
+
+interface SocialLink {
+  platform: string;
+  url: string;
+  icon: string;
+  label: string;
 }
 
 interface Blog {
@@ -22,6 +29,10 @@ interface Blog {
   featured_image_urls?: string[];
   published_date: string;
   author: string;
+  author_details?: string;
+  author_social_links?: Array<{ platform: string; url: string }>;
+  formatted_social_links?: SocialLink[];
+  has_social_links?: boolean;
   meta_title?: string;
   meta_description?: string;
   category?: BlogCategory;
@@ -64,6 +75,29 @@ const getImageUrl = (blog: Blog): string => {
   }
 
   return '/images/blog-placeholder.jpg';
+};
+
+const getSocialIcon = (platform: string) => {
+  const iconProps = { size: 18, className: "text-white" };
+
+  switch (platform.toLowerCase()) {
+    case 'facebook':
+      return <Facebook {...iconProps} />;
+    case 'twitter':
+      return <Twitter {...iconProps} />;
+    case 'instagram':
+      return <Instagram {...iconProps} />;
+    case 'linkedin':
+      return <Linkedin {...iconProps} />;
+    case 'youtube':
+      return <Youtube {...iconProps} />;
+    case 'github':
+      return <Github {...iconProps} />;
+    case 'website':
+      return <Globe {...iconProps} />;
+    default:
+      return <LinkIcon {...iconProps} />;
+  }
 };
 
 const BlogShow: React.FC<BlogShowProps> = ({
@@ -110,6 +144,32 @@ const BlogShow: React.FC<BlogShowProps> = ({
         img.style.borderRadius = '12px';
         img.style.margin = '2rem 0';
         img.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+      });
+
+      // Style anchor links - make them blue and open in new tab
+      const anchorLinks = contentRef.current.querySelectorAll('a');
+      anchorLinks.forEach(link => {
+        link.style.color = '#3B82F6'; // Blue color
+        link.style.textDecoration = 'underline';
+        link.style.fontWeight = '500';
+        link.style.transition = 'color 0.2s';
+        link.classList.add(
+        'focus:outline-none',
+        'focus:ring-0',
+        'outline-none'
+        );
+
+        // Make links open in new tab
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+
+        link.addEventListener('mouseenter', () => {
+          link.style.color = '#2563EB'; // Darker blue on hover
+        });
+
+        link.addEventListener('mouseleave', () => {
+          link.style.color = '#3B82F6';
+        });
       });
 
       // Ensure headings have proper styling
@@ -213,16 +273,16 @@ const BlogShow: React.FC<BlogShowProps> = ({
                 )}
 
                 {(blog.author || blog.published_date) && (
-                  <div className="flex flex-wrap items-center gap-2 text-[#7F7F8A] font-poppins text-xs sm:text-sm mb-6">
-                    <span>By</span>
+                  <div className="flex flex-wrap items-center gap-2 text-[#8a8ae0] font-poppins text-xs sm:text-sm mb-6">
+                    {/* <span>By</span>
 
                     {blog.author && (
                       <span className="flex items-center text-[#150F32] gap-1.5 font-medium">
                         {blog.author}
                       </span>
-                    )}
+                    )} */}
 
-                    {blog.author && blog.published_date && <span>•</span>}
+                    {blog.author && blog.published_date && <span><Calendar size={16} /></span>}
 
                     {blog.published_date && (
                       <span className="flex items-center gap-1.5">
@@ -256,6 +316,54 @@ const BlogShow: React.FC<BlogShowProps> = ({
                   className="blog-content prose prose-sm sm:prose-base max-w-none"
                   dangerouslySetInnerHTML={{ __html: blog.content }}
                 />
+
+                {/* Author Details Section */}
+                {(blog.author_details || blog.has_social_links) && (
+                  <div className="mt-12 pt-8 border-t border-gray-200">
+                    <h3 className="text-[#150F32] font-sora text-xl sm:text-2xl !font-bold mb-4">
+                      About the Author
+                    </h3>
+
+                    <div className="bg-[#F9F5FF] rounded-xl p-6">
+                      {blog.author && (
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-[#9943EE] flex items-center justify-center text-white font-sora font-bold text-lg">
+                            <User size={20} />
+                          </div>
+                          <div>
+                            <h4 className="text-[#150F32] font-sora text-lg font-semibold">
+                              {blog.author}
+                            </h4>
+                          </div>
+                        </div>
+                      )}
+
+                      {blog.author_details && (
+                        <p className="text-[#62626C] font-poppins text-sm leading-relaxed mb-4">
+                          {blog.author_details}
+                        </p>
+                      )}
+
+                      {blog.has_social_links && blog.formatted_social_links && blog.formatted_social_links.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {blog.formatted_social_links.map((social, index) => (
+                            <a
+                              key={index}
+                              href={social.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-[#9943EE] to-[#51148D] text-white hover:opacity-90 transition-opacity font-poppins text-sm font-medium outline-none focus:outline-none focus:ring-0"
+                              title={social.label}
+                            >
+                              {getSocialIcon(social.platform)}
+                              <span>{social.label}</span>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="lg:col-span-4">

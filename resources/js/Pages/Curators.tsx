@@ -9,6 +9,14 @@ import {
   Users,
   Calendar,
   Image as ImageIcon,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
+  Github,
+  Globe,
+  Link as LinkIcon,
 } from 'lucide-react';
 import LayoutUnauth from './LayoutUnauth';
 
@@ -53,6 +61,11 @@ interface Filter {
   image?: string;
 }
 
+interface SocialLink {
+  platform: string;
+  url: string;
+}
+
 interface Curator {
   id: number;
   title?: string;
@@ -60,6 +73,8 @@ interface Curator {
   image?: string;
   image_url?: string;
   image_name?: string;
+  social_links?: SocialLink[];
+  has_social_links?: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -91,6 +106,29 @@ interface PageProps {
   ziggy: any;
   [key: string]: any;
 }
+
+const getSocialIcon = (platform: string) => {
+  const iconProps = { size: 20 };
+
+  switch (platform.toLowerCase()) {
+    case 'facebook':
+      return <Facebook {...iconProps} />;
+    case 'twitter':
+      return <Twitter {...iconProps} />;
+    case 'instagram':
+      return <Instagram {...iconProps} />;
+    case 'linkedin':
+      return <Linkedin {...iconProps} />;
+    case 'youtube':
+      return <Youtube {...iconProps} />;
+    case 'github':
+      return <Github {...iconProps} />;
+    case 'website':
+      return <Globe {...iconProps} />;
+    default:
+      return <LinkIcon {...iconProps} />;
+  }
+};
 
 const Curators: React.FC<CuratorsProps> = ({
   libraries = [],
@@ -245,6 +283,24 @@ const Curators: React.FC<CuratorsProps> = ({
                             <p className="mt-3 md:mt-4 text-center font-kalam !font-extrabold text-gray-800 dark:text-gray-200 text-2xl md:text-3xl">
                               {curator.image_name}
                             </p>
+                          )}
+
+                          {/* Social Links */}
+                          {curator.has_social_links && curator.social_links && curator.social_links.length > 0 && (
+                            <div className="flex justify-center gap-3 mt-3">
+                              {curator.social_links.map((social, socialIndex) => (
+                                <a
+                                  key={socialIndex}
+                                  href={social.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors outline-none focus:outline-none focus:ring-0"
+                                  title={social.platform}
+                                >
+                                  {getSocialIcon(social.platform)}
+                                </a>
+                              ))}
+                            </div>
                           )}
                         </div>
                       ) : (
