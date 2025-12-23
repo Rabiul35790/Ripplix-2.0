@@ -44,7 +44,16 @@ class AnimationController extends Controller
                     'interaction' => $library->interactions->pluck('name')->toArray(),
                     'description' => $library->description,
                     'keywords' => $library->keywords,
-                    'logo' => $library->logo
+                  	'focus_keyword' => $library->focus_keyword,
+                    'logo' => $library->logo,
+                     'video_alt_text' => $library->video_alt_text,
+                    'meta_description' => $library->meta_description,
+                    'seo_title' => $library->seo_title,
+                  	'og_title' => $library->og_title,
+                  	'og_description' => $library->og_description,
+                  	'og_image' => $library->og_image,
+                  	'og_type' => $library->og_type,
+                  	'structured_data' => $library->structured_data,
                 ];
             });
 
@@ -82,8 +91,16 @@ class AnimationController extends Controller
                 'animations.*.meta_description' => 'nullable|string|max:500',
                 'animations.*.seo_title' => 'nullable|string|max:255',
                 'animations.*.description' => 'nullable|string',
+              	'animations.*.video_alt_text' => 'nullable|string|max:255',
                 'animations.*.keywords' => 'nullable|array',
                 'animations.*.keywords.*' => 'string',
+              	'animations.*.focus_keyword' => 'nullable|string|max:255',
+              	'animations.*.og_title' => 'nullable|string|max:255',
+              	'animations.*.og_description' => 'nullable|string',
+              	'animations.*.og_image' => 'nullable|string',
+              	'animations.*.og_type' => 'nullable|string',
+              	'animations.*.structured_data' => 'nullable|array',
+                'animations.*.structured_data.*' => 'string',
             ]);
 
             if ($validator->fails()) {

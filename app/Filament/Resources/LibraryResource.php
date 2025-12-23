@@ -75,6 +75,10 @@ class LibraryResource extends Resource
                             ->image()
                             ->directory('library-logos'),
 
+                        Forms\Components\TextInput::make('video_alt_text')
+                      		->label('Video Alt Text')
+                            ->maxLength(255),
+
                         Forms\Components\Toggle::make('is_active')
                             ->default(true),
                     ])->columns(2),
@@ -486,7 +490,7 @@ class LibraryResource extends Resource
             Forms\Components\FileUpload::make('import_file')
                 ->label('Upload CSV or JSON File')
                 ->acceptedFileTypes(['text/csv', 'application/json', 'text/json'])
-                ->maxSize(10240) // 10MB
+                ->maxSize(20480)
                 ->required()
                 ->helperText('Upload a CSV or JSON file containing library data. Download a template to see the required format.'),
         ])

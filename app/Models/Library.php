@@ -20,6 +20,7 @@ class Library extends Model
         'url',
         'video_url',
         'description',
+        'video_alt_text',
         'logo',
         'seo_title',
         'meta_description',

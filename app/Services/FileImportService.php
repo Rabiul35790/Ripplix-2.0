@@ -145,14 +145,6 @@ class FileImportService
         $id = $record['id'] ?? $record['external_id'] ?? null;
         $id = $id !== null ? (string) $id : null;
 
-        // Handle focus_keyword -> keywords mapping
-        $keywords = [];
-        if (isset($record['focus_keyword'])) {
-            $keywords = $this->normalizeArray($record['focus_keyword']);
-        } elseif (isset($record['keywords'])) {
-            $keywords = $this->normalizeArray($record['keywords']);
-        }
-
         return [
             'id' => $id,
             'published_date' => $record['published_date'] ?? null,
@@ -167,12 +159,21 @@ class FileImportService
             'industry' => $record['industry'] ?? null,
             'interaction' => $this->normalizeArray($record['interaction'] ?? []),
             'description' => $record['description'] ?? null,
+          	'video_alt_text' => $record['video_alt_text'] ?? null,
             'meta_description' => $record['meta_description'] ?? $record['meta description'] ?? null,
-            'keywords' => $keywords,
+
+            'keywords' => $this->normalizeArray($record['keywords'] ?? []),
+            'focus_keyword' => $record['focus_keyword'] ?? null,
+
             'seo_title' => $record['seo_title'] ?? null,
-            'focus_keyword' => !empty($keywords) ? $keywords[0] : null, // Add focus_keyword as first keyword
+          	'og_title' => $record['og_title'] ?? null,
+          	'og_description' => $record['og_description'] ?? null,
+          	'og_image' => $record['og_image'] ?? null,
+          	'og_type' => $record['og_type'] ?? null,
+          	'structured_data' => $this->normalizeArray($record['structured_data'] ?? []),
         ];
     }
+
 
     /**
      * Normalize array fields (handle both array and comma-separated strings)
@@ -212,9 +213,18 @@ class FileImportService
             'interaction.*' => 'string',
             'meta_description' => 'nullable|string|max:500',
             'seo_title' => 'nullable|string|max:255',
+          	'focus_keyword' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+          	'video_alt_text' => 'nullable|string|max:255',
             'keywords' => 'nullable|array',
             'keywords.*' => 'string',
+          	'og_title' => 'nullable|string|max:255',
+          	'og_description' => 'nullable|string',
+          	'og_image' => 'nullable|string',
+          	'og_type' => 'nullable|string',
+          	'structured_data' => 'nullable|array',
+          	'structured_data.*' => 'string',
+
         ]);
     }
 
@@ -238,8 +248,15 @@ class FileImportService
             'description',
             'meta_description',
             'seo_title',
+          	'focus_keyword',
             'keywords',
-            'logo'
+            'logo',
+          	'video_alt_text',
+          	'og_title',
+          	'og_description',
+          	'og_image',
+          	'og_type',
+          	'structured_data'
         ];
 
         $sampleData = [
