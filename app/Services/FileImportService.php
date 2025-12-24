@@ -159,18 +159,16 @@ class FileImportService
             'industry' => $record['industry'] ?? null,
             'interaction' => $this->normalizeArray($record['interaction'] ?? []),
             'description' => $record['description'] ?? null,
-          	'video_alt_text' => $record['video_alt_text'] ?? null,
+            'video_alt_text' => $record['video_alt_text'] ?? null,
             'meta_description' => $record['meta_description'] ?? $record['meta description'] ?? null,
-
             'keywords' => $this->normalizeArray($record['keywords'] ?? []),
             'focus_keyword' => $record['focus_keyword'] ?? null,
-
             'seo_title' => $record['seo_title'] ?? null,
-          	'og_title' => $record['og_title'] ?? null,
-          	'og_description' => $record['og_description'] ?? null,
-          	'og_image' => $record['og_image'] ?? null,
-          	'og_type' => $record['og_type'] ?? null,
-          	'structured_data' => $this->normalizeArray($record['structured_data'] ?? []),
+            'og_title' => $record['og_title'] ?? null,
+            'og_description' => $record['og_description'] ?? null,
+            'og_image' => $record['og_image'] ?? null,
+            'og_type' => $record['og_type'] ?? null,
+            'structured_data' => $this->normalizeJsonField($record['structured_data'] ?? null),
         ];
     }
 
@@ -190,6 +188,28 @@ class FileImportService
         }
 
         return [];
+    }
+
+    /**
+     * Normalize JSON field (handle objects, arrays, and JSON strings)
+     */
+    private function normalizeJsonField($value): ?array
+    {
+        // If it's already an array, return it
+        if (is_array($value)) {
+            return $value;
+        }
+
+        // If it's a JSON string, decode it
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        // Return null for empty or invalid values
+        return null;
     }
 
     /**
@@ -213,18 +233,16 @@ class FileImportService
             'interaction.*' => 'string',
             'meta_description' => 'nullable|string|max:500',
             'seo_title' => 'nullable|string|max:255',
-          	'focus_keyword' => 'nullable|string|max:255',
+            'focus_keyword' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-          	'video_alt_text' => 'nullable|string|max:255',
+            'video_alt_text' => 'nullable|string|max:255',
             'keywords' => 'nullable|array',
             'keywords.*' => 'string',
-          	'og_title' => 'nullable|string|max:255',
-          	'og_description' => 'nullable|string',
-          	'og_image' => 'nullable|string',
-          	'og_type' => 'nullable|string',
-          	'structured_data' => 'nullable|array',
-          	'structured_data.*' => 'string',
-
+            'og_title' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string',
+            'og_image' => 'nullable|string',
+            'og_type' => 'nullable|string',
+            'structured_data' => 'nullable|array',
         ]);
     }
 
@@ -248,15 +266,15 @@ class FileImportService
             'description',
             'meta_description',
             'seo_title',
-          	'focus_keyword',
+            'focus_keyword',
             'keywords',
             'logo',
-          	'video_alt_text',
-          	'og_title',
-          	'og_description',
-          	'og_image',
-          	'og_type',
-          	'structured_data'
+            'video_alt_text',
+            'og_title',
+            'og_description',
+            'og_image',
+            'og_type',
+            'structured_data'
         ];
 
         $sampleData = [
@@ -311,7 +329,13 @@ class FileImportService
                     'meta_description' => 'Meta description',
                     'seo_title' => 'SEO Title',
                     'keywords' => ['keyword1', 'keyword2'],
-                    'logo' => 'https://example.com/logo.svg'
+                    'logo' => 'https://example.com/logo.svg',
+                    'structured_data' => [
+                        '@context' => 'https://schema.org',
+                        '@type' => 'VideoObject',
+                        'name' => 'Sample Video',
+                        'description' => 'Sample description'
+                    ]
                 ]
             ]
         ];

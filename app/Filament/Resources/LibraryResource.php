@@ -269,31 +269,59 @@ class LibraryResource extends Resource
                                             ->default('index,follow'),
                                     ]),
 
-                                Forms\Components\Group::make([
-                                    Forms\Components\Textarea::make('structured_data')
-                                        ->json()
-                                        ->rows(6)
-                                        ->helperText('JSON-LD structured data'),
+                                    // Replace the existing structured_data field in your LibraryResource.php
+                                    // Inside the "Technical SEO" section
 
-                                    Forms\Components\Actions::make([
-                                        Forms\Components\Actions\Action::make('generate_schema')
-                                            ->label('Generate Schema')
-                                            ->icon('heroicon-o-sparkles')
-                                            ->color('primary')
-                                            ->action(function ($state, Forms\Set $set, Forms\Get $get) {
-                                                $schema = [
-                                                    '@context' => 'https://schema.org',
-                                                    '@type' => $get('schema_type') ?: 'VideoObject',
-                                                    'name' => $get('title'),
-                                                    'description' => $get('description') ?: '',
-                                                    'contentUrl' => $get('video_url'),
-                                                    'keywords' => implode(', ', $get('keywords') ?: []),
-                                                ];
-
-                                                $set('structured_data', json_encode($schema, JSON_PRETTY_PRINT));
+                                    Forms\Components\Group::make([
+                                        Forms\Components\Textarea::make('structured_data')
+                                            ->rows(6)
+                                            ->helperText('JSON-LD structured data')
+                                            ->formatStateUsing(function ($state) {
+                                                if (is_array($state)) {
+                                                    return json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                                                }
+                                                if (is_string($state)) {
+                                                    // If it's already a string, try to prettify it
+                                                    $decoded = json_decode($state, true);
+                                                    if (json_last_error() === JSON_ERROR_NONE) {
+                                                        return json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                                                    }
+                                                    return $state;
+                                                }
+                                                return '';
                                             })
-                                    ])->alignEnd()
-                                ]),
+                                            ->dehydrateStateUsing(function ($state) {
+                                                if (empty($state)) {
+                                                    return null;
+                                                }
+                                                if (is_string($state)) {
+                                                    $decoded = json_decode($state, true);
+                                                    if (json_last_error() === JSON_ERROR_NONE) {
+                                                        return $decoded;
+                                                    }
+                                                }
+                                                return $state;
+                                            }),
+
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('generate_schema')
+                                                ->label('Generate Schema')
+                                                ->icon('heroicon-o-sparkles')
+                                                ->color('primary')
+                                                ->action(function ($state, Forms\Set $set, Forms\Get $get) {
+                                                    $schema = [
+                                                        '@context' => 'https://schema.org',
+                                                        '@type' => $get('schema_type') ?: 'VideoObject',
+                                                        'name' => $get('title'),
+                                                        'description' => $get('description') ?: '',
+                                                        'contentUrl' => $get('video_url'),
+                                                        'keywords' => implode(', ', $get('keywords') ?: []),
+                                                    ];
+
+                                                    $set('structured_data', json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                                                })
+                                        ])->alignEnd()
+                                    ]),
                             ])
                             ->collapsible()
                             ->collapsed(),
