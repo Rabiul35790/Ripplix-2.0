@@ -11,13 +11,28 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/seo-widget.ts'
             ],
-            ssr: 'resources/js/ssr.tsx',
-
-
+            //ssr: 'resources/js/ssr.tsx',
             refresh: true,
         }),
         react(),
     ],
+
+    server: {
+        host: '0.0.0.0',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'www.ripplix.com',
+            port: 5173,
+            clientPort: 443,
+            protocol: 'wss'
+        },
+        cors: {
+            origin: ['https://www.ripplix.com', 'http://www.ripplix.com'],
+            credentials: true,
+        }
+    },
+
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'resources/js'),
@@ -25,13 +40,14 @@ export default defineConfig({
     },
 
     build: {
+        manifest: true,
+        outDir: 'public/build',
+        emptyOutDir: true,
+        sourcemap: false,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ['laravel-vite-plugin'],
-                    seo: ['resources/js/seo-widget.ts']
-                }
+                manualChunks: undefined,
             }
         }
-    },
+    }
 });

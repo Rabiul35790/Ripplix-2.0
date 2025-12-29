@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\AnimationController;
 use App\Http\Controllers\Api\CookieController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\LibraryViewController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Api\AnimationController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\Api\LookupController;
 
@@ -13,7 +13,7 @@ use App\Http\Controllers\Api\LookupController;
 Route::prefix('ripplix/v2')->group(function () {
     // Public GET endpoint
     Route::get('/animations', [AnimationController::class, 'index']);
-  
+
   	Route::get('/apps', [LookupController::class, 'categories']);
     Route::get('/industries', [LookupController::class, 'industries']);
     Route::get('/elements', [LookupController::class, 'interactions']);
