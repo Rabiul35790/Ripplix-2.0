@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdController;
-use App\Http\Controllers\Api\CookieController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Api\CookieController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\CollectionController;
@@ -61,7 +61,7 @@ Route::get('/api/all-categories/libraries', [BrowseController::class, 'getAllCat
 Route::get('/api/all-elements/libraries', [BrowseController::class, 'getAllElementsLibraries'])->name('api.all-elements.libraries');
 
 // Route::get('/challenges', [LibraryController::class, 'challenges'])->name('challenges');
-Route::get('/curators', [CuratorController::class, 'index'])->middleware('verified')->name('curators');
+Route::get('/about-us', [CuratorController::class, 'index'])->middleware('verified')->name('curators');
 Route::get('/contact-us', [ContactController::class, 'index'])->middleware('verified')->name('contact-us');
 Route::post('/contact-us', [ContactController::class, 'store']);
 Route::get('/sponsor-us', [SponsorController::class, 'index'])->middleware('verified')->name('sponsor-us');
@@ -111,6 +111,13 @@ Route::post('/logout', function (Request $request) {
 
     return redirect('/');
 })->name('logout');
+
+
+
+Route::middleware(['web'])->group(function () {
+    Route::post('/api/cookies/store', [CookieController::class, 'store'])->name('cookies.store');
+    Route::get('/api/cookies/preferences', [CookieController::class, 'getUserPreferences'])->name('cookies.preferences');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -313,11 +320,6 @@ Route::get('/report-content-policy', [LegalController::class, 'reportContentPoli
 Route::post('/contact', [ContactController::class, 'store'])->middleware('verified')->name('contact.store');
 
 
-
-Route::middleware(['web'])->group(function () {
-    Route::post('/api/cookies/store', [CookieController::class, 'store'])->name('cookies.store');
-    Route::get('/api/cookies/preferences', [CookieController::class, 'getUserPreferences'])->name('cookies.preferences');
-});
 
 // Route::get('/test-429', function () {
 //     abort(429); // Laravel will immediately return a 500 response

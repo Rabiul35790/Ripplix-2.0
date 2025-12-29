@@ -179,7 +179,7 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
     const aboutLinks: MenuItem[] = [
       {
         name: 'Curators',
-        route: 'curators',
+        route: 'about-us',
         icon: User,
         iconBg: 'bg-[#FFDCCC] dark:bg-orange-900/30',
         iconColor: 'text-[#F27E49] dark:text-orange-400'
@@ -399,7 +399,7 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
         </div>
 
         {/* Footer Space for Copyright and Terms/Privacy Links */}
-        <div className="mt-auto p-4 pt-4 mb-5 font-sora">
+        <div className="mt-auto p-4 pt-4 mb-8 font-sora">
           <div className="text-xs text-[#443B82] dark:text-gray-400 space-y-1.5">
             <div className="text-center">
               {copyright_text ? (

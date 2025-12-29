@@ -7,11 +7,16 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\AnimationController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\Api\LookupController;
 
 // Animation routes
 Route::prefix('ripplix/v2')->group(function () {
     // Public GET endpoint
     Route::get('/animations', [AnimationController::class, 'index']);
+  
+  	Route::get('/apps', [LookupController::class, 'categories']);
+    Route::get('/industries', [LookupController::class, 'industries']);
+    Route::get('/elements', [LookupController::class, 'interactions']);
 
     // Protected POST endpoint (requires authentication)
     Route::post('/animations/bulk', [AnimationController::class, 'bulkStore'])
@@ -27,6 +32,7 @@ Route::get('/search', [SearchController::class, 'search'])->name('api.search');
 
 // Library filter API endpoint
 Route::get('/libraries/filter', [LibraryController::class, 'filter'])->name('api.libraries.filter');
+
 
 
 

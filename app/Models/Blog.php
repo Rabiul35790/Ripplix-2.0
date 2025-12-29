@@ -33,7 +33,7 @@ class Blog extends Model
     ];
 
     protected $casts = [
-        'featured_images' => 'array',
+        'featured_images' => '',
         'author_social_links' => 'array',
         'published_date' => 'date',
         'is_published' => 'boolean',

@@ -97,12 +97,13 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
     setIsMobileSidebarOpen(false);
   };
 
-//   const route = () => {
-//     if(currentRoute === '/') {
-//       return true;
-//     }
-//     return false;
-//   }
+//  const route = () => {
+//    if(currentRoute === '/' || currentRoute === '/library/${library.slug}') {
+//     return true;
+//    }
+//   return false;
+//  }
+
 
   useEffect(() => {
     const header = document.getElementById('main-header');

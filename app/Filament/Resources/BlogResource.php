@@ -149,9 +149,9 @@ class BlogResource extends Resource
                             ->addActionLabel('Add Social Link')
                             ->reorderable()
                             ->collapsible()
-                            ->itemLabel(fn (array $state): ?string =>
-                                isset($state['platform'])
-                                    ? ucfirst($state['platform'])
+                            ->itemLabel(fn (array $state): ?string => 
+                                isset($state['platform']) 
+                                    ? ucfirst($state['platform']) 
                                     : null
                             )
                             ->helperText('Add social media profiles for the author')
@@ -205,9 +205,17 @@ class BlogResource extends Resource
                             ->maxFiles(5)
                             ->directory('blog-images')
                             ->maxSize(5120)
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([
+                                '16:9',
+                                '4:3',
+                                '1:1',
+                            ])
                             ->helperText('Upload up to 5 images (Max 5MB each)')
                             ->columnSpanFull()
-                            ->reorderable(),
+                            ->reorderable()
+                            ->visibility('public')
+                            ->disk('public'),
                     ])
                     ->collapsed(),
 

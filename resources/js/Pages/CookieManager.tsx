@@ -46,7 +46,7 @@ export default function CookieManager() {
         localStorage.setItem('cookieConsent', JSON.stringify(prefs));
 
         // Get CSRF token - try multiple methods
-        const csrfToken =
+        const csrfToken = 
             document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
             (document.querySelector('input[name="_token"]') as HTMLInputElement)?.value ||
             '';
@@ -81,7 +81,7 @@ export default function CookieManager() {
             return response.json();
         })
         .then(data => {
-            console.log('Cookie preferences saved successfully:', data);
+            //console.log('Cookie preferences saved successfully:', data);
         })
         .catch(error => {
             console.error('Failed to save cookie preferences to server:', error);

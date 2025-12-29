@@ -263,11 +263,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
         /* Desktop positioning for badges (1281px+) */
         @media (min-width: 1400px) {
-          .desktop-badge-1 { top: 18%; left: 11%; }
-          .desktop-badge-2 { top: 18%; left: 32%; }
-          .desktop-badge-3 { top: 22%; left: 50%; }
-          .desktop-badge-4 { bottom: 20%; left: 25%; }
-          .desktop-badge-5 { bottom: 28%; left: 50%; }
+          .desktop-badge-1 { top: 15%; left: 12%; }
+          .desktop-badge-2 { top: 15%; left: 33%; }
+          .desktop-badge-3 { top: 18%; left: 51%; }
+          .desktop-badge-4 { bottom: 16%; left: 25%; }
+          .desktop-badge-5 { bottom: 25%; left: 50%; }
         }
       `}</style>
 

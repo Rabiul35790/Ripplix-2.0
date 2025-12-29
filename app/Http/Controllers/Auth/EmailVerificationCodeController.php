@@ -24,7 +24,7 @@ class EmailVerificationCodeController extends Controller
 
         // Ensure user is fully loaded with fresh data
         $user = Auth::user();
-
+        
         if (!$user) {
             Log::warning('User not found in session during verification show');
             return redirect()->route('login')->withErrors(['error' => 'Session expired. Please login again.']);
@@ -89,13 +89,13 @@ class EmailVerificationCodeController extends Controller
             usleep(100000); // 100ms
 
             return redirect()->route('home')->with('success', 'Email verified successfully!');
-
+            
         } catch (\Exception $e) {
             Log::error('Verification error: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
                 'trace' => $e->getTraceAsString()
             ]);
-
+            
             return back()->withErrors(['code' => 'Verification failed. Please try again.']);
         }
     }
@@ -133,12 +133,12 @@ class EmailVerificationCodeController extends Controller
             $user->notify(new VerificationCodeNotification($code));
 
             return back()->with('status', 'verification-code-sent');
-
+            
         } catch (\Exception $e) {
             Log::error('Resend verification error: ' . $e->getMessage(), [
                 'user_id' => Auth::id()
             ]);
-
+            
             return back()->withErrors(['error' => 'Failed to resend code. Please try again.']);
         }
     }

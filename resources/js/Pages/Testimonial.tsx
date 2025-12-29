@@ -21,68 +21,69 @@ const Testimonials: React.FC<TestimonialsProps> = ({
   const testimonials: Testimonial[] = [
     {
       id: 1,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability tried before was Ripplix transformed our design workflow right on schedule. tried before was Ripplix transformed",
+      text: "Ripplix completely changed the pace of our design flow. What used to feel messy and slow suddenly became smooth and predictable. Within a few days, we were seeing noticeable improvements in collaboration, something we hadn’t been able to achieve before, even after trying multiple tools. Ripplix simply delivered in a way none of our previous attempts ever did.",
       author: "Daniel Patrick",
       role: "UX Motion Lead",
       avatar: "https://i.pravatar.cc/150?img=12"
     },
     {
       id: 2,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability tried before was Ripplix transformed our design workflow right on schedule.tried before was Ripplix transformed",
+      text: "Our team felt the difference almost instantly after switching to Ripplix. The workflow felt lighter, faster, and far more organized. Engagement rose quickly, and cross-team communication stopped feeling like a bottleneck. We had tested several alternatives in the past, but none managed to bring this level of polish and consistency the way Ripplix did.",
       author: "Sarah Chen",
       role: "Creative Director",
       avatar: "https://i.pravatar.cc/150?img=33"
     },
     {
       id: 3,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability tried before was Ripplix transformed tried before was Ripplix transformed",
+      text: "Ripplix brought a refreshing level of clarity to our design system. Tasks that used to require extra discussions became effortless, helping us move almost 50% faster. We had experimented with similar ideas before, but nothing truly stuck until we adopted Ripplix. It felt like the piece we were always missing but didn’t know how to describe.",
       author: "Marcus Johnson",
       role: "Senior Animator",
       avatar: "https://i.pravatar.cc/150?img=25"
     },
     {
       id: 4,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and",
+      text: "The impact Ripplix had on our workflow became obvious right from the beginning. Our team adapted quickly and felt a real boost in engagement within the first few days. It made our collaboration more fluid and removed the friction we had become used to.",
       author: "Emily Rodriguez",
       role: "Product Designer",
       avatar: "https://i.pravatar.cc/150?img=47"
     },
     {
       id: 5,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability to integrate new motion tools we'd never tried before was Ripplix transformed our design workflow right on schedule. tried before was Ripplix transformed tried before was Ripplix transformed tried before was Ripplix transformed",
+      text: "Adopting Ripplix was one of the easiest decisions we’ve made. From day one, our workflow became faster, cleaner, and far more enjoyable. Engagement jumped noticeably, and the way Ripplix blends advanced motion features we never previously used gave our team a fresh sense of creativity. It consistently performed better than every tool we tested before it.",
       author: "Alex Kumar",
       role: "Design Lead",
       avatar: "https://i.pravatar.cc/150?img=58"
     },
     {
       id: 6,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and tried before was Ripplix transformedtried before was Ripplix transformedtried before was Ripplix transformedtried before was Ripplix transformedtried before was Ripplix transformed",
+      text: "Ripplix helped us streamline our entire design cycle without any learning curve. The speed improvements were obvious—our team felt noticeably more productive almost immediately. We had tried several methods to improve our flow in the past, but none managed to deliver concrete results the way Ripplix did across every stage of the process.",
       author: "Jessica Taylor",
       role: "UI/UX Designer",
       avatar: "https://i.pravatar.cc/150?img=68"
     },
     {
       id: 7,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability to integrate new motion 50% boost in engagement and tried before was Ripplix transformed our design workflow right on schedule.tried before was Ripplix transformed our design workflow right on schedule.",
+      text: "The difference Ripplix made to our motion workflow was surprisingly big. Our engagement metrics went up, handoffs became smoother, and the team regained the creative energy we’d been missing. Even the more complex tasks we previously struggled with felt more manageable. No other tool gave us this kind of boost or reliability.",
       author: "Ryan Mitchell",
       role: "Motion Designer",
       avatar: "https://i.pravatar.cc/150?img=15"
     },
     {
       id: 8,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability to integrate new motion tools we'd never tried before was Ripplix transformed ",
+      text: "Ripplix quickly became the tool our creative team relies on the most. Within a few days, everyone noticed how much easier it was to stay aligned during fast-paced projects. The motion features, especially the newer ones we hadn’t used before, added a layer of polish that improved both our speed and our final output.",
       author: "Olivia Brown",
       role: "Art Director",
       avatar: "https://i.pravatar.cc/150?img=32"
     },
     {
       id: 9,
-      text: "Ripplix transformed our design workflow right on schedule. Within days of launch, our team saw a 50% boost in engagement and smoother design handoffs. Their ability to integrate new motion tools we'd never tried before was Ripplix",
+      text: "Our design process improved dramatically after adopting Ripplix. Tasks flowed more naturally, handoffs became predictable, and our team felt more confident experimenting with new ideas. The motion tools alone opened up possibilities we hadn’t explored earlier. It quickly became a core part of our workflow.",
       author: "David Lee",
       role: "Visual Designer",
       avatar: "https://i.pravatar.cc/150?img=41"
     }
   ];
+
 
   return (
     <div className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">

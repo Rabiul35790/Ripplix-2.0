@@ -188,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
   const aboutLinks: MenuItem[] = [
     {
       name: 'Curators',
-      route: 'curators',
+      route: 'about-us',
       icon: User,
       iconBg: 'bg-[#FFDCCC] dark:bg-orange-900/30',
       iconColor: 'text-[#F27E49] dark:text-orange-400'

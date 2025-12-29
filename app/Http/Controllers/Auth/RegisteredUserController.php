@@ -58,10 +58,10 @@ class RegisteredUserController extends Controller
 
                 // Generate verification code within transaction
                 $code = $user->generateVerificationCode();
-
+                
                 // Refresh to ensure we have the latest data
                 $user->refresh();
-
+                
                 return $user;
             });
 
@@ -78,24 +78,24 @@ class RegisteredUserController extends Controller
 
             // Login user with explicit session regeneration
             Auth::login($user, true);
-
+            
             // Explicitly regenerate session and wait
             $request->session()->regenerate();
             $request->session()->save(); // Force session save
-
+            
             // Small delay to ensure session is written
             usleep(50000); // 50ms
 
             // Redirect to verification page
             return redirect()->route('verification.code.show')
                 ->with('status', 'verification-code-sent');
-
+                
         } catch (\Exception $e) {
             Log::error('Registration error: ' . $e->getMessage(), [
                 'email' => $request->email,
                 'trace' => $e->getTraceAsString()
             ]);
-
+            
             return back()->withErrors([
                 'email' => 'Registration failed. Please try again.'
             ])->withInput($request->except('password', 'password_confirmation'));

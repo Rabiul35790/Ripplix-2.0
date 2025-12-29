@@ -522,21 +522,6 @@ return (
     <>
         <Head>
         <title>{library.title}</title>
-        {/* <meta name="seo_title" content={library.seo_title || library.title} />
-        <meta name="description" content={library.meta_description || library.description || 'Explore this resource on Ripplix.'} />
-        <meta property="og:title" content={library.og_title || library.title} />
-        <meta property="og:description" content={library.og_description || library.meta_description || library.description || 'Explore this resource on Ripplix.'} />
-        {library.og_image && <meta property="og:image" content={library.og_image} />}
-        {library.og_type && <meta property="og:type" content={library.og_type} />}
-        {library.canonical_url && <link rel="canonical" href={library.canonical_url} />}
-        {library.keywords && library.keywords.length > 0 && (
-          <meta name="keywords" content={library.keywords.join(', ')} />
-        )}
-        {library.structured_data && (
-          <script type="application/ld+json">
-            {JSON.stringify(library.structured_data)}
-          </script>
-        )} */}
 
         </Head>
       <div
