@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Log;
 class LibraryController extends Controller
 {
     const CACHE_TTL = 1800;
-    const LIBRARIES_PER_PAGE = 18;
+    const LIBRARIES_PER_PAGE = 12;
 
     /**
      * SAFE: Get user plan limits with optional caching

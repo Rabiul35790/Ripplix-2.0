@@ -256,50 +256,96 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
       return { normalLibraries: [], blurredLibraries: [], showLoginPrompt: false };
     }
 
-    const normal = isUserAuthenticated ? libraries : libraries.slice(0, 18);
-    const blurred = isUserAuthenticated ? [] : libraries.slice(15, 18);
+    const normal = isUserAuthenticated ? libraries : libraries.slice(0, 12);
+    const blurred = isUserAuthenticated ? [] : libraries.slice(10, 12);
     const showPrompt = !isUserAuthenticated && blurred.length > 0;
 
     return { normalLibraries: normal, blurredLibraries: blurred, showLoginPrompt: showPrompt };
   }, [libraries, isUserAuthenticated]);
 
-  // Merge libraries with ads at specific positions
+ // Merge libraries with ads at specific positions at 4th and then 11, 21, 31, etc.
   const mergedItems = useMemo(() => {
-    const items: Array<{ type: 'library' | 'ad'; data: Library | InFeedAd; key: string }> = [];
+  const items: Array<{
+    type: 'library' | 'ad';
+    data: Library | InFeedAd;
+    key: string;
+  }> = [];
 
-    if (inFeedAds.length === 0) {
-      normalLibraries.forEach((library) => {
-        items.push({
-          type: 'library',
-          data: library,
-          key: `library-${library.id}`
-        });
-      });
-      return items;
-    }
-
-    let adIndex = 0;
-
-    normalLibraries.forEach((library, index) => {
+  if (inFeedAds.length === 0) {
+    normalLibraries.forEach((library) => {
       items.push({
         type: 'library',
         data: library,
-        key: `library-${library.id}`
+        key: `library-${library.id}`,
       });
+    });
+    return items;
+  }
 
-      if (index >= 3 && (index - 3) % 10 === 0) {
-        const ad = inFeedAds[adIndex % inFeedAds.length];
-        items.push({
-          type: 'ad',
-          data: ad,
-          key: `ad-${index}-${ad.id}-1`
-        });
-        adIndex++;
-      }
+  let adIndex = 0;
+
+  normalLibraries.forEach((library, index) => {
+    items.push({
+      type: 'library',
+      data: library,
+      key: `library-${library.id}`,
     });
 
-    return items;
-  }, [normalLibraries, inFeedAds]);
+    const shouldInsertAd =
+      index === 3 || (index >= 10 && (index - 10) % 10 === 0);
+
+    if (shouldInsertAd) {
+      const ad = inFeedAds[adIndex % inFeedAds.length];
+      items.push({
+        type: 'ad',
+        data: ad,
+        key: `ad-${index}-${ad.id}`,
+      });
+      adIndex++;
+    }
+  });
+
+  return items;
+}, [normalLibraries, inFeedAds]);
+
+
+  // Merge libraries with ads at specific positions at 4th and every 10 thereafter
+//   const mergedItems = useMemo(() => {
+//     const items: Array<{ type: 'library' | 'ad'; data: Library | InFeedAd; key: string }> = [];
+
+//     if (inFeedAds.length === 0) {
+//       normalLibraries.forEach((library) => {
+//         items.push({
+//           type: 'library',
+//           data: library,
+//           key: `library-${library.id}`
+//         });
+//       });
+//       return items;
+//     }
+
+//     let adIndex = 0;
+
+//     normalLibraries.forEach((library, index) => {
+//       items.push({
+//         type: 'library',
+//         data: library,
+//         key: `library-${library.id}`
+//       });
+
+//       if (index >= 3 && (index - 3) % 10 === 0) {
+//         const ad = inFeedAds[adIndex % inFeedAds.length];
+//         items.push({
+//           type: 'ad',
+//           data: ad,
+//           key: `ad-${index}-${ad.id}-1`
+//         });
+//         adIndex++;
+//       }
+//     });
+
+//     return items;
+//   }, [normalLibraries, inFeedAds]);
 
   // IMPROVED: Smoother infinite scroll with debouncing and throttling
   const handleScroll = useCallback(() => {

@@ -12,7 +12,7 @@ interface PaymentModalProps {
     onSuccess: () => void;
 }
 
-const stripePromise = loadStripe('pk_test_51OTP4tD6qTMyeCUdk8wYrXC2lI6KmzRxKerDDHkJbPCKfi6te9CpCDLgegJbe9XauKM7yscXVlzyfOo9mm8rshEd00N7GK7nl2');
+const stripePromise = loadStripe('pk_live_51RCKo72LPf6CMtQj7zrBg48wCz8Cg3rXDqWLn4SDvUCn2m6lnutfJmNimewEbqfAFV4jwbykLpsUdmFtWYVrTXR200O99K8tC3');
 
 const PaymentForm: React.FC<{
     paymentData: PaymentData;
