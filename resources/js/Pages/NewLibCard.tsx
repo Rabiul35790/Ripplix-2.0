@@ -15,6 +15,12 @@ interface Category {
   product_url?: string;
 }
 
+interface Platform {
+  id: number;
+  name: string;
+  slug?: string;
+}
+
 interface UserPlanLimits {
   isFree: boolean;
   maxBoards: number;
@@ -32,7 +38,7 @@ interface Library {
   video_url: string;
   description?: string;
   logo?: string;
-  platforms: Array<{ id: number; name: string }>;
+  platforms: Platform[];
   categories: Category[];
   industries: Array<{ id: number; name: string; slug?: string }>;
   interactions: Array<{ id: number; name: string; slug?: string }>;
@@ -64,6 +70,7 @@ interface LibraryCardProps extends PageProps {
   filterName?: string;
   onStarClick?: (library: Library, isStarred: boolean) => void;
   onLibraryViewed?: (libraryId: number) => void;
+  currentPlatformFilter?: string;
 }
 
 // Image Cache Manager
@@ -215,7 +222,8 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   viewedLibraryIds = [],
   onStarClick,
   onLibraryViewed,
-  auth
+  auth,
+  currentPlatformFilter = 'smartwatch'
 }) => {
   const { props, url: currentUrl } = usePage<PageProps>();
   const authData = auth || props.auth;
@@ -242,16 +250,6 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     triggerOnce: true,
     threshold: 0.1,
   });
-
-  // Get platform type
-  const getPlatformType = (): string => {
-    if (library.platforms.length > 0) {
-      return library.platforms[0].name;
-    }
-    return 'Smartwatch'; // Default
-  };
-
-  const platformType = getPlatformType();
 
   useEffect(() => {
     const categoryImage = getCategoryImage();
@@ -351,6 +349,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
     const previousUrl = window.location.pathname + window.location.search;
     const newUrl = `/library/${library.slug}`;
+
     const isAlreadyInModal = window.location.pathname.startsWith('/library/');
 
     if (!isAlreadyInModal) {
@@ -465,45 +464,17 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
   const getVideoContainerClasses = () => {
     const baseClasses = "relative rounded-lg overflow-hidden bg-transparent cursor-pointer";
-
-    if (platformType === 'Web App' || platformType === 'Website') {
-      if (cardSize === 'large') {
-        return `${baseClasses} sm:aspect-[4/2.7]`;
-      }
-      return `${baseClasses} sm:aspect-[4/2.6]`;
-    }
-
-    if (platformType === 'AR VR') {
-      if (cardSize === 'large') {
-        return `${baseClasses} aspect-[4/2.7]`;
-      }
-      return `${baseClasses} aspect-[4/2.6]`;
-    }
-
-    // Mobile App and Smartwatch (default)
     if (cardSize === 'large') {
-      return `${baseClasses} aspect-[4/2.7]`;
+      return `${baseClasses} aspect-[4/2.4]`;
     }
-    return `${baseClasses} aspect-[4/2.6]`;
+    return `${baseClasses} aspect-[3/2.1]`;
   };
 
-  const getMobilewidthClasses = () => {
+  const getMobileWidthClasses = () => {
     if(cardSize === 'large') {
-        return `sm:w-[30%]`;
+        return `w-[28%]`;
     }
-    return `sm:w-[30%]`;
-  };
-
-  const getbottombuttonposition = () => {
-    return cardSize === 'large' ? 'top-[38%]' : 'top-[42%]';
-  };
-
-  const getmiddlebuttonposition = () => {
-    return cardSize === 'large' ? 'top-[27%]' : 'top-[27%]';
-  };
-
-  const gettopbuttonposition = () => {
-    return cardSize === 'large' ? 'top-[18%]' : 'top-[15%]';
+    return `w-[34%]`;
   };
 
   const getContentPadding = () => {
@@ -546,39 +517,79 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
     return library.categories.length > 0 ? library.categories[0].product_url : null;
   };
 
-  // Render video content based on platform type
-  const renderVideoContent = () => {
+  // Render video based on platform
+  const renderVideoContainer = () => {
     if (!inView || !library.video_url) return null;
 
-    // Web App / Website
-    if (platformType === 'Web App' || platformType === 'Website') {
+    const platformSlug = currentPlatformFilter?.toLowerCase().trim();
+
+    console.log('🔍 Current Platform Filter:', platformSlug); // Debug log
+
+    // Mobile App
+    if (platformSlug === 'mobile-app' || platformSlug === 'mobile_app' || platformSlug === 'mobile app') {
       return (
-        <div className="w-full h-full bg-[#f1f1f1] flex items-center justify-center overflow-hidden">
-          <div className="w-[85%] h-[80%] flex flex-col rounded-xl overflow-hidden border border-[#c0c0c0]">
-            {/* Safari Top Bar */}
+        <div className="w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <div className="relative">
+            <div className="absolute inset-0 -z-10 bg-black/30 blur-2xl rounded-[2.5rem] translate-y-5 scale-[0.95]" />
+          </div>
+
+          <div className={`${getMobileWidthClasses()} relative h-[95%] rounded-[1.5rem] p-[4px] bg-gradient-to-b from-[#2c2c2c] via-[#121212] to-black shadow-[0_35px_70px_-20px_rgba(0,0,0,0.5)]`}>
+            <div className="relative w-full h-full rounded-[1.2rem] bg-gray-700 p-[2px]">
+              <div className="relative w-full h-full bg-black rounded-[1.05rem] overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-white/5 via-transparent to-white/10 z-10" />
+
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[33%] h-[12px] bg-black rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.08)] z-20" />
+
+                <video
+                  ref={videoRef}
+                  src={library.video_url}
+                  className={`w-full h-full object-cover scale-x-[1.1] scale-y-[1.12] transition-all duration-500 ${
+                    isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
+                  }`}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  onLoadedData={handleVideoLoad}
+                />
+              </div>
+            </div>
+
+            <span className="absolute left-[-2px] top-[20%] w-[2px] h-6 bg-gradient-to-b from-gray-400 to-gray-700 rounded-full shadow-md"></span>
+            <span className="absolute left-[-2px] top-[30%] w-[2px] h-10 bg-gradient-to-b from-gray-400 to-gray-700 rounded-full shadow-md"></span>
+            <span className="absolute right-[-2px] top-[25%] w-[2px] h-16 bg-gradient-to-b from-gray-400 to-gray-700 rounded-full shadow-md"></span>
+          </div>
+        </div>
+      );
+    }
+
+    // Website or Web App
+    if (platformSlug === 'website' || platformSlug === 'web-app' || platformSlug === 'web_app' || platformSlug === 'web app') {
+      return (
+        <div className="w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <div className="w-[85%] h-[80%] flex flex-col rounded-3xl overflow-hidden">
             <div className="h-9 bg-[#f6f6f8] flex items-center px-3 gap-3 border-b">
-              {/* Traffic Lights */}
               <div className="flex gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
               </div>
-              {/* Address Bar */}
+
               <div className="flex-1 flex justify-center">
                 <div className="w-[60%] h-6 bg-white rounded-md text-[11px] text-gray-500 flex items-center justify-center border">
                   {getCategoryProductUrl()}
                 </div>
               </div>
             </div>
-            {/* Video */}
+
             <div className="flex-1 bg-transparent overflow-hidden">
               <video
                 ref={videoRef}
                 src={library.video_url}
-                className={`w-full h-full object-cover scale-x-[1.13] scale-y-[1.4]
-                  transition-all duration-500 ${
-                    isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
-                  }`}
+                className={`w-full h-full object-cover scale-x-[1.1] scale-y-[1.12] transition-all duration-500 ${
+                  isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
+                }`}
                 autoPlay
                 muted
                 loop
@@ -592,85 +603,15 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
       );
     }
 
-    // Mobile App
-    if (platformType === 'Mobile App') {
-      return (
-        <div className="w-full h-full bg-[#f1f1f1] flex items-center justify-center overflow-hidden">
-          {/* Ambient + Ground Shadow */}
-          <div className="relative">
-            <div className="absolute inset-0 -z-10
-              bg-black/30 blur-2xl rounded-[2.5rem]
-              translate-y-6 scale-[0.95]" />
-          </div>
-          {/* iPhone Body */}
-          <div className={`w-[34%] ${getMobilewidthClasses()} relative h-[98%] sm:h-[90%]
-            rounded-[1.8rem] p-[4px]
-            bg-gradient-to-b from-[#2c2c2c] via-[#121212] to-black
-            shadow-[0_35px_70px_-20px_rgba(0,0,0,0.5)]
-          `}>
-            {/* Metal Edge */}
-            <div className="relative w-full h-full rounded-[1.4rem]
-               bg-gray-700 p-[2px]">
-              {/* Screen */}
-              <div className="relative w-full h-full bg-black rounded-[1.4rem] overflow-hidden">
-                {/* Glass Reflection */}
-                <div className="absolute inset-0 pointer-events-none
-                  bg-gradient-to-tr from-white/5 via-transparent to-white/10
-                  z-10" />
-                {/* Dynamic Island */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2
-                  w-[33%] h-[12px]
-                  bg-black rounded-full
-                  shadow-[inset_0_1px_2px_rgba(255,255,255,0.08)]
-                  z-20" />
-                {/* Video */}
-                <video
-                  ref={videoRef}
-                  src={library.video_url}
-                  className={`w-full h-full object-cover scale-x-[1.1] scale-y-[1.13]
-                    transition-all duration-500 ${
-                      isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
-                    }`}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  onLoadedData={handleVideoLoad}
-                />
-              </div>
-            </div>
-            {/* Side Buttons */}
-            <span className={`absolute left-[-1px] sm:left-[-2px]
-              w-[1px] sm:w-[2px] ${gettopbuttonposition()} h-4 sm:h-6 bg-[#1B0D0A]
-              rounded-full shadow-md`}></span>
-            <span className={`absolute left-[-1px] sm:left-[-2px] ${getmiddlebuttonposition()} rounded-l
-              w-[1px] sm:w-[2px] h-5 sm:h-10 bg-[#1B0D0A]
-              rounded-full shadow-md`}></span>
-            <span className={`absolute left-[-1px] sm:left-[-2px] ${getbottombuttonposition()}
-              w-[1px] sm:w-[2px] h-5 sm:h-10 bg-[#1B0D0A]
-              rounded-full shadow-md`}></span>
-            <span className="absolute right-[-1px] sm:right-[-2px] top-[25%]
-              w-[1px] sm:w-[2px] h-[40px] sm:h-[66px] bg-[#1B0D0A]
-              rounded-full shadow-md"></span>
-          </div>
-        </div>
-      );
-    }
-
     // AR VR
-    if (platformType === 'AR VR') {
+    if (platformSlug === 'ar-vr' || platformSlug === 'ar_vr' || platformSlug === 'ar vr' || platformSlug === 'arvr') {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-[#f1f1f1] overflow-hidden relative">
-          {/* VIDEO WITH MASK */}
+        <div className="w-full h-full flex items-center justify-center bg-white overflow-hidden relative">
           <div className="w-[95%] h-[95%] vr-mask overflow-hidden relative">
             <video
               ref={videoRef}
               src={library.video_url}
-              className={`w-full h-full object-cover
-                scale-x-[1.15] scale-y-[1.2]
-                transition-all duration-500
-                ${isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'}`}
+              className={`w-full h-full object-cover scale-x-[1.15] scale-y-[1.2] transition-all duration-500 ${isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'}`}
               autoPlay
               muted
               loop
@@ -678,28 +619,15 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               preload="metadata"
               onLoadedData={handleVideoLoad}
             />
-            {/* BORDER OVERLAY */}
+
             <svg
-              className="absolute inset-0 w-full h-full pointer-events-none"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none"
               viewBox="0 0 1000 600"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="
-                  M921.644 0.03
-                  C964.52 -1.29 1000 26.8 1000 61.4
-                  V538.4
-                  C1000 574.1 962.138 602.2 917.902 599.3
-                  L505.47 572.3
-                  C501.408 572.0 497.324 572.0 493.262 572.3
-                  L82.113 599.2
-                  C37.873 602.1 0.0004 574.1 0 538.3
-                  V61.4
-                  C0.0003 26.8 35.48 -1.29 78.356 0.03
-                  L499.918 10.6
-                  L921.644 0.03
-                  Z"
+                d="M40,20 L480,40 L520,40 L960,20 A20,20 0 0 1 980,40 L980,560 A20,20 0 0 1 960,580 L520,560 L480,560 L40,580 A20,20 0 0 1 20,560 L20,40 A20,20 0 0 1 40,20 Z"
                 stroke="#595959"
                 strokeWidth="20"
                 fill="transparent"
@@ -710,28 +638,21 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
       );
     }
 
-    // Smartwatch (default)
+    // Default: Smartwatch
     return (
-      <>
-        <video
-          ref={videoRef}
-          src={library.video_url}
-          className={`w-full h-full object-cover transition-all duration-500 ${
-            isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
-          }`}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          onLoadedData={handleVideoLoad}
-        />
-        {isNewLibrary() && (
-          <div className="absolute top-3 right-3 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
-            New
-          </div>
-        )}
-      </>
+      <video
+        ref={videoRef}
+        src={library.video_url}
+        className={`w-full h-full object-cover transition-all duration-500 ${
+          isVideoLoaded ? 'opacity-100 blur-0' : 'opacity-100 blur-md'
+        }`}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        onLoadedData={handleVideoLoad}
+      />
     );
   };
 
@@ -745,10 +666,16 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
 
         <div className="relative z-[8]">
           <div
-            className={`${getVideoContainerClasses()} ${platformType === 'Web App' || platformType === 'Website' ? 'aspect-[3/2]' : ''}`}
+            className={`${getVideoContainerClasses()}`}
             onClick={handleVideoClick}
           >
-            {renderVideoContent()}
+            {renderVideoContainer()}
+
+            {isNewLibrary() && (
+              <div className="absolute top-3 right-3 bg-[#2B235A] text-white px-3 py-1 rounded-full text-xs font-semibold tracking-wide">
+                New
+              </div>
+            )}
           </div>
 
           <div className={getContentPadding()}>
@@ -801,7 +728,8 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
                       {library.interactions.slice(0, 2).map((interaction, index) => (
                         <span
                           key={interaction.id}
-                          className={`font-sora ${cardSize === 'large' ? 'text-base' : 'text-sm'
+                          className={`font-sora ${
+                            cardSize === 'large' ? 'text-base' : 'text-sm'
                           }`}
                         >
                           <Link
