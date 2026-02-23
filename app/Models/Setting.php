@@ -26,6 +26,7 @@ class Setting extends Model
         'phones',
         'addresses',
         'social_media',
+        'seo_settings',
         'maintenance_mode',
         'maintenance_message',
     ];
@@ -35,6 +36,7 @@ class Setting extends Model
         'emails' => 'array',
         'phones' => 'array',
         'addresses' => 'array',
+        'seo_settings' => 'array',
         'maintenance_mode' => 'boolean',
     ];
 
@@ -53,6 +55,7 @@ class Setting extends Model
                 'phones' => [],
                 'addresses' => [],
                 'social_media' => [],
+                'seo_settings' => [],
             ]);
         }
 

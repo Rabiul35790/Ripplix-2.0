@@ -138,6 +138,8 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(!!initialSelectedLibrary);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
     if (pathMatch) {
@@ -149,7 +151,7 @@ const SharedBoard: React.FC<SharedBoardProps> = ({
       setIsModalOpen(false);
       setModalLibrary(null);
     }
-  }, [window.location.pathname]);
+  }, [url, modalLibrary, isModalOpen]);
 
   const fetchLibraryForModal = async (slug: string) => {
     try {

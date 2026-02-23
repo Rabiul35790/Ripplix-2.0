@@ -15,3 +15,9 @@ declare global {
 declare module '@inertiajs/core' {
     interface PageProps extends InertiaPageProps, AppPageProps {}
 }
+
+declare module 'react' {
+    interface ImgHTMLAttributes<T> {
+        fetchpriority?: 'high' | 'low' | 'auto';
+    }
+}

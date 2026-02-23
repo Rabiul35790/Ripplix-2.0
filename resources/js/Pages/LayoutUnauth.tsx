@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import SeoHead from '@/Components/SeoHead';
 import Sidebar2 from './Sidebar2';
 import Header2 from './Header2';
 import HeroSection from '../Components/HeroSection';
@@ -200,6 +201,7 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
 
   return (
     <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F8F8F9] dark:bg-gray-900">
+      <SeoHead />
 
       {/* Full Width Header - Sticky */}
       <div id="main-header" className="sticky top-0 z-50 bg-white dark:bg-gray-900 w-full">

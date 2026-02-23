@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import SeoHead from '@/Components/SeoHead';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -75,6 +76,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F8F8F9] dark:bg-gray-900">
+      <SeoHead />
       <Sidebar
         currentRoute={currentRoute}
         auth={authData}

@@ -102,6 +102,45 @@ class EditSetting extends EditRecord
             $data['addresses'] = $addresses;
         }
 
+        // Clean up SEO settings profiles
+        if (isset($data['seo_settings'])) {
+            $seoProfiles = [];
+
+            foreach ($data['seo_settings'] as $profile) {
+                $pageKey = $profile['page_key'] ?? null;
+                $customPageKey = trim($profile['custom_page_key'] ?? '');
+
+                if ($pageKey === 'custom' && $customPageKey !== '') {
+                    $pageKey = $customPageKey;
+                }
+
+                if (!$pageKey) {
+                    continue;
+                }
+
+                $seoProfiles[] = [
+                    'page_key' => $pageKey,
+                    'title' => trim($profile['title'] ?? ''),
+                    'description' => trim($profile['description'] ?? ''),
+                    'canonical_url' => trim($profile['canonical_url'] ?? ''),
+                    'og_title' => trim($profile['og_title'] ?? ''),
+                    'og_description' => trim($profile['og_description'] ?? ''),
+                    'og_image' => trim($profile['og_image'] ?? ''),
+                    'og_type' => trim($profile['og_type'] ?? 'website'),
+                    'og_url' => trim($profile['og_url'] ?? ''),
+                    'og_site_name' => trim($profile['og_site_name'] ?? ''),
+                    'twitter_card' => trim($profile['twitter_card'] ?? 'summary_large_image'),
+                    'twitter_url' => trim($profile['twitter_url'] ?? ''),
+                    'twitter_title' => trim($profile['twitter_title'] ?? ''),
+                    'twitter_description' => trim($profile['twitter_description'] ?? ''),
+                    'twitter_image' => trim($profile['twitter_image'] ?? ''),
+                    'notes' => trim($profile['notes'] ?? ''),
+                ];
+            }
+
+            $data['seo_settings'] = $seoProfiles;
+        }
+
         return $data;
     }
 }

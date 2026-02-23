@@ -293,6 +293,116 @@ class SettingResource extends Resource
                             ->placeholder('We are currently performing scheduled maintenance. Please check back soon.')
                             ->visible(fn (Forms\Get $get) => $get('maintenance_mode')),
                     ]),
+
+                Section::make('SEO Settings')
+                    ->description('Configure default and per-page SEO tags used by the frontend.')
+                    ->schema([
+                        Repeater::make('seo_settings')
+                            ->label('SEO Profiles')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        Select::make('page_key')
+                                            ->label('Page Key')
+                                            ->options([
+                                                'global' => 'Global Default (Fallback)',
+                                                'Home' => 'Home',
+                                                'Browse' => 'Browse',
+                                                'BlogShow' => 'Blog Detail',
+                                                'LegalShow' => 'Legal Detail',
+                                                'AllApps' => 'All Apps',
+                                                'AllCategories' => 'All Categories',
+                                                'AllElements' => 'All Elements',
+                                                'SearchResults' => 'Search Results',
+                                                'Following' => 'Following',
+                                                'Collections' => 'Collections',
+                                                'ContactUs' => 'Contact',
+                                                'SponsorUs' => 'Sponsor',
+                                                'PaymentManagement' => 'Payment Management',
+                                                'Dashboard' => 'Dashboard',
+                                                'custom' => 'Custom Page Key',
+                                            ])
+                                            ->searchable()
+                                            ->required(),
+
+                                        TextInput::make('custom_page_key')
+                                            ->label('Custom Page Key')
+                                            ->placeholder('Example: Auth/Login')
+                                            ->visible(fn (Forms\Get $get) => $get('page_key') === 'custom'),
+                                    ]),
+
+                                TextInput::make('title')
+                                    ->label('Meta Title')
+                                    ->maxLength(255)
+                                    ->placeholder('Page title'),
+
+                                Textarea::make('description')
+                                    ->label('Meta Description')
+                                    ->rows(2)
+                                    ->maxLength(500),
+
+                                TextInput::make('canonical_url')
+                                    ->label('Canonical URL (optional)')
+                                    ->placeholder('https://www.ripplix.com/browse'),
+
+                                Grid::make(2)
+                                    ->schema([
+                                        TextInput::make('og_title')
+                                            ->label('OG Title')
+                                            ->maxLength(255),
+                                        TextInput::make('og_type')
+                                            ->label('OG Type')
+                                            ->default('website')
+                                            ->maxLength(50),
+                                        Textarea::make('og_description')
+                                            ->label('OG Description')
+                                            ->rows(2)
+                                            ->maxLength(500),
+                                        TextInput::make('og_image')
+                                            ->label('OG Image URL')
+                                            ->placeholder('https://www.ripplix.com/images/og/og-default.png'),
+                                        TextInput::make('og_url')
+                                            ->label('OG URL (optional)'),
+                                        TextInput::make('og_site_name')
+                                            ->label('OG Site Name')
+                                            ->maxLength(100),
+                                    ]),
+
+                                Grid::make(2)
+                                    ->schema([
+                                        Select::make('twitter_card')
+                                            ->label('Twitter Card')
+                                            ->options([
+                                                'summary' => 'summary',
+                                                'summary_large_image' => 'summary_large_image',
+                                            ])
+                                            ->default('summary_large_image'),
+                                        TextInput::make('twitter_url')
+                                            ->label('Twitter URL (optional)'),
+                                        TextInput::make('twitter_title')
+                                            ->label('Twitter Title')
+                                            ->maxLength(255),
+                                        Textarea::make('twitter_description')
+                                            ->label('Twitter Description')
+                                            ->rows(2)
+                                            ->maxLength(500),
+                                        TextInput::make('twitter_image')
+                                            ->label('Twitter Image URL'),
+                                    ]),
+
+                                Textarea::make('notes')
+                                    ->label('Notes')
+                                    ->rows(2)
+                                    ->maxLength(300)
+                                    ->helperText('Optional internal notes for this profile.'),
+                            ])
+                            ->collapsible()
+                            ->cloneable()
+                            ->reorderable()
+                            ->defaultItems(0)
+                            ->addActionLabel('Add SEO Profile')
+                            ->helperText('Supported placeholders: {url}, {siteName}, {filterName}, {blogTitle}, {legalTitle}.'),
+                    ]),
             ]);
     }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import SeoHead from '@/Components/SeoHead';
 import BlogHeader from './BlogHeader';
 
 interface Filter {
@@ -61,6 +62,7 @@ const BlogLayout: React.FC<BlogLayoutProps> = ({
 
   return (
     <div className="min-h-screen max-w-[1920px] mx-auto bg-[#F9F5FF] dark:bg-gray-900">
+      <SeoHead />
       <BlogHeader
         auth={authData}
         filters={filters}

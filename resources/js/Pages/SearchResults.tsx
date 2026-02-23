@@ -138,6 +138,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   // UPDATED: Check URL for library modal - now checks path instead of query parameter
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Check if URL matches /library/{slug} pattern
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
@@ -151,7 +153,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       setIsModalOpen(false);
       setModalLibrary(null);
     }
-  }, [window.location.pathname]);
+  }, [url, modalLibrary, isModalOpen]);
 
   // Function to fetch library data for modal
   const fetchLibraryForModal = async (slug: string) => {

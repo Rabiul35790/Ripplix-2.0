@@ -10,14 +10,13 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import CookieManager from './Pages/CookieManager';
 import { analytics } from './services/analytics';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 const token = document.head.querySelector('meta[name="csrf-token"]');
 
 // Initialize analytics when app starts
 analytics.initialize();
 
 createInertiaApp({
-    title: (title) => `${appName} - ${title}`,
+    title: (title) => title,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.tsx`,

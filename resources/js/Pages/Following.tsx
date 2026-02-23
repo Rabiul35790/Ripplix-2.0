@@ -235,6 +235,8 @@ const Following: React.FC<FollowingProps> = ({
 
   // Check URL for library modal
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
     if (pathMatch) {
@@ -246,7 +248,7 @@ const Following: React.FC<FollowingProps> = ({
       setIsModalOpen(false);
       setModalLibrary(null);
     }
-  }, [window.location.pathname]);
+  }, [url, modalLibrary, isModalOpen]);
 
   const fetchLibraryForModal = async (slug: string) => {
     try {

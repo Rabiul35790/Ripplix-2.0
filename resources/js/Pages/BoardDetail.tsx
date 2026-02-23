@@ -151,6 +151,8 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
 
   // UPDATED: Check URL for library modal - now checks path instead of query parameter
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Check if URL matches /library/{slug} pattern
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
@@ -164,7 +166,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
       setIsModalOpen(false);
       setModalLibrary(null);
     }
-  }, [window.location.pathname]);
+  }, [url, modalLibrary, isModalOpen]);
 
   // Function to fetch library data for modal
   const fetchLibraryForModal = async (slug: string) => {

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight, Copy, Heart, Phone, Link2, Check, ArrowRight, ArrowLeft, X } from 'lucide-react';
-import { router, Link, usePage, Head } from '@inertiajs/react';
+import { router, Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
 import MembershipModal from './Website/Components/MembershipModal';
@@ -49,7 +49,7 @@ interface Library {
   focus_keyword?: string;
   keywords?: string[];
   canonical_url?: string;
-  structured_data?: object;
+  structured_data?: object | string;
   platforms: Array<{ id: number; name: string; slug?: string }>;
   categories: Category[];
   industries: Array<{ id: number; name: string; slug?: string }>;
@@ -535,10 +535,6 @@ const handleSuggestedLibraryClick = (suggestedLibrary: Library) => {
 
 return (
     <>
-        <Head>
-        <title>{library.title}</title>
-
-        </Head>
       <div
         className="fixed inset-0 transition-opacity bg-[#EBEBEB59] bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4"
         onClick={handleBackdropClick}

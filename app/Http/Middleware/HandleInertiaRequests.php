@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy as ZiggyZiggy;
@@ -52,7 +53,14 @@ class HandleInertiaRequests extends Middleware
                     'success' => $request->session()->get('success'),
                 ];
             },
+            'seoSettings' => function () {
+                $settings = Setting::first();
+
+                return [
+                    'site_name' => $settings?->site_name,
+                    'seo_settings' => $settings?->seo_settings ?? [],
+                ];
+            },
         ]);
     }
 }
-

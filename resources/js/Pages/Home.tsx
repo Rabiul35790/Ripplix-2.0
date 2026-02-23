@@ -250,6 +250,8 @@ const Home: React.FC<HomeProps> = ({
 
   // Check URL for library modal
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const pathMatch = window.location.pathname.match(/^\/library\/([^/]+)$/);
 
     if (pathMatch) {
@@ -261,7 +263,7 @@ const Home: React.FC<HomeProps> = ({
       setIsModalOpen(false);
       setModalLibrary(null);
     }
-  }, [window.location.pathname]);
+  }, [url, modalLibrary, isModalOpen]);
 
 
 
