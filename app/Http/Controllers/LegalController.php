@@ -9,6 +9,7 @@ use App\Models\Industry;
 use App\Models\Interaction;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class LegalController extends Controller
@@ -37,19 +38,14 @@ class LegalController extends Controller
             return null;
         }
 
-        if ($user->pricingPlan) {
-            return [
-                'id' => $user->pricingPlan->id,
-                'name' => $user->pricingPlan->name,
-                'slug' => $user->pricingPlan->slug ?? null,
-                'price' => $user->pricingPlan->price ?? 0,
-                'billing_period' => $user->pricingPlan->billing_period ?? 'monthly',
-                'expires_at' => $user->subscription_ends_at ?? null,
-                'days_until_expiry' => $user->daysUntilExpiry(),
-            ];
+        try {
+            return Cache::remember("user_current_plan_{$user->id}", 300, function() use ($user) {
+                return $user->getCurrentPlan();
+            });
+        } catch (\Exception $e) {
+            // Fallback without cache if error
+            return $user->getCurrentPlan();
         }
-
-        return null;
     }
 
     public function privacy(Request $request)

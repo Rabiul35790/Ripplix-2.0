@@ -68,7 +68,7 @@ class LibraryResource extends Resource
                             ->helperText('Main video URL where the video is stored'),
 
                         Forms\Components\Textarea::make('description')
-                            ->maxLength(1000)
+                            ->maxLength(1500)
                             ->rows(3),
 
                         Forms\Components\FileUpload::make('logo')
@@ -386,6 +386,9 @@ class LibraryResource extends Resource
                     ->separator(','),
 
                 Tables\Columns\TextColumn::make('industries.name')
+                    ->badge()
+                    ->separator(','),
+                Tables\Columns\TextColumn::make('interactions.name')
                     ->badge()
                     ->separator(','),
 
@@ -730,6 +733,168 @@ class LibraryResource extends Resource
         ->modalSubmitActionLabel('Import'),
 ])
             ->bulkActions([
+                Tables\Actions\BulkAction::make('bulk_assign_platforms')
+                    ->label('Assign Platforms')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\Select::make('platforms')
+                            ->label('Select Platforms')
+                            ->options(Platform::pluck('name', 'id'))
+                            ->multiple()
+                            ->required()
+                            ->preload()
+                            ->searchable()
+                            ->helperText('Select one or more platforms to assign to the selected libraries.'),
+
+                        Forms\Components\Radio::make('action_type')
+                            ->label('Action Type')
+                            ->options([
+                                'add' => 'Add to existing platforms',
+                                'replace' => 'Replace existing platforms',
+                            ])
+                            ->default('add')
+                            ->required()
+                            ->helperText('Choose whether to add these platforms to existing ones or replace them entirely.'),
+                    ])
+                    ->action(function ($records, array $data) {
+                        $platformIds = $data['platforms'];
+                        $actionType = $data['action_type'];
+                        $count = 0;
+
+                        foreach ($records as $record) {
+                            if ($actionType === 'replace') {
+                                // Replace: Sync will remove old platforms and add new ones
+                                $record->platforms()->sync($platformIds);
+                            } else {
+                                // Add: Attach will add new platforms without removing existing ones
+                                $record->platforms()->syncWithoutDetaching($platformIds);
+                            }
+                            $count++;
+                        }
+
+                        $platformNames = Platform::whereIn('id', $platformIds)->pluck('name')->implode(', ');
+                        $action = $actionType === 'replace' ? 'replaced with' : 'added to';
+
+                        Notification::make()
+                            ->title('Platforms Assigned Successfully')
+                            ->body("{$count} libraries have been {$action}: {$platformNames}")
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion()
+                    ->modalHeading('Bulk Assign Platforms')
+                    ->modalDescription('Assign platforms to multiple libraries at once.')
+                    ->modalSubmitActionLabel('Assign Platforms'),
+
+                Tables\Actions\BulkAction::make('bulk_assign_category')
+                    ->label('Assign Category')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\Select::make('categories')
+                            ->label('Select Categories')
+                            ->options(Category::pluck('name', 'id'))
+                            ->multiple()
+                            ->required()
+                            ->preload()
+                            ->searchable()
+                            ->helperText('Select one or more categories to assign to the selected libraries.'),
+
+                        Forms\Components\Radio::make('action_type')
+                            ->label('Action Type')
+                            ->options([
+                                'add' => 'Add to existing category',
+                                'replace' => 'Replace existing category',
+                            ])
+                            ->default('add')
+                            ->required()
+                            ->helperText('Choose whether to add these category to existing ones or replace them entirely.'),
+                    ])
+                    ->action(function ($records, array $data) {
+                        $categoryIds = $data['categories'];
+                        $actionType = $data['action_type'];
+                        $count = 0;
+
+                        foreach ($records as $record) {
+                            if ($actionType === 'replace') {
+                                // Replace: Sync will remove old platforms and add new ones
+                                $record->categories()->sync($categoryIds);
+                            } else {
+                                // Add: Attach will add new platforms without removing existing ones
+                                $record->categories()->syncWithoutDetaching($categoryIds);
+                            }
+                            $count++;
+                        }
+
+                        $categoryNames = Category::whereIn('id', $categoryIds)->pluck('name')->implode(', ');
+                        $action = $actionType === 'replace' ? 'replaced with' : 'added to';
+
+                        Notification::make()
+                            ->title('Categories Assigned Successfully')
+                            ->body("{$count} libraries have been {$action}: {$categoryNames}")
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion()
+                    ->modalHeading('Bulk Assign Categories')
+                    ->modalDescription('Assign categories to multiple libraries at once.')
+                    ->modalSubmitActionLabel('Assign Categories'),
+
+                Tables\Actions\BulkAction::make('bulk_assign_interaction')
+                    ->label('Assign Interaction')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\Select::make('interactions')
+                            ->label('Select Interactions')
+                            ->options(Interaction::pluck('name', 'id'))
+                            ->multiple()
+                            ->required()
+                            ->preload()
+                            ->searchable()
+                            ->helperText('Select one or more interactions to assign to the selected libraries.'),
+
+                        Forms\Components\Radio::make('action_type')
+                            ->label('Action Type')
+                            ->options([
+                                'add' => 'Add to existing interaction',
+                                'replace' => 'Replace existing interaction',
+                            ])
+                            ->default('add')
+                            ->required()
+                            ->helperText('Choose whether to add these interaction to existing ones or replace them entirely.'),
+                    ])
+                    ->action(function ($records, array $data) {
+                        $interactionIds = $data['interactions'];
+                        $actionType = $data['action_type'];
+                        $count = 0;
+
+                        foreach ($records as $record) {
+                            if ($actionType === 'replace') {
+                                // Replace: Sync will remove old platforms and add new ones
+                                $record->interactions()->sync($interactionIds);
+                            } else {
+                                // Add: Attach will add new platforms without removing existing ones
+                                $record->interactions()->syncWithoutDetaching($interactionIds);
+                            }
+                            $count++;
+                        }
+
+                        $interactionNames = Interaction::whereIn('id', $interactionIds)->pluck('name')->implode(', ');
+                        $action = $actionType === 'replace' ? 'replaced with' : 'added to';
+
+                        Notification::make()
+                            ->title('Interactions Assigned Successfully')
+                            ->body("{$count} libraries have been {$action}: {$interactionNames}")
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion()
+                    ->modalHeading('Bulk Assign Interactions')
+                    ->modalDescription('Assign interactions to multiple libraries at once.')
+                    ->modalSubmitActionLabel('Assign Interactions'),
+
                 Tables\Actions\BulkAction::make('update_seo_scores')
                     ->label('Update SEO Scores')
                     ->icon('heroicon-o-arrow-path')
@@ -839,76 +1004,100 @@ public static function exportLibrariesByDateRange($startDate, $endDate)
 
 
 
- public static function exportLibrariesAsJson($startDate, $endDate)
-    {
-        try {
-            $libraries = Library::with(['categories', 'platforms', 'industries', 'interactions'])
-                ->whereDate('published_date', '>=', $startDate)
-                ->whereDate('published_date', '<=', $endDate)
-                ->orderBy('published_date', 'desc')
-                ->get();
+public static function exportLibrariesAsJson($startDate, $endDate)
+{
+    try {
+        $libraries = Library::with(['categories', 'platforms', 'industries', 'interactions'])
+            ->whereDate('published_date', '>=', $startDate)
+            ->whereDate('published_date', '<=', $endDate)
+            ->orderBy('published_date', 'desc')
+            ->get();
 
-            if ($libraries->isEmpty()) {
-                Notification::make()
-                    ->title('No Data Found')
-                    ->body('No libraries found within the selected date range.')
-                    ->warning()
-                    ->send();
-                return null;
-            }
-
-            // Transform libraries to match API format
-            $animations = $libraries->map(function ($library) {
-                // Get first category (product)
-                $firstCategory = $library->categories->first();
-
-                // Get first platform
-                $firstPlatform = $library->platforms->first();
-
-                // Get first industry
-                $firstIndustry = $library->industries->first();
-
-                // Get all interactions as array
-                $interactions = $library->interactions->pluck('name')->toArray();
-
-                return [
-                    'id' => $library->external_id,
-                    'published_date' => $library->published_date?->format('Y-m-d'),
-                    'title' => $library->title,
-                    'url' => $library->url,
-                    'video_url' => $library->video_url,
-                    'product' => $firstCategory?->name ?? '',
-                    'product_logo' => $firstCategory?->image ?? '',
-                    'product_link' => $firstCategory?->product_url ?? '', // NEW: Export product_url as product_link
-                    'platform' => $firstPlatform?->name ?? '',
-                    'industry' => $firstIndustry?->name ?? '',
-                    'interaction' => $interactions,
-                    'logo' => $library->logo
-                ];
-            });
-
-            $jsonData = [
-                'animations' => $animations
-            ];
-
-            $filename = 'libraries_' . $startDate . '_to_' . $endDate . '.json';
-
-            $json = json_encode($jsonData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
-            return response()->streamDownload(function() use ($json) {
-                echo $json;
-            }, $filename, [
-                'Content-Type' => 'application/json',
-            ]);
-        } catch (\Exception $e) {
+        if ($libraries->isEmpty()) {
             Notification::make()
-                ->title('Export Failed')
-                ->body($e->getMessage())
-                ->danger()
+                ->title('No Data Found')
+                ->body('No libraries found within the selected date range.')
+                ->warning()
                 ->send();
             return null;
         }
+
+        // Transform libraries to match API format
+        $animations = $libraries->map(function ($library) {
+            // Get first category (product)
+            $firstCategory = $library->categories->first();
+
+            // Get first platform
+            $firstPlatform = $library->platforms->first();
+
+            // Get first industry
+            $firstIndustry = $library->industries->first();
+
+            // Get all interactions as array
+            $interactions = $library->interactions->pluck('name')->toArray();
+
+            return [
+                'id' => $library->external_id,
+                'published_date' => $library->published_date?->format('Y-m-d'),
+                'title' => $library->title,
+                'slug' => $library->slug,
+                'url' => $library->url,
+                'video_url' => $library->video_url,
+
+                'product' => $firstCategory?->name ?? '',
+                'product_logo' => $firstCategory?->image ?? '',
+                'product_link' => $firstCategory?->product_url ?? '',
+
+                'platform' => $firstPlatform?->name ?? '',
+                'industry' => $firstIndustry?->name ?? '',
+                'interaction' => $interactions,
+
+                'description' => $library->description,
+                'keywords' => $library->keywords,
+                'focus_keyword' => $library->focus_keyword,
+
+                'logo' => $library->logo,
+                'video_alt_text' => $library->video_alt_text,
+
+                'meta_description' => $library->meta_description,
+                'seo_title' => $library->seo_title,
+
+                'og_title' => $library->og_title,
+                'og_description' => $library->og_description,
+                'og_image' => $library->og_image,
+                'og_type' => $library->og_type,
+
+                'structured_data' => $library->structured_data,
+            ];
+        });
+
+        $jsonData = [
+            'animations' => $animations
+        ];
+
+        $filename = 'libraries_' . $startDate . '_to_' . $endDate . '.json';
+
+        $json = json_encode(
+            $jsonData,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+
+        return response()->streamDownload(function () use ($json) {
+            echo $json;
+        }, $filename, [
+            'Content-Type' => 'application/json',
+        ]);
+    } catch (\Exception $e) {
+        Notification::make()
+            ->title('Export Failed')
+            ->body($e->getMessage())
+            ->danger()
+            ->send();
+        return null;
     }
+}
+
+
 
     public static function getPages(): array
     {

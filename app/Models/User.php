@@ -16,11 +16,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Cache;
-
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasRoles, HasApiTokens;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens, Billable;
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -40,6 +40,12 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'trial_taken',
         'verification_code',
         'verification_code_expires_at',
+        'subscription_plan_id',
+        'auto_renew',
+        'stripe_id',
+        'pm_type',
+        'pm_last_four',
+        'trial_ends_at',
     ];
 
     protected $hidden = [
@@ -57,6 +63,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'plan_expires_at' => 'datetime',
             'trial_taken' => 'boolean',
             'verification_code_expires_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
+            'auto_renew' => 'boolean',
         ];
     }
 
@@ -210,24 +218,64 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
     // NEW: Get Plan Limits Array (for easy frontend consumption)
+    // public function getPlanLimits(): array
+    // {
+    //     $cacheKey = "user_limits_{$this->id}_{$this->pricing_plan_id}";
+
+    //     return Cache::remember($cacheKey, 600, function () {
+    //         $isFree = $this->isFreePlan();
+    //         $isPaid = !$isFree;
+
+    //         return [
+    //             'isFree' => $isFree,
+    //             'isPaid' => $isPaid,
+    //             'maxBoards' => $isPaid ? PHP_INT_MAX : ($this->isVisitorPlan() ? 0 : 3),
+    //             'maxLibrariesPerBoard' => $isPaid ? PHP_INT_MAX : ($this->isVisitorPlan() ? 0 : 6),
+    //             'canShare' => $isPaid,
+    //             'planName' => $this->pricingPlan ? $this->pricingPlan->name : 'No Plan',
+    //             'planSlug' => $this->pricingPlan ? $this->pricingPlan->slug : null,
+    //             'currentBoardCount' => $this->getCurrentBoardCount(),
+    //             'canCreateMoreBoards' => $this->canCreateMoreBoards(),
+    //         ];
+    //     });
+    // }
+
+
     public function getPlanLimits(): array
     {
-        $cacheKey = "user_limits_{$this->id}_{$this->pricing_plan_id}";
+        $cacheKey = "user_limits_{$this->id}";
 
         return Cache::remember($cacheKey, 600, function () {
-            $isFree = $this->isFreePlan();
+            $subscriptionPlan = $this->subscriptionPlan;
+
+            if (!$subscriptionPlan) {
+                // No plan - treat as free
+                return [
+                    'isFree' => true,
+                    'isPaid' => false,
+                    'maxBoards' => 3,
+                    'maxLibrariesPerBoard' => 6,
+                    'canShare' => false,
+                    'planName' => 'No Plan',
+                    'planSlug' => null,
+                    'currentBoardCount' => $this->getCurrentBoardCount(),
+                    'canCreateMoreBoards' => $this->getCurrentBoardCount() < 3,
+                ];
+            }
+
+            $isFree = $subscriptionPlan->price == 0;
             $isPaid = !$isFree;
 
             return [
                 'isFree' => $isFree,
                 'isPaid' => $isPaid,
-                'maxBoards' => $isPaid ? PHP_INT_MAX : ($this->isVisitorPlan() ? 0 : 3),
-                'maxLibrariesPerBoard' => $isPaid ? PHP_INT_MAX : ($this->isVisitorPlan() ? 0 : 6),
-                'canShare' => $isPaid,
-                'planName' => $this->pricingPlan ? $this->pricingPlan->name : 'No Plan',
-                'planSlug' => $this->pricingPlan ? $this->pricingPlan->slug : null,
+                'maxBoards' => $subscriptionPlan->max_boards,
+                'maxLibrariesPerBoard' => $subscriptionPlan->max_libraries_per_board,
+                'canShare' => $subscriptionPlan->can_share,
+                'planName' => $subscriptionPlan->name,
+                'planSlug' => $subscriptionPlan->slug,
                 'currentBoardCount' => $this->getCurrentBoardCount(),
-                'canCreateMoreBoards' => $this->canCreateMoreBoards(),
+                'canCreateMoreBoards' => $this->getCurrentBoardCount() < $subscriptionPlan->max_boards,
             ];
         });
     }
@@ -362,29 +410,41 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
 
-     public function getCurrentPlan()
+    public function getCurrentPlan()
     {
-        if (!$this->pricing_plan_id) {
+        if (!$this->subscription_plan_id) {
             return null;
         }
 
-        // Cache key unique to user and plan
-        $cacheKey = "user_plan_{$this->id}_{$this->pricing_plan_id}";
+        $cacheKey = "user_plan_{$this->id}";
 
         return Cache::remember($cacheKey, 300, function () {
-            if (!$this->pricingPlan) {
+            if (!$this->subscriptionPlan) {
                 return null;
             }
 
-            return [
-                'id' => $this->pricingPlan->id,
-                'name' => $this->pricingPlan->name,
-                'slug' => $this->pricingPlan->slug ?? null,
-                'price' => $this->pricingPlan->price ?? 0,
-                'billing_period' => $this->pricingPlan->billing_period ?? 'monthly',
-                'expires_at' => $this->plan_expires_at ?? null,
-                'days_until_expiry' => $this->daysUntilExpiry(),
+            $data = [
+                'id' => $this->subscriptionPlan->id,
+                'name' => $this->subscriptionPlan->name,
+                'slug' => $this->subscriptionPlan->slug ?? null,
+                'price' => $this->subscriptionPlan->price ?? 0,
+                'billing_period' => $this->subscriptionPlan->billing_period ?? 'free',
+                'expires_at' => null,
+                'days_until_expiry' => null,
             ];
+
+            // Add Stripe subscription info if exists
+            if ($this->hasActiveStripeSubscription()) {
+                $subscription = $this->subscription('default');
+                $data['expires_at'] = $subscription->ends_at;
+                $data['on_grace_period'] = $subscription->onGracePeriod();
+
+                if ($subscription->ends_at) {
+                    $data['days_until_expiry'] = now()->diffInDays($subscription->ends_at, false);
+                }
+            }
+
+            return $data;
         });
     }
 
@@ -410,10 +470,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     /**
      * Boot method - Auto-handle expired subscriptions on model access
      */
+/**
+ * Boot method - Combined functionality
+ */
     public static function boot()
     {
         parent::boot();
 
+        // When user is created
         static::created(function ($user) {
             // Defer automatic plan assignment to after transaction commits
             DB::afterCommit(function () use ($user) {
@@ -421,43 +485,76 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             });
         });
 
+        // When user is retrieved (accessed from database)
         static::retrieved(function ($user) {
             // Check for expired subscriptions asynchronously
-            if ($user->isSubscriptionExpired()) {
-                // Use a queued job or defer this to avoid blocking
-                dispatch(function () use ($user) {
-                    $user->downgradeToFreeMember();
-                })->afterResponse();
+            // ONLY for users with Stripe subscriptions, not free plan users
+            if ($user->hasActiveStripeSubscription()) {
+                $subscription = $user->subscription('default');
+
+                // Check if subscription is actually expired in Stripe
+                if ($subscription && $subscription->ended()) {
+                    dispatch(function () use ($user) {
+                        // Downgrade to free plan
+                        $freePlan = SubscriptionPlan::where('slug', 'free')->first();
+                        if ($freePlan) {
+                            $user->update([
+                                'subscription_plan_id' => $freePlan->id,
+                                'auto_renew' => false,
+                            ]);
+                        }
+                    })->afterResponse();
+                }
             }
         });
 
+        // When user data is being saved
         static::saving(function ($user) {
             // Clear caches before save to prevent stale reads
-            if ($user->isDirty(['pricing_plan_id', 'plan_expires_at', 'plan_updated_at'])) {
-                $user->clearPlanCaches();
+            if ($user->isDirty(['subscription_plan_id', 'auto_renew'])) {
+                Cache::forget("user_plan_{$user->id}");
+                Cache::forget("user_limits_{$user->id}");
             }
         });
 
+        // When user data is saved
         static::saved(function ($user) {
             // Clear caches after save and wait for write
             DB::afterCommit(function () use ($user) {
-                $user->clearPlanCaches();
+                Cache::forget("user_plan_{$user->id}");
+                Cache::forget("user_limits_{$user->id}");
 
+                // Assign lifetime plan to users with roles (admins)
                 if ($user->shouldHaveLifetimePlan() &&
-                    (!$user->pricingPlan || $user->pricingPlan->slug !== 'lifetime-pro')) {
+                    (!$user->subscriptionPlan || $user->subscriptionPlan->slug !== 'lifetime-pro')) {
                     $user->assignLifetimePlan();
                 }
             });
         });
 
+        // When user is being deleted
         static::deleting(function ($user) {
             // Clear caches on delete
-            $user->clearPlanCaches();
+            Cache::forget("user_plan_{$user->id}");
+            Cache::forget("user_limits_{$user->id}");
 
+            // Delete uploaded avatar if exists
             if ($user->hasUploadedAvatar()) {
                 $avatarPath = str_replace('/storage/', '', $user->avatar);
                 if (\Illuminate\Support\Facades\Storage::disk('public')->exists($avatarPath)) {
                     \Illuminate\Support\Facades\Storage::disk('public')->delete($avatarPath);
+                }
+            }
+
+            // Cancel Stripe subscription if exists
+            if ($user->hasActiveStripeSubscription()) {
+                try {
+                    $user->subscription('default')->cancelNow();
+                } catch (\Exception $e) {
+                    Log::error('Error cancelling subscription on user delete', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
         });
@@ -470,20 +567,22 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             return;
         }
 
-        // Auto-assign to Plan ID 2 (Free Member)
-        if (!$this->pricing_plan_id) {
-            $this->update(['pricing_plan_id' => 2]);
+        // Auto-assign to Free plan if no plan set
+        if (!$this->subscription_plan_id) {
+            $freePlan = SubscriptionPlan::where('slug', 'free')->first();
+            if ($freePlan) {
+                $this->update(['subscription_plan_id' => $freePlan->id]);
+            }
         }
     }
 
     public function assignLifetimePlan()
     {
-        $lifetimePlan = PricingPlan::where('slug', 'lifetime-pro')->first();
+        $lifetimePlan = SubscriptionPlan::where('slug', 'lifetime-pro')->first();
         if ($lifetimePlan) {
             $this->update([
-                'pricing_plan_id' => $lifetimePlan->id,
-                'plan_updated_at' => now(),
-                'plan_expires_at' => null,
+                'subscription_plan_id' => $lifetimePlan->id,
+                'auto_renew' => false,
             ]);
         }
     }
@@ -573,4 +672,103 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         $this->notify(new CustomResetPasswordNotification($token));
     }
 
+
+    //start from here new subscription code
+
+    public function subscriptionPlan(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionPlan::class);
+    }
+
+    public function hasActiveStripeSubscription(): bool
+    {
+        return $this->subscribed('default');
+    }
+
+    public function getActiveSubscriptionPlan(): ?SubscriptionPlan
+    {
+        return $this->subscriptionPlan;
+    }
+
+
+    public function isOnFreePlan(): bool
+    {
+        return !$this->subscription_plan_id ||
+               ($this->subscriptionPlan && $this->subscriptionPlan->is_free_plan);
+    }
+
+    public function isOnPaidPlan(): bool
+    {
+        return $this->subscriptionPlan && $this->subscriptionPlan->is_paid_plan;
+    }
+
+
+    public function isOnLifetimePlan(): bool
+    {
+        return $this->subscriptionPlan && $this->subscriptionPlan->is_lifetime_plan;
+    }
+
+
+    public function canUpgradeTo(SubscriptionPlan $plan): bool
+    {
+        // Can't upgrade to free plan
+        if ($plan->is_free_plan) {
+            return false;
+        }
+
+        // Can't upgrade if already on lifetime
+        if ($this->isOnLifetimePlan()) {
+            return false;
+        }
+
+        // Can upgrade if on free plan
+        if ($this->isOnFreePlan()) {
+            return true;
+        }
+
+        // Can upgrade if plan price is higher
+        return $plan->price > $this->subscriptionPlan->price;
+    }
+
+
+    public function assignFreePlan(): void
+    {
+        $freePlan = SubscriptionPlan::where('slug', 'free')->first();
+        if ($freePlan) {
+            $this->update([
+                'subscription_plan_id' => $freePlan->id,
+                'auto_renew' => false,
+            ]);
+        }
+    }
+
+
+    public function switchToLifetimePlan(): void
+    {
+        $lifetimePlan = SubscriptionPlan::where('slug', 'lifetime-pro')->first();
+        if ($lifetimePlan) {
+            // Cancel any active recurring subscriptions
+            if ($this->hasActiveStripeSubscription()) {
+                $this->subscription('default')->cancelNow();
+            }
+
+            $this->update([
+                'subscription_plan_id' => $lifetimePlan->id,
+                'auto_renew' => false,
+            ]);
+        }
+    }
+
+
+    // public static function boot()
+    // {
+    //     parent::boot();
+
+    //     static::created(function ($user) {
+    //         // Assign free plan to new users
+    //         if (!$user->subscription_plan_id) {
+    //             $user->assignFreePlan();
+    //         }
+    //     });
+    // }
 }

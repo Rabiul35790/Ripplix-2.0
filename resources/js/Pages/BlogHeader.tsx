@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import BrowseDropdown from './Website/Components/BrowseDropdown';
 import ProfileModal from './ProfileModal';
-import PricingModal from './PricingModal';
+import SubscriptionPricingModal from './SubscriptionPricingModal';
 import SupportModal from './SupportModal';
 import { Settings, MessageSquare, UserPlus } from 'lucide-react';
 import axios from 'axios';
@@ -167,12 +167,12 @@ const getUnlockProButtonText = () => {
   }
 
   if (currentPlan && currentPlan.price > 0) {
-    if (
-      currentPlan.days_until_expiry !== undefined &&
-      currentPlan.days_until_expiry <= 7
-    ) {
-      return { full: 'Renew Pro', short: 'Renew' };
-    }
+    // if (
+    //   currentPlan.days_until_expiry !== undefined &&
+    //   currentPlan.days_until_expiry <= 7
+    // ) {
+    //   return { full: 'Renew Pro', short: 'Renew' };
+    // }
     return {
       full: `Pro ${formatText(currentPlan.billing_period)}`,
       short: 'Pro'
@@ -193,9 +193,9 @@ const getUnlockProButtonText = () => {
     }
 
     if (currentPlan && currentPlan.price > 0) {
-      if (currentPlan.days_until_expiry !== undefined && currentPlan.days_until_expiry <= 7) {
-        return "bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white hover:opacity-95";
-      }
+    //   if (currentPlan.days_until_expiry !== undefined && currentPlan.days_until_expiry <= 7) {
+    //     return "bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white hover:opacity-95";
+    //   }
       return "bg-[#F5F5FA] text-[#7F7F8A] pointer-events-none";
     }
 
@@ -470,6 +470,17 @@ const getUnlockProButtonText = () => {
                                 </div> */}
                             </Link>
                             <Link
+                                href={'/payment-management'}
+                                className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                            >
+                                <div className="flex items-center">
+                                <span className="font-medium text-[#2B235A]">Payment Management</span>
+                                </div>
+                                {/* <div className="text-gray-500 dark:text-gray-400 text-xs ml-10">
+                                Become a Premium Member
+                                </div> */}
+                            </Link>
+                            <Link
                                 href={'/privacy'}
                                 className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
                             >
@@ -572,11 +583,11 @@ const getUnlockProButtonText = () => {
       />
 
       {/* Pricing Modal */}
-      <PricingModal
+    <SubscriptionPricingModal
         isOpen={isPricingModalOpen}
         onClose={handlePricingModalClose}
         isAuthenticated={!!currentUser}
-      />
+    />
 
       {/* Support Modal */}
       {currentUser && (

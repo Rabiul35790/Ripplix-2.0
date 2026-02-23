@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Check, Minus, Crown, SwatchBook } from 'lucide-react';
-import PricingModal from '@/Pages/PricingModal';
+import SubscriptionPricingModal from './SubscriptionPricingModal';
+// import PricingModal from '@/Pages/PricingModal';
 
 interface Board {
   id: number;
@@ -515,7 +516,7 @@ const LibrarySelectionModal: React.FC<LibrarySelectionModalProps> = ({
       </div>
 
       {/* Pricing Modal */}
-      <PricingModal
+      <SubscriptionPricingModal
         isOpen={isPricingModalOpen}
         onClose={handlePricingModalClose}
         isAuthenticated={true}

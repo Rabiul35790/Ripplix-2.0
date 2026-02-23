@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+        'stripe/webhook',
+        ]);
+
         $middleware->alias([
             'seo' => \App\Http\Middleware\SeoMiddleware::class,
             'auto.expired.subscriptions' => \App\Http\Middleware\AutoHandleExpiredSubscriptions::class,

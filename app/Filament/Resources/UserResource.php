@@ -1,11 +1,13 @@
 <?php
-// app/Filament/Resources/UserResource.php
+
+// File: app/Filament/Resources/UserResource.php
+// UPDATED VERSION with Subscription Management
 
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
-use App\Models\PricingPlan;
+use App\Models\SubscriptionPlan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,12 +15,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-    // protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationGroup = 'User Management';
     protected static ?int $navigationSort = 1;
 
@@ -53,79 +53,61 @@ class UserResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Pricing Plan Assignment')
+                Forms\Components\Section::make('Subscription Management')
                     ->schema([
-                        Forms\Components\Select::make('pricing_plan_id')
-                            ->label('Pricing Plan')
-                            ->relationship('pricingPlan', 'name')
+                        Forms\Components\Select::make('subscription_plan_id')
+                            ->label('Subscription Plan')
+                            ->relationship('subscriptionPlan', 'name')
                             ->searchable()
                             ->preload()
-                            ->live()
-                            ->helperText('Optional: Assign a pricing plan to this user')
-                            ->placeholder('Select a pricing plan (optional)')
-                            ->getOptionLabelFromRecordUsing(fn (PricingPlan $record): string =>
+                            ->helperText('Assign a subscription plan to this user')
+                            ->placeholder('Select a subscription plan')
+                            ->getOptionLabelFromRecordUsing(fn (SubscriptionPlan $record): string =>
                                 "{$record->name} ({$record->formatted_price})"
-                            ),
-
-                        Forms\Components\DateTimePicker::make('plan_updated_at')
-                            ->label('Plan Start Date')
-                            ->default(now())
-                            ->helperText('When the plan starts for this user')
-                            ->visible(fn (Forms\Get $get): bool => filled($get('pricing_plan_id')))
-                            ->required(fn (Forms\Get $get): bool => filled($get('pricing_plan_id'))),
-
-                        Forms\Components\DateTimePicker::make('plan_expires_at')
-                            ->label('Plan Expiry Date')
-                            ->helperText('When the plan expires (leave empty for lifetime/free plans)')
-                            ->visible(fn (Forms\Get $get): bool => filled($get('pricing_plan_id')))
-                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, $state) {
-                                // Auto-set expiry based on plan billing period if not manually set
-                                $planId = $get('pricing_plan_id');
-                                $startDate = $get('plan_updated_at');
-
-                                if ($planId && $startDate && !$state) {
-                                    $plan = PricingPlan::find($planId);
-                                    if ($plan) {
-                                        $start = \Carbon\Carbon::parse($startDate);
-
-                                        if ($plan->billing_period === 'monthly') {
-                                            $set('plan_expires_at', $start->copy()->addMonth());
-                                        } elseif ($plan->billing_period === 'yearly') {
-                                            $set('plan_expires_at', $start->copy()->addYear());
-                                        }
-                                        // For 'free' and 'lifetime', leave null (no expiry)
+                            )
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                // Reset auto_renew based on plan type
+                                if ($state) {
+                                    $plan = SubscriptionPlan::find($state);
+                                    if ($plan && ($plan->is_free_plan || $plan->is_lifetime_plan)) {
+                                        $set('auto_renew', false);
                                     }
                                 }
                             }),
 
-                        Forms\Components\Placeholder::make('plan_preview')
-                            ->label('Plan Duration Preview')
-                            ->content(function (Forms\Get $get) {
-                                $planId = $get('pricing_plan_id');
-                                $startDate = $get('plan_updated_at');
-                                $endDate = $get('plan_expires_at');
+                        Forms\Components\Toggle::make('auto_renew')
+                            ->label('Auto Renewal')
+                            ->default(true)
+                            ->helperText('Automatically renew subscription at end of billing period')
+                            ->disabled(function (Forms\Get $get): bool {
+                                $planId = $get('subscription_plan_id');
 
-                                if (!$planId || !$startDate) {
-                                    return 'Select a plan and start date to see duration';
+                                if (!$planId) {
+                                    return false;
                                 }
 
-                                $plan = PricingPlan::find($planId);
-                                if (!$plan) {
-                                    return 'Invalid plan selected';
+                                $plan = SubscriptionPlan::find($planId);
+
+                                return $plan && ($plan->is_free_plan || $plan->is_lifetime_plan);
+                            }),
+
+                        Forms\Components\Placeholder::make('stripe_customer_info')
+                            ->label('Stripe Customer Info')
+                            ->content(function ($record) {
+                                if (!$record || !$record->hasStripeId()) {
+                                    return 'No Stripe customer created yet';
                                 }
 
-                                $start = \Carbon\Carbon::parse($startDate);
+                                $info = "Stripe ID: {$record->stripe_id}";
 
-                                if (!$endDate) {
-                                    return "Plan: {$plan->name} | Duration: Lifetime/Permanent";
+                                if ($record->hasDefaultPaymentMethod()) {
+                                    $pm = $record->defaultPaymentMethod();
+                                    $info .= "\nPayment Method: {$pm->card->brand} •••• {$pm->card->last4}";
                                 }
 
-                                $end = \Carbon\Carbon::parse($endDate);
-                                $duration = $start->diffForHumans($end, true);
-
-                                return "Plan: {$plan->name} | Duration: {$duration} ({$start->format('M d, Y')} - {$end->format('M d, Y')})";
+                                return $info;
                             })
-                            ->visible(fn (Forms\Get $get): bool => filled($get('pricing_plan_id'))),
+                            ->visible(fn ($record) => $record && $record->hasStripeId()),
                     ])
                     ->columns(2)
                     ->collapsible(),
@@ -154,30 +136,27 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('pricingPlan.name')
-                    ->label('Pricing Plan')
+                Tables\Columns\TextColumn::make('subscriptionPlan.name')
+                    ->label('Subscription')
                     ->badge()
                     ->color(fn ($state, $record) => match (true) {
-                        !$record->pricingPlan => 'gray',
-                        $record->pricingPlan->price == 0 => 'success',
-                        $record->pricingPlan->billing_period === 'lifetime' => 'warning',
-                        $record->isSubscriptionExpired() => 'danger',
-                        $record->subscriptionExpiresSoon() => 'warning',
-                        default => 'primary'
+                        !$record->subscriptionPlan => 'gray',
+                        $record->subscriptionPlan->is_free_plan => 'success',
+                        $record->subscriptionPlan->is_lifetime_plan => 'warning',
+                        $record->hasActiveStripeSubscription() => 'primary',
+                        default => 'gray'
                     })
                     ->formatStateUsing(function ($state, $record) {
-                        if (!$record->pricingPlan) {
+                        if (!$record->subscriptionPlan) {
                             return 'No Plan';
                         }
 
-                        $planName = $record->pricingPlan->name;
+                        $planName = $record->subscriptionPlan->name;
 
-                        if ($record->plan_expires_at) {
-                            if ($record->isSubscriptionExpired()) {
-                                return $planName . ' (Expired)';
-                            } elseif ($record->subscriptionExpiresSoon()) {
-                                $days = $record->daysUntilExpiry();
-                                return $planName . " ({$days}d left)";
+                        if ($record->hasActiveStripeSubscription()) {
+                            $subscription = $record->subscription('default');
+                            if ($subscription->onGracePeriod()) {
+                                return $planName . ' (Cancelling)';
                             }
                         }
 
@@ -185,24 +164,23 @@ class UserResource extends Resource
                     })
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('plan_updated_at')
-                    ->label('Plan Started')
-                    ->dateTime('M d, Y')
-                    ->sortable()
-                    ->placeholder('Not set')
+                Tables\Columns\IconColumn::make('auto_renew')
+                    ->label('Auto Renew')
+                    ->boolean()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('plan_expires_at')
-                    ->label('Plan Expires')
-                    ->dateTime('M d, Y')
-                    ->sortable()
-                    ->placeholder('Never')
-                    ->color(fn ($record) => match (true) {
-                        !$record->plan_expires_at => 'success',
-                        $record->isSubscriptionExpired() => 'danger',
-                        $record->subscriptionExpiresSoon() => 'warning',
-                        default => 'gray'
-                    })
+                Tables\Columns\TextColumn::make('stripe_id')
+                    ->label('Stripe Customer')
+                    ->formatStateUsing(fn ($state) => $state ? 'Yes' : 'No')
+                    ->badge()
+                    ->color(fn ($state) => $state ? 'success' : 'gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('pm_last_four')
+                    ->label('Payment Method')
+                    ->formatStateUsing(fn ($state, $record) =>
+                        $state ? "{$record->pm_type} •••• {$state}" : 'None'
+                    )
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\BadgeColumn::make('roles.name')
@@ -235,9 +213,9 @@ class UserResource extends Resource
                     ->multiple()
                     ->preload(),
 
-                Tables\Filters\SelectFilter::make('pricing_plan_id')
-                    ->label('Pricing Plan')
-                    ->relationship('pricingPlan', 'name')
+                Tables\Filters\SelectFilter::make('subscription_plan_id')
+                    ->label('Subscription Plan')
+                    ->relationship('subscriptionPlan', 'name')
                     ->searchable()
                     ->preload(),
 
@@ -248,77 +226,47 @@ class UserResource extends Resource
                     ->falseLabel('Inactive Users')
                     ->native(false),
 
-                Tables\Filters\Filter::make('expired_plans')
-                    ->label('Expired Plans')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->whereNotNull('plan_expires_at')
-                              ->where('plan_expires_at', '<', now())
-                    ),
-
-                Tables\Filters\Filter::make('expiring_soon')
-                    ->label('Expiring Soon (7 days)')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->whereNotNull('plan_expires_at')
-                              ->where('plan_expires_at', '>', now())
-                              ->where('plan_expires_at', '<=', now()->addDays(7))
-                    ),
-
-                Tables\Filters\Filter::make('no_plan')
-                    ->label('No Pricing Plan')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->whereNull('pricing_plan_id')
-                    ),
+                Tables\Filters\TernaryFilter::make('has_stripe_customer')
+                    ->label('Stripe Customer')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('stripe_id'),
+                        false: fn (Builder $query) => $query->whereNull('stripe_id'),
+                    )
+                    ->native(false),
             ])
             ->actions([
-                Tables\Actions\Action::make('extend_plan')
-                    ->label('Extend Plan')
-                    ->icon('heroicon-o-clock')
-                    ->color('success')
-                    ->visible(fn ($record) => $record->pricingPlan && $record->plan_expires_at)
+                Tables\Actions\Action::make('assign_plan')
+                    ->label('Assign Plan')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->color('primary')
                     ->form([
-                        Forms\Components\Select::make('extension_type')
-                            ->label('Extension Type')
-                            ->options([
-                                'days' => 'Days',
-                                'weeks' => 'Weeks',
-                                'months' => 'Months',
-                                'years' => 'Years',
-                            ])
+                        Forms\Components\Select::make('subscription_plan_id')
+                            ->label('Subscription Plan')
+                            ->options(SubscriptionPlan::active()->pluck('name', 'id'))
                             ->required()
-                            ->default('days'),
+                            ->searchable()
+                            ->helperText('Select a plan to assign to this user'),
 
-                        Forms\Components\TextInput::make('extension_amount')
-                            ->label('Amount')
-                            ->numeric()
-                            ->required()
-                            ->minValue(1)
-                            ->default(7),
+                        Forms\Components\Toggle::make('auto_renew')
+                            ->label('Enable Auto Renewal')
+                            ->default(true)
+                            ->helperText('Automatically renew subscription'),
                     ])
                     ->action(function ($record, array $data) {
-                        $currentExpiry = $record->plan_expires_at ?: now();
-                        $extension = match($data['extension_type']) {
-                            'days' => $currentExpiry->addDays($data['extension_amount']),
-                            'weeks' => $currentExpiry->addWeeks($data['extension_amount']),
-                            'months' => $currentExpiry->addMonths($data['extension_amount']),
-                            'years' => $currentExpiry->addYears($data['extension_amount']),
-                        };
-
-                        $record->update(['plan_expires_at' => $extension]);
+                        $record->update($data);
                     }),
 
-                Tables\Actions\Action::make('remove_plan')
-                    ->label('Remove Plan')
-                    ->icon('heroicon-o-x-mark')
+                Tables\Actions\Action::make('cancel_subscription')
+                    ->label('Cancel Subscription')
+                    ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn ($record) => $record->pricingPlan)
+                    ->visible(fn ($record) => $record->hasActiveStripeSubscription())
                     ->requiresConfirmation()
-                    ->modalDescription('This will remove the pricing plan from this user.')
+                    ->modalDescription('This will cancel the user\'s active Stripe subscription.')
                     ->action(function ($record) {
-                        $record->update([
-                            'pricing_plan_id' => null,
-                            'plan_updated_at' => null,
-                            'plan_expires_at' => null,
-                        ]);
+                        if ($record->hasActiveStripeSubscription()) {
+                            $record->subscription('default')->cancel();
+                        }
                     }),
 
                 Tables\Actions\ViewAction::make(),
@@ -340,44 +288,15 @@ class UserResource extends Resource
                         ->label('Assign Plan to Selected')
                         ->icon('heroicon-o-currency-dollar')
                         ->form([
-                            Forms\Components\Select::make('pricing_plan_id')
-                                ->label('Pricing Plan')
-                                ->relationship('pricingPlan', 'name')
-                                ->searchable()
-                                ->preload()
+                            Forms\Components\Select::make('subscription_plan_id')
+                                ->label('Subscription Plan')
+                                ->options(SubscriptionPlan::active()->pluck('name', 'id'))
                                 ->required()
-                                ->getOptionLabelFromRecordUsing(fn (PricingPlan $record): string =>
-                                    "{$record->name} ({$record->formatted_price})"
-                                ),
-
-                            Forms\Components\DateTimePicker::make('plan_updated_at')
-                                ->label('Plan Start Date')
-                                ->default(now())
-                                ->required(),
-
-                            Forms\Components\DateTimePicker::make('plan_expires_at')
-                                ->label('Plan Expiry Date')
-                                ->helperText('Leave empty for lifetime/free plans'),
+                                ->searchable(),
                         ])
                         ->action(function ($records, array $data) {
                             foreach ($records as $record) {
                                 $record->update($data);
-                            }
-                        })
-                        ->deselectRecordsAfterCompletion(),
-
-                    Tables\Actions\BulkAction::make('bulk_remove_plan')
-                        ->label('Remove Plan from Selected')
-                        ->icon('heroicon-o-x-mark')
-                        ->color('danger')
-                        ->requiresConfirmation()
-                        ->action(function ($records) {
-                            foreach ($records as $record) {
-                                $record->update([
-                                    'pricing_plan_id' => null,
-                                    'plan_updated_at' => null,
-                                    'plan_expires_at' => null,
-                                ]);
                             }
                         })
                         ->deselectRecordsAfterCompletion(),

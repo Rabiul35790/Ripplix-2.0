@@ -18,6 +18,8 @@ use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SponsorController;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Foundation\Application;
@@ -367,5 +369,70 @@ Route::prefix('api/seo')->middleware(['web', 'auth'])->group(function () {
         return response()->json($library->getAutoSuggestions());
     });
 });
+
+
+
+
+Route::prefix('api/subscription')->name('api.subscription.')->group(function () {
+    Route::get('/plans', [SubscriptionController::class, 'getPlans'])
+        ->name('plans');
+});
+
+// Protected subscription routes (auth required)
+Route::middleware(['auth:sanctum'])->prefix('api/subscription')->name('api.subscription.')->group(function () {
+    // Current subscription status
+    Route::get('/current', [SubscriptionController::class, 'getCurrentSubscription'])
+        ->name('current');
+
+    // Checkout & subscription management
+    Route::post('/checkout', [SubscriptionController::class, 'createCheckoutSession'])
+        ->name('checkout');
+
+    Route::post('/cancel', [SubscriptionController::class, 'cancelSubscription'])
+        ->name('cancel');
+
+    Route::post('/resume', [SubscriptionController::class, 'resumeSubscription'])
+        ->name('resume');
+
+    Route::post('/auto-renew', [SubscriptionController::class, 'updateAutoRenew'])
+        ->name('auto-renew');
+
+    // Payment method management
+    Route::post('/payment-method/setup', [SubscriptionController::class, 'setupPaymentMethod'])
+        ->name('payment-method.setup');
+
+    // NEW: Update payment method info after Stripe confirmation
+    Route::post('/payment-method/update', [SubscriptionController::class, 'updatePaymentMethod'])
+        ->name('payment-method.update');
+
+    Route::delete('/payment-method', [SubscriptionController::class, 'removePaymentMethod'])
+        ->name('payment-method.remove');
+
+    // Payment history
+    Route::get('/invoices', [SubscriptionController::class, 'getPaymentHistory'])
+        ->name('invoices');
+
+    Route::get('/invoices/{invoice}/download', [SubscriptionController::class, 'downloadInvoice'])
+        ->name('invoices.download');
+});
+
+// Public callback routes (no auth, no CSRF)
+Route::middleware('web')->group(function () {
+    Route::get('/subscription/success', [SubscriptionController::class, 'success'])
+        ->name('subscription.success');
+
+    Route::get('/subscription/cancel', [SubscriptionController::class, 'cancel'])
+        ->name('subscription.cancel');
+});
+
+// Stripe webhook (no auth, no CSRF - verified by Stripe signature)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])
+        ->name('cashier.webhook');
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/payment-management', [SubscriptionController::class, 'paymentManagement'])->name('payment-management');
+});
+
 
 require __DIR__.'/auth.php';

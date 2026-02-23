@@ -8,9 +8,10 @@ import BoardCard from '../Components/BoardCard';
 import UniversalSearch from '@/Components/UniversalSearch';
 import { useSearch } from '@/hooks/useSearch';
 import { PageProps } from '@/types';
-import PricingModal from './PricingModal';
+
 import DeleteBoardModal from '../Components/DeleteBoardModal';
 import LayoutUnauth from './LayoutUnauth';
+import SubscriptionPricingModal from './SubscriptionPricingModal';
 
 interface Library {
   id: number;
@@ -455,7 +456,7 @@ const handleCloseDeleteModal = () => {
             board={deletingBoard}
           />
 
-          <PricingModal
+          <SubscriptionPricingModal
             isOpen={isPricingModalOpen}
             onClose={handlePricingModalClose}
             isAuthenticated={!!authData.user}

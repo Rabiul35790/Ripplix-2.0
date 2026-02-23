@@ -217,21 +217,36 @@ const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
   const hasNext = currentIndex < allLibraries.length - 1;
 
   // Get suggested libraries (next 3 libraries, wrapping around if needed)
-  const getSuggestedLibraries = (): Library[] => {
-    if (!library || allLibraries.length <= 1) return [];
+const getSuggestedLibraries = (): Library[] => {
+  if (!library || allLibraries.length <= 1) return [];
 
-    const suggestions: Library[] = [];
-    const totalLibraries = allLibraries.length;
+  // Filter libraries by same category
+  const sameCategoryLibraries = allLibraries.filter(lib =>
+    lib.id !== library.id &&
+    lib.categories.some(cat =>
+      library.categories.some(libCat => libCat.id === cat.id)
+    )
+  );
 
-    for (let i = 1; i <= 6 && suggestions.length < 6; i++) {
-      const nextIndex = (currentIndex + i) % totalLibraries;
-      if (nextIndex !== currentIndex) {
-        suggestions.push(allLibraries[nextIndex]);
-      }
-    }
+  // If we have enough same-category libraries, use those
+  if (sameCategoryLibraries.length >= 6) {
+    return sameCategoryLibraries.slice(0, 6);
+  }
 
-    return suggestions;
-  };
+  // Otherwise, mix same category + other libraries
+  const suggestions = [...sameCategoryLibraries];
+
+  // Fill remaining slots with other libraries
+  const otherLibraries = allLibraries.filter(lib =>
+    lib.id !== library.id &&
+    !suggestions.some(s => s.id === lib.id)
+  );
+
+  const remaining = 6 - suggestions.length;
+  suggestions.push(...otherLibraries.slice(0, remaining));
+
+  return suggestions;
+};
 
   const suggestedLibraries = getSuggestedLibraries();
 

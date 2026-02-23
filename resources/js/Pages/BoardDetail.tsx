@@ -6,8 +6,9 @@ import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
 import LibraryModal from './LibraryModal';
 import FilterSection from './Website/Components/FilterSection';
-import PricingModal from './PricingModal';
+
 import LayoutUnauth from './LayoutUnauth';
+import SubscriptionPricingModal from './SubscriptionPricingModal';
 
 interface Category {
   id: number;
@@ -601,7 +602,7 @@ const BoardDetail: React.FC<BoardDetailProps> = ({
           userPlanLimits={userPlanLimits}
         />
 
-        <PricingModal
+        <SubscriptionPricingModal
           isOpen={isPricingModalOpen}
           onClose={handlePricingModalClose}
           isAuthenticated={!!authData.user}

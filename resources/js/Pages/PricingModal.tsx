@@ -377,18 +377,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
                             </button>
                         </div>
 
-                        <CurrentPlanStatus
-                            isAuthenticated={isAuthenticated}
-                            currentPlan={currentPlan}
-                            onRenewPlan={handleRenewPlan}
-                            onStartTrial={handleStartTrial}
-                            paymentLoading={paymentLoading}
-                            trialLoading={trialLoading}
-                        />
 
-                        <AuthMessage isAuthenticated={isAuthenticated} />
-
-                        <LoadingSpinner loading={loading} plans={plans} />
 
                         <BillingToggle
                             isAnnual={isAnnual}
@@ -416,22 +405,7 @@ const PricingModal: React.FC<PricingModalProps> = ({
                 </div>
             </div>
 
-            {selectedPlan && (
-                <PaymentModal
-                    isOpen={showPaymentModal}
-                    onClose={() => {
-                        setShowPaymentModal(false);
-                        setSelectedPlan(null);
-                    }}
-                    paymentData={{
-                        pricing_plan_id: selectedPlan.id,
-                        amount: selectedPlan.price,
-                        currency: selectedPlan.currency,
-                        plan_name: selectedPlan.name,
-                    }}
-                    onSuccess={handlePaymentSuccess}
-                />
-            )}
+
         </>
     );
 };
