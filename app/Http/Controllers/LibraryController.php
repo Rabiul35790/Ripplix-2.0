@@ -447,8 +447,9 @@ class LibraryController extends Controller
         $filterName = null;
         $categoryData = null;
 
-        if ($request->has('category') && $request->category !== 'all') {
-            $category = Category::where('slug', $request->category)->first();
+        $appsFilter = $request->query('apps', $request->query('category'));
+        if ($appsFilter && $appsFilter !== 'all') {
+            $category = Category::where('slug', $appsFilter)->first();
             if ($category) {
                 $filterType = 'category';
                 $filterValue = $category->slug;
@@ -574,8 +575,9 @@ class LibraryController extends Controller
             ->where('libraries.is_active', true);
 
         // Apply filters
-        if ($request->has('category') && $request->category !== 'all') {
-            $category = Category::where('slug', $request->category)->first(['id']);
+        $appsFilter = $request->query('apps', $request->query('category'));
+        if ($appsFilter && $appsFilter !== 'all') {
+            $category = Category::where('slug', $appsFilter)->first(['id']);
             if ($category) {
                 $query->whereHas('categories', function($q) use ($category) {
                     $q->where('categories.id', $category->id);

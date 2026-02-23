@@ -122,7 +122,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
                 {filters.categories.slice(0, 6).map((category) => (
                   <a
                     key={category.id}
-                    href={`/browse?category=${category.slug}`}
+                    href={`/browse?apps=${category.slug}`}
                     className="flex items-center py-2 px-2 -mx-2 transition-colors group hover:bg-[#F5F5FA] dark:hover:bg-gray-800 rounded-md focus:outline-none focus:ring-0 active:bg-gray-200 dark:active:bg-gray-700"
                   >
                     {category.image ? (
@@ -273,7 +273,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
                   {filters.categories.map((category) => (
                     <Link
                       key={category.id}
-                      href={`/browse?category=${category.slug}`}
+                      href={`/browse?apps=${category.slug}`}
                       onClick={onClose}
                       className="flex items-center transition-colors group outline-none focus:outline-none"
                     >

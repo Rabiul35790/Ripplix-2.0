@@ -634,7 +634,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               {getCategoryImage() && !categoryImageError ? (
                 <div className={`bg-white dark:bg-gray-800 border border-[#8787A833] hover:shadow-[6px_0px_24px_-1px_#6D16C321,0px_6px_20px_-1px_#6D16C321] transition-shadow duration-300 overflow-hidden flex-shrink-0 ${getCategoryImageSize()}`}>
                   <Link
-                    href={`/browse?category=${getCategorySlug()}`}
+                    href={`/browse?apps=${getCategorySlug()}`}
                     className={`font-sora !font-bold ${
                       filterValue === getCategorySlug() ? '' : ''
                     }`}
@@ -664,7 +664,7 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
               <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
                 <h3 className={`font-sora text-lg text-[#2B235A] !font-bold truncate ${getTitleClasses()}`}>
                   <Link
-                    href={`/browse?category=${getCategorySlug()}`}
+                    href={`/browse?apps=${getCategorySlug()}`}
                     className={`font-sora !font-bold outline-none focus:outline-none focus:ring-0 ${
                       filterValue === getCategorySlug() ? '' : ''
                     }`}

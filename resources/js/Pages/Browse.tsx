@@ -201,7 +201,7 @@ const fetchLibraries = useCallback(async (page: number = 1, append: boolean = fa
     const params = new URLSearchParams();
 
     if (filterValue) {
-      if (filterType === 'category') params.set('category', filterValue);
+      if (filterType === 'category') params.set('apps', filterValue);
       if (filterType === 'industry') params.set('industry', filterValue);
       if (filterType === 'interaction') params.set('interaction', filterValue);
     }
@@ -266,7 +266,7 @@ const ensureSufficientLibrariesForSuggestions = useCallback(async (currentLibrar
     try {
       const params = new URLSearchParams();
       if (filterValue) {
-        if (filterType === 'category') params.set('category', filterValue);
+        if (filterType === 'category') params.set('apps', filterValue);
         if (filterType === 'industry') params.set('industry', filterValue);
         if (filterType === 'interaction') params.set('interaction', filterValue);
       }

@@ -519,7 +519,7 @@ const Following: React.FC<FollowingProps> = ({
                             </div>
 
                             <Link
-                              href={`/browse?category=${category.slug}`}
+                              href={`/browse?apps=${category.slug}`}
                               className="text-[#2B235A] bg-[#F5F5FA] dark:text-white rounded-lg border border-[#CECCFF] focus:outline-none focus:ring-0 px-2.5 sm:px-3 md:px-2.5 py-1.5 sm:py-2 text-sm sm:text-base md:text-[15px] font-medium whitespace-nowrap"
                             >
                               View All

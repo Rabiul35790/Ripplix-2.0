@@ -584,7 +584,7 @@ return (
                   <div className="inline-block">
                     {getCategoryName() && (
                       <Link
-                        href={`/browse?category=${getCategorySlug()}`}
+                        href={`/browse?apps=${getCategorySlug()}`}
                         className="font-sora !font-bold"
                       >
                         <h2 className="text-lg sm:text-3xl !font-bold text-[#150F32] opacity-85 hover:opacity-100 transition-opacity duration-500 dark:text-white font-sora">

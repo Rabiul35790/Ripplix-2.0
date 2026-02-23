@@ -204,7 +204,7 @@ const AllApps: React.FC<AllAppsProps> = ({
   const renderCategoryCard = (category: Category, index: number) => (
     <Link
       key={category.id}
-      href={`/browse?category=${category.slug}`}
+      href={`/browse?apps=${category.slug}`}
       className={`flex flex-col items-center justify-center p-3 sm:p-4 md:p-3.5 rounded-xl outline-none focus:outline-none focus:ring-0 active:outline-none transition-all duration-200 group app-card w-full bg-white ${
         filterValue === category.slug
           ? 'bg-[#E3E2FF] dark:bg-blue-900/20'

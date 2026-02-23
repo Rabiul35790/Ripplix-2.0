@@ -71,7 +71,7 @@ const TopLibraryCard: React.FC<TopLibraryCardProps> = ({ group, type, cardIndex 
     if (!slug) return '/';
 
     if (type === 'category') {
-      return `/browse?category=${slug}`;
+      return `/browse?apps=${slug}`;
     } else if (type === 'interaction') {
       return `/browse?interaction=${slug}`;
     } else if (type === 'industry') {
