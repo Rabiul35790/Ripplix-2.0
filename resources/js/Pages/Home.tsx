@@ -396,6 +396,11 @@ useEffect(() => {
 
 
 const handlePlatformChange = useCallback(async (platform: string) => {
+  const filterSection = document.getElementById('home-filter-section');
+  if (filterSection) {
+    filterSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   setSelectedPlatform(platform);
   setIsLoadingMore(true);
   setError(null);
@@ -743,7 +748,7 @@ const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
         )}
 
         {/* Library Grid Section with Sticky Filter */}
-        <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12 relative">
+        <div id="home-filter-section" className="scroll-mt-24 lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12 relative">
           <div className="sticky top-[60px] md:top-[68px] lg:top-[68px] z-10" style={{ contain: 'layout style paint' }}>
             <FilterWrapper
               filters={filters}

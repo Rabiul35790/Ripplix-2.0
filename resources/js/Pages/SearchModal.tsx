@@ -93,6 +93,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
 
   // Auth data and authentication check
   const authData = auth || props.auth;
@@ -149,6 +151,26 @@ const SearchModal: React.FC<SearchModalProps> = ({
       setSelectedResultIndex(-1);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    let closeTimer: number | undefined;
+
+    if (isOpen) {
+      setShouldRender(true);
+      requestAnimationFrame(() => setIsAnimatingIn(true));
+    } else if (shouldRender) {
+      setIsAnimatingIn(false);
+      closeTimer = window.setTimeout(() => {
+        setShouldRender(false);
+      }, 200);
+    }
+
+    return () => {
+      if (closeTimer) {
+        window.clearTimeout(closeTimer);
+      }
+    };
+  }, [isOpen, shouldRender]);
 
   useEffect(() => {
     if (searchQuery.trim() && isOpen) {
@@ -350,7 +372,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const getGridClasses = () => {
     if (cardsPerRow === 2) {
@@ -365,8 +387,30 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 transition-opacity bg-black bg-opacity-20 backdrop-blur-md z-50 flex items-start justify-center sm:pt-20 pt-4 focus:outline-none px-2 sm:px-4">
-        <div className="bg-[#F8F8F9] dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] sm:max-h-[80vh] overflow-hidden flex flex-col focus:outline-none">
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-20 backdrop-blur-md z-50 flex items-start justify-center sm:pt-20 pt-4 focus:outline-none px-2 sm:px-4 ${
+          isAnimatingIn ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          transition: 'opacity 320ms cubic-bezier(0.22, 1, 0.36, 1)',
+          pointerEvents: isAnimatingIn ? 'auto' : 'none',
+        }}
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div
+          className={`bg-[#F8F8F9] dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] sm:max-h-[80vh] overflow-hidden flex flex-col focus:outline-none transform ${
+            isAnimatingIn ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-[0.97]'
+          }`}
+          style={{
+            transition: 'transform 800ms cubic-bezier(0.22, 1, 0.36, 1), opacity 800ms cubic-bezier(0.22, 1, 0.36, 1)',
+            willChange: 'transform, opacity',
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="p-3 sm:p-4 dark:border-gray-700">
             <form onSubmit={handleSearchSubmit}>
