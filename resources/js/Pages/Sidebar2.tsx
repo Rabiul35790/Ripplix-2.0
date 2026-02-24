@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { BookOpen, Target, Smartphone, Zap, FolderOpen, User, Phone, Heart, Command, Star, Navigation, SquareMousePointer, Building2 } from 'lucide-react';
+import GoogleAdSlot from '@/Components/GoogleAdSlot';
 
 interface Sidebar2Props {
   currentRoute: string;
@@ -51,8 +52,22 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
 
   const copyright_text = props?.settings?.copyright_text || null;
   const logo = props?.settings?.logo || null;
+  const adSettings = props?.adSettings;
+  const canShowAds = adSettings?.can_show_ads !== false;
+  const useGoogleAds = Boolean(
+    canShowAds &&
+    adSettings?.enabled &&
+    adSettings?.client &&
+    adSettings?.slots?.sidebar
+  );
 
   useEffect(() => {
+    if (!canShowAds || useGoogleAds) {
+      setSidebarAd(null);
+      setIsLoadingAd(false);
+      return;
+    }
+
     const fetchSidebarAd = async () => {
       try {
         setIsLoadingAd(true);
@@ -73,7 +88,7 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
     };
 
     fetchSidebarAd();
-  }, []);
+  }, [canShowAds, useGoogleAds]);
 
   // Update sliding indicator position
   useEffect(() => {
@@ -337,8 +352,18 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
           </div>
 
           {/* Dynamic Advertisement Section */}
-          <div className="px-5 mt-10 font-sora">
-            {isLoadingAd ? (
+          {canShowAds && (
+            <div className="px-5 mt-10 font-sora">
+              {useGoogleAds ? (
+                <div className="max-w-[192px] rounded-lg overflow-hidden border border-[#CECCFF] p-2">
+                  <GoogleAdSlot
+                    client={adSettings?.client as string}
+                    slot={adSettings?.slots?.sidebar as string}
+                    style={{ display: 'inline-block', width: '192px', height: '193px' }}
+                    responsive={false}
+                  />
+                </div>
+              ) : isLoadingAd ? (
               <div className="max-h-[193px] max-w-[192px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
                 <div className="h-[193px] w-[192px] bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
               </div>
@@ -394,8 +419,9 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
                   </Link>
                 </div>
               </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer Space for Copyright and Terms/Privacy Links */}

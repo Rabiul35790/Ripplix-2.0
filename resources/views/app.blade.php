@@ -20,6 +20,14 @@
         </script>
         @endif
 
+        @php
+            $googleAdsEnabled = \App\Helpers\SettingsHelper::googleAdsEnabled();
+            $googleAdsClient = \App\Helpers\SettingsHelper::googleAdsClient();
+        @endphp
+        @if($googleAdsEnabled && $googleAdsClient)
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ $googleAdsClient }}" crossorigin="anonymous"></script>
+        @endif
+
         <!-- Favicon -->
         @if(\App\Helpers\SettingsHelper::favicon())
             <link rel="icon" type="image/png" href="{{ \App\Helpers\SettingsHelper::favicon() }}">

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Atom, Building2, ChevronRight, Command, Heart, Star, SwatchBook } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import GoogleAdSlot from '@/Components/GoogleAdSlot';
 
 interface Category {
   id: number;
@@ -204,10 +206,25 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
   topLibrariesByInteraction = [],
   topLibrariesByIndustry = []
 }) => {
+  const { props } = usePage<PageProps>();
   const [homeAd, setHomeAd] = useState<Ad | null>(null);
   const [isLoadingAd, setIsLoadingAd] = useState(true);
+  const adSettings = props?.adSettings;
+  const canShowAds = adSettings?.can_show_ads !== false;
+  const useGoogleAds = Boolean(
+    canShowAds &&
+    adSettings?.enabled &&
+    adSettings?.client &&
+    adSettings?.slots?.home
+  );
 
   useEffect(() => {
+    if (!canShowAds || useGoogleAds) {
+      setHomeAd(null);
+      setIsLoadingAd(false);
+      return;
+    }
+
     const fetchHomeAd = async () => {
       try {
         setIsLoadingAd(true);
@@ -228,7 +245,7 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
     };
 
     fetchHomeAd();
-  }, []);
+  }, [canShowAds, useGoogleAds]);
 
   const trackAdClick = async (adId: number) => {
     try {
@@ -286,8 +303,17 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
       )}
 
       {/* Home Ad Section - Full Width */}
-      <div className="w-full">
-        {isLoadingAd ? (
+      {canShowAds && (
+        <div className="w-full">
+        {useGoogleAds ? (
+          <div className="w-full rounded-lg border border-[#CECCFF] p-3 bg-white">
+            <GoogleAdSlot
+              client={adSettings?.client as string}
+              slot={adSettings?.slots?.home as string}
+              style={{ display: 'block', width: '100%', minHeight: '250px' }}
+            />
+          </div>
+        ) : isLoadingAd ? (
           <div className="w-full h-40 sm:h-48 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
             <div className="w-full h-full px-1 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
           </div>
@@ -349,7 +375,8 @@ const TopLibrariesSection: React.FC<TopLibrarySectionProps> = ({
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Top Elements Section */}
       {topLibrariesByInteraction.length > 0 && (

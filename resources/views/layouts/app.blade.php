@@ -16,6 +16,15 @@
 
     {{-- Scripts --}}
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+
+    @php
+        $googleAdsEnabled = \App\Helpers\SettingsHelper::googleAdsEnabled();
+        $googleAdsClient = \App\Helpers\SettingsHelper::googleAdsClient();
+    @endphp
+    @if($googleAdsEnabled && $googleAdsClient)
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ $googleAdsClient }}" crossorigin="anonymous"></script>
+    @endif
+
     {{-- Additional head content --}}
     @stack('head')
 </head>

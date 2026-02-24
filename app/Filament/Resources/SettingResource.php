@@ -279,6 +279,48 @@ class SettingResource extends Resource
                             ),
                     ]),
 
+                Section::make('Google AdSense')
+                    ->description('Control Google ad rendering. When disabled, manual ads remain active.')
+                    ->schema([
+                        Toggle::make('google_ads_enabled')
+                            ->label('Enable Google AdSense')
+                            ->helperText('If enabled, Google ads will be used in existing ad placements for free/guest users.'),
+
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('google_adsense_client')
+                                    ->label('AdSense Client ID')
+                                    ->placeholder('ca-pub-2521034643813541')
+                                    ->helperText('Use the full client id format: ca-pub-xxxxxxxxxxxxxxx')
+                                    ->visible(fn (Forms\Get $get) => $get('google_ads_enabled'))
+                                    ->maxLength(100),
+
+                                TextInput::make('google_ads_slot_in_feed')
+                                    ->label('In-Feed Slot ID')
+                                    ->placeholder('7375528021')
+                                    ->visible(fn (Forms\Get $get) => $get('google_ads_enabled'))
+                                    ->maxLength(100),
+
+                                TextInput::make('google_ads_slot_sidebar')
+                                    ->label('Sidebar Slot ID')
+                                    ->placeholder('your-sidebar-slot-id')
+                                    ->visible(fn (Forms\Get $get) => $get('google_ads_enabled'))
+                                    ->maxLength(100),
+
+                                TextInput::make('google_ads_slot_home')
+                                    ->label('Home Slot ID')
+                                    ->placeholder('1807506571')
+                                    ->visible(fn (Forms\Get $get) => $get('google_ads_enabled'))
+                                    ->maxLength(100),
+
+                                TextInput::make('google_ads_slot_modal')
+                                    ->label('Modal Slot ID')
+                                    ->placeholder('your-modal-slot-id')
+                                    ->visible(fn (Forms\Get $get) => $get('google_ads_enabled'))
+                                    ->maxLength(100),
+                            ]),
+                    ]),
+
                 Section::make('Maintenance Mode')
                     ->description('Control site maintenance mode')
                     ->schema([

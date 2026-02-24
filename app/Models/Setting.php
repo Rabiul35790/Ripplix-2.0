@@ -27,6 +27,12 @@ class Setting extends Model
         'addresses',
         'social_media',
         'seo_settings',
+        'google_ads_enabled',
+        'google_adsense_client',
+        'google_ads_slot_sidebar',
+        'google_ads_slot_home',
+        'google_ads_slot_modal',
+        'google_ads_slot_in_feed',
         'maintenance_mode',
         'maintenance_message',
     ];
@@ -37,6 +43,7 @@ class Setting extends Model
         'phones' => 'array',
         'addresses' => 'array',
         'seo_settings' => 'array',
+        'google_ads_enabled' => 'boolean',
         'maintenance_mode' => 'boolean',
     ];
 
@@ -56,6 +63,7 @@ class Setting extends Model
                 'addresses' => [],
                 'social_media' => [],
                 'seo_settings' => [],
+                'google_ads_enabled' => false,
             ]);
         }
 

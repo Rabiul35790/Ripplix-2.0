@@ -16,4 +16,15 @@ export type PageProps<
         user: User | null; // Allow null for unauthenticated users
     };
     ziggy: Config & { location: string };
+    adSettings?: {
+        enabled?: boolean;
+        client?: string | null;
+        can_show_ads?: boolean;
+        slots?: {
+            sidebar?: string | null;
+            home?: string | null;
+            modal?: string | null;
+            in_feed?: string | null;
+        };
+    };
 };

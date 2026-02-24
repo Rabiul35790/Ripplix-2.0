@@ -141,6 +141,17 @@ class EditSetting extends EditRecord
             $data['seo_settings'] = $seoProfiles;
         }
 
+        if (isset($data['google_adsense_client'])) {
+            $data['google_adsense_client'] = trim((string) $data['google_adsense_client']);
+        }
+
+        foreach (['sidebar', 'home', 'modal', 'in_feed'] as $placement) {
+            $key = "google_ads_slot_{$placement}";
+            if (isset($data[$key])) {
+                $data[$key] = trim((string) $data[$key]);
+            }
+        }
+
         return $data;
     }
 }

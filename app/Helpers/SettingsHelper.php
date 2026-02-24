@@ -172,4 +172,30 @@ class SettingsHelper
     {
         return self::get('maintenance_message', 'We are currently performing scheduled maintenance. Please check back soon.');
     }
+
+    /**
+     * Check if Google Ads is enabled.
+     */
+    public static function googleAdsEnabled(): bool
+    {
+        return (bool) self::get('google_ads_enabled', false);
+    }
+
+    /**
+     * Get Google AdSense client id (ca-pub-...).
+     */
+    public static function googleAdsClient(): ?string
+    {
+        $client = self::get('google_adsense_client');
+        return is_string($client) && trim($client) !== '' ? trim($client) : null;
+    }
+
+    /**
+     * Get Google AdSense slot by placement key.
+     */
+    public static function googleAdsSlot(string $placement): ?string
+    {
+        $value = self::get("google_ads_slot_{$placement}");
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
 }

@@ -61,6 +61,28 @@ class HandleInertiaRequests extends Middleware
                     'seo_settings' => $settings?->seo_settings ?? [],
                 ];
             },
+            'adSettings' => function () use ($request) {
+                $settings = Setting::first();
+                $user = $request->user();
+
+                $canShowAds = true;
+                if ($user) {
+                    $limits = $user->getPlanLimits();
+                    $canShowAds = (bool) ($limits['isFree'] ?? false);
+                }
+
+                return [
+                    'enabled' => (bool) ($settings?->google_ads_enabled ?? false),
+                    'client' => $settings?->google_adsense_client,
+                    'slots' => [
+                        'sidebar' => $settings?->google_ads_slot_sidebar,
+                        'home' => $settings?->google_ads_slot_home,
+                        'modal' => $settings?->google_ads_slot_modal,
+                        'in_feed' => $settings?->google_ads_slot_in_feed,
+                    ],
+                    'can_show_ads' => $canShowAds,
+                ];
+            },
         ]);
     }
 }

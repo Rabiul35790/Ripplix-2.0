@@ -4,6 +4,7 @@ import { PageProps } from '@/types';
 import LibraryCard from './LibraryCard';
 import { Infinity } from 'lucide-react';
 import InFeedAdCard from './InFeedAdCard';
+import GoogleAdSlot from '@/Components/GoogleAdSlot';
 
 interface UserPlanLimits {
   isFree: boolean;
@@ -188,6 +189,14 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
   const isUserAuthenticated = isAuthenticated ?? !!authData?.user;
+  const adSettings = props?.adSettings;
+  const canShowAds = adSettings?.can_show_ads !== false;
+  const useGoogleAds = Boolean(
+    canShowAds &&
+    adSettings?.enabled &&
+    adSettings?.client &&
+    adSettings?.slots?.in_feed
+  );
 
   const [inFeedAds, setInFeedAds] = useState<InFeedAd[]>([]);
   const [isLoadingAds, setIsLoadingAds] = useState(true);
@@ -209,6 +218,12 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
 
   // Fetch in-feed ads
   useEffect(() => {
+    if (!canShowAds || useGoogleAds) {
+      setInFeedAds([]);
+      setIsLoadingAds(false);
+      return;
+    }
+
     const fetchInFeedAds = async () => {
       try {
         setIsLoadingAds(true);
@@ -234,7 +249,7 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     };
 
     fetchInFeedAds();
-  }, []);
+  }, [canShowAds, useGoogleAds]);
 
   // Grid columns
   const gridCols = useMemo(() => {
@@ -270,6 +285,47 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
     data: Library | InFeedAd;
     key: string;
   }> = [];
+
+  if (!canShowAds) {
+    normalLibraries.forEach((library) => {
+      items.push({
+        type: 'library',
+        data: library,
+        key: `library-${library.id}`,
+      });
+    });
+    return items;
+  }
+
+  if (useGoogleAds) {
+    normalLibraries.forEach((library, index) => {
+      items.push({
+        type: 'library',
+        data: library,
+        key: `library-${library.id}`,
+      });
+
+      const shouldInsertAd =
+        index === 3 || (index >= 10 && (index - 10) % 10 === 0);
+
+      if (shouldInsertAd) {
+        items.push({
+          type: 'ad',
+          data: {
+            id: -(index + 1),
+            title: 'Google Ad',
+            media_type: 'image',
+            image_url: null,
+            video_url: null,
+            media_url: '',
+            target_url: '',
+          } as InFeedAd,
+          key: `google-ad-${index}`,
+        });
+      }
+    });
+    return items;
+  }
 
   if (inFeedAds.length === 0) {
     normalLibraries.forEach((library) => {
@@ -483,10 +539,20 @@ const LibraryGrid: React.FC<LibraryGridProps> = ({
             const ad = item.data as InFeedAd;
             return (
               <div key={item.key}>
-                <InFeedAdCard
-                  ad={ad}
-                  cardSize={cardSize}
-                />
+                {useGoogleAds ? (
+                  <div className="rounded-lg border border-[#E3E2FF] bg-white p-3">
+                    <GoogleAdSlot
+                      client={adSettings?.client as string}
+                      slot={adSettings?.slots?.in_feed as string}
+                      style={{ display: 'block', width: '100%', minHeight: cardSize === 'large' ? '280px' : '240px' }}
+                    />
+                  </div>
+                ) : (
+                  <InFeedAdCard
+                    ad={ad}
+                    cardSize={cardSize}
+                  />
+                )}
               </div>
             );
           }

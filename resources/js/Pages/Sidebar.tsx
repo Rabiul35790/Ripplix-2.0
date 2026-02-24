@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { Menu, X, BookOpen, Users, Target, Smartphone, Zap, FolderOpen, User, Phone, Heart, Command, Star, Layers, Navigation, SquareMousePointer, Building2 } from 'lucide-react';
+import GoogleAdSlot from '@/Components/GoogleAdSlot';
 
 interface SidebarProps {
   currentRoute: string;
@@ -52,6 +53,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
 
   const logo = props?.settings?.logo || null;
   const copyright_text = props?.settings?.copyright_text || null;
+  const adSettings = props?.adSettings;
+  const canShowAds = adSettings?.can_show_ads !== false;
+  const useGoogleAds = Boolean(
+    canShowAds &&
+    adSettings?.enabled &&
+    adSettings?.client &&
+    adSettings?.slots?.sidebar
+  );
 
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -62,6 +71,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
   }, []);
 
   useEffect(() => {
+    if (!canShowAds || useGoogleAds) {
+      setSidebarAd(null);
+      setIsLoadingAd(false);
+      return;
+    }
+
     const fetchSidebarAd = async () => {
       try {
         setIsLoadingAd(true);
@@ -82,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
     };
 
     fetchSidebarAd();
-  }, []);
+  }, [canShowAds, useGoogleAds]);
 
   // Update sliding indicator position
   useEffect(() => {
@@ -353,8 +368,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
         </div>
 
         {/* Dynamic Advertisement Section */}
-        <div className="px-5 mt-10 font-sora">
-          {isLoadingAd ? (
+        {canShowAds && (
+          <div className="px-5 mt-10 font-sora">
+          {useGoogleAds ? (
+            <div className="max-w-[192px] rounded-lg overflow-hidden border border-[#CECCFF] p-2">
+              <GoogleAdSlot
+                client={adSettings?.client as string}
+                slot={adSettings?.slots?.sidebar as string}
+                style={{ display: 'inline-block', width: '192px', height: '193px' }}
+                responsive={false}
+              />
+            </div>
+          ) : isLoadingAd ? (
             <div className="max-h-[193px] max-w-[192px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse">
               <div className="h-[193px] w-[192px] bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
             </div>
@@ -410,7 +435,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentRoute, auth, ziggy }) => {
               </div>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}

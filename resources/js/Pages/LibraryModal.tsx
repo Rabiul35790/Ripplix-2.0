@@ -8,6 +8,7 @@ import LibrarySelectionModal from './LibrarySelectionModal';
 import BoardModal from '../Components/BoardModal';
 import axios from 'axios';
 import { Button } from '@headlessui/react';
+import GoogleAdSlot from '@/Components/GoogleAdSlot';
 
 interface Category {
     id: number;
@@ -127,6 +128,14 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
   // Use auth from props if passed directly, otherwise fall back to props.auth from usePage
   const authData = auth || props.auth;
   const ziggyData = props.ziggy;
+  const adSettings = props?.adSettings;
+  const canShowAds = adSettings?.can_show_ads !== false;
+  const useGoogleAds = Boolean(
+    canShowAds &&
+    adSettings?.enabled &&
+    adSettings?.client &&
+    adSettings?.slots?.modal
+  );
 
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -168,10 +177,16 @@ const [isLoadingModalAd, setIsLoadingModalAd] = useState(false);
 
   // Fetch modal ad for all users when modal opens
     useEffect(() => {
+    if (!canShowAds || useGoogleAds) {
+        setModalAd(null);
+        setIsLoadingModalAd(false);
+        return;
+    }
+
     if (isOpen) {
         fetchModalAd();
     }
-    }, [isOpen]);
+    }, [isOpen, canShowAds, useGoogleAds]);
 
     const fetchModalAd = async () => {
     try {
@@ -746,8 +761,17 @@ return (
             </div>
 
             <div className="p-4 sm:p-6">
+            {canShowAds && (
             <div className="w-full mb-6 sm:mb-12">
-                {isLoadingModalAd ? (
+                {useGoogleAds ? (
+                <div className="w-full border border-[#E0DAC8] rounded-lg p-3 bg-white">
+                    <GoogleAdSlot
+                        client={adSettings?.client as string}
+                        slot={adSettings?.slots?.modal as string}
+                        style={{ display: 'block', width: '100%', minHeight: '280px' }}
+                    />
+                </div>
+                ) : isLoadingModalAd ? (
                 <div className="w-full h-48 sm:h-80 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center">
                     <div className="w-3/4 h-40 sm:h-60 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                 </div>
@@ -814,6 +838,7 @@ return (
                 </div>
                 )}
             </div>
+            )}
 
               {/* Suggested Libraries Section - Shows for all users */}
               {suggestedLibraries.length > 0 && (
