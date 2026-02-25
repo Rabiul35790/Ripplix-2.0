@@ -41,6 +41,7 @@ type AdminSeoProfile = {
     twitter_title?: string;
     twitter_description?: string;
     twitter_image?: string;
+    structured_data?: Record<string, unknown> | string | null;
 };
 
 const DEFAULT_IMAGE = '/images/og/og-default.png';
@@ -292,6 +293,19 @@ const SeoHead: React.FC = () => {
         tokens
     );
 
+    const resolvedStructuredData =
+        librarySeo?.structuredData ||
+        (typeof pageProfile?.structured_data === 'string'
+            ? pageProfile.structured_data
+            : pageProfile?.structured_data
+                ? JSON.stringify(pageProfile.structured_data)
+                : '') ||
+        (typeof globalProfile?.structured_data === 'string'
+            ? globalProfile.structured_data
+            : globalProfile?.structured_data
+                ? JSON.stringify(globalProfile.structured_data)
+                : '');
+
     return (
         <Head>
             <title head-key="title">{resolvedTitle}</title>
@@ -311,11 +325,11 @@ const SeoHead: React.FC = () => {
             <meta head-key="twitter:description" name="twitter:description" content={resolvedTwitterDescription} />
             <meta head-key="twitter:image" name="twitter:image" content={resolvedTwitterImage} />
             {librarySeo?.keywords && <meta head-key="keywords" name="keywords" content={librarySeo.keywords} />}
-            {librarySeo?.structuredData && (
+            {resolvedStructuredData && (
                 <script
                     head-key="structured-data"
                     type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: librarySeo.structuredData }}
+                    dangerouslySetInnerHTML={{ __html: resolvedStructuredData }}
                 />
             )}
         </Head>

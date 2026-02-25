@@ -430,6 +430,7 @@ class CollectionController extends Controller
             return [
                 'id' => $library->id,
                 'title' => $library->title,
+                'seo_title' => $library->seo_title,
                 'slug' => $library->slug,
                 'url' => $library->url,
                 'video_url' => $library->video_url,
@@ -531,6 +532,7 @@ class CollectionController extends Controller
                 return [
                     'id' => $library->id,
                     'title' => $library->title,
+                    'seo_title' => $library->seo_title,
                     'slug' => $library->slug,
                     'url' => $library->url,
                     'video_url' => $library->video_url,

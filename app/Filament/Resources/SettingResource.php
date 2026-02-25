@@ -432,6 +432,11 @@ class SettingResource extends Resource
                                             ->label('Twitter Image URL'),
                                     ]),
 
+                                Textarea::make('structured_data')
+                                    ->label('Structured Data (JSON-LD)')
+                                    ->rows(6)
+                                    ->helperText('Optional JSON-LD for this page profile. Example: {"@context":"https://schema.org","@type":"WebPage"}'),
+
                                 Textarea::make('notes')
                                     ->label('Notes')
                                     ->rows(2)

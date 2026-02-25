@@ -95,6 +95,7 @@ class LibraryController extends Controller
         $query = Library::select([
                 'libraries.id',
                 'libraries.title',
+                'libraries.seo_title',
                 'libraries.published_date',
                 'libraries.slug',
                 'libraries.url',
@@ -169,6 +170,7 @@ class LibraryController extends Controller
         if ($isAuthenticated) {
             // Don't cache this - it's user-specific and random
             $allLibraries = Library::select(['id', 'slug', 'title'])
+                ->addSelect('seo_title')
                 ->where('is_active', true)
                 ->inRandomOrder()
                 ->limit(100) // Limit for performance
@@ -247,6 +249,7 @@ class LibraryController extends Controller
 
         foreach ($topCategories as $category) {
             $libraries = Library::select(['id', 'title', 'slug', 'url', 'video_url', 'logo'])
+                ->addSelect('seo_title')
                 ->with([
                     'platforms:id,name',
                     'categories:id,name,image,slug',
@@ -284,6 +287,7 @@ class LibraryController extends Controller
 
         foreach ($topInteractions as $interaction) {
             $libraries = Library::select(['id', 'title', 'slug', 'url', 'video_url', 'logo'])
+                ->addSelect('seo_title')
                 ->with([
                     'platforms:id,name',
                     'categories:id,name,image,slug',
@@ -320,6 +324,7 @@ class LibraryController extends Controller
 
         foreach ($topIndustries as $industry) {
             $libraries = Library::select(['id', 'title', 'slug', 'url', 'video_url', 'logo'])
+                ->addSelect('seo_title')
                 ->with([
                     'platforms:id,name',
                     'categories:id,name,image,slug',
@@ -377,6 +382,7 @@ class LibraryController extends Controller
         $query = Library::select([
                 'libraries.id',
                 'libraries.title',
+                'libraries.seo_title',
                 'libraries.slug',
                 'libraries.url',
                 'libraries.video_url',
@@ -558,6 +564,7 @@ class LibraryController extends Controller
         $query = Library::select([
                 'libraries.id',
                 'libraries.title',
+                'libraries.seo_title',
                 'libraries.slug',
                 'libraries.url',
                 'libraries.video_url',

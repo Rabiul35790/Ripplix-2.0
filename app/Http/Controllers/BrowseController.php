@@ -165,6 +165,7 @@ class BrowseController extends Controller
         $query = Library::select([
                 'libraries.id',
                 'libraries.title',
+                'libraries.seo_title',
                 'libraries.slug',
                 'libraries.url',
                 'libraries.video_url',
@@ -307,6 +308,7 @@ class BrowseController extends Controller
         $query = Library::select([
                 'libraries.id',
                 'libraries.title',
+                'libraries.seo_title',
                 'libraries.slug',
                 'libraries.url',
                 'libraries.video_url',
@@ -449,6 +451,7 @@ public function allElements(Request $request)
         $query = Library::select([
                 'libraries.id',
                 'libraries.title',
+                'libraries.seo_title',
                 'libraries.slug',
                 'libraries.url',
                 'libraries.video_url',

@@ -10,6 +10,7 @@ import BoardModal from '../Components/BoardModal';
 interface Category {
   id: number;
   name: string;
+  meta_title?: string;
   image?: string;
   slug?: string;
   product_url?: string;
@@ -27,6 +28,7 @@ interface UserPlanLimits {
 interface Library {
   id: number;
   title: string;
+  seo_title?: string;
   slug: string;
   url: string;
   video_url: string;
@@ -531,7 +533,13 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   };
 
   const getCategoryName = () => {
-    return library.categories.length > 0 ? library.categories[0].name : '';
+    if (library.seo_title && library.seo_title.trim() !== '') {
+      return library.seo_title;
+    }
+
+    if (library.categories.length === 0) return '';
+
+    return library.categories[0].name || '';
   };
 
   const getCategorySlug = () => {
@@ -545,6 +553,8 @@ const LibraryCard: React.FC<LibraryCardProps> = ({
   const getCategoryProductUrl = () => {
     return library.categories.length > 0 ? library.categories[0].product_url : null;
   };
+
+  console.log("title is the ", library.seo_title);
 
   // Render video content based on platform type
   const renderVideoContent = () => {

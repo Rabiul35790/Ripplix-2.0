@@ -134,6 +134,17 @@ class EditSetting extends EditRecord
                     'twitter_title' => trim($profile['twitter_title'] ?? ''),
                     'twitter_description' => trim($profile['twitter_description'] ?? ''),
                     'twitter_image' => trim($profile['twitter_image'] ?? ''),
+                    'structured_data' => (function () use ($profile) {
+                        $structuredData = trim((string) ($profile['structured_data'] ?? ''));
+                        if ($structuredData === '') {
+                            return '';
+                        }
+
+                        $decoded = json_decode($structuredData, true);
+                        return json_last_error() === JSON_ERROR_NONE
+                            ? json_encode($decoded, JSON_UNESCAPED_SLASHES)
+                            : $structuredData;
+                    })(),
                     'notes' => trim($profile['notes'] ?? ''),
                 ];
             }

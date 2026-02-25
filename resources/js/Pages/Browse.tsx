@@ -358,6 +358,18 @@ useEffect(() => {
     return filtered;
   }, [libraries, selectedPlatform, searchQuery]);
 
+  const selectedPlatformLabel = useMemo(() => {
+    if (selectedPlatform === 'all') {
+      return '';
+    }
+
+    const matchedPlatform = filters?.platforms?.find(
+      (platform) => platform.name.toLowerCase() === selectedPlatform.toLowerCase()
+    );
+
+    return matchedPlatform?.name || selectedPlatform;
+  }, [filters?.platforms, selectedPlatform]);
+
   // Update displayed libraries when filteredLibraries changes
   useEffect(() => {
     setDisplayedLibraries(filteredLibraries);
@@ -635,7 +647,9 @@ const handleLibraryNavigation = useCallback((library: Library) => {
                     </svg>
                   </div>
                   <h3 className="text-xl sm:text-2xl md:text-[22px] font-sora !font-bold text-[#2B235A] dark:text-white mb-2">
-                    No libraries found
+                    {selectedPlatformLabel
+                      ? `No libraries found for ${selectedPlatformLabel}`
+                      : 'No libraries found'}
                   </h3>
                   <p className="text-sm sm:text-base md:text-[15px] text-[#7F7F8A] dark:text-gray-400 max-w-md mx-auto mb-4 sm:mb-6 md:mb-5">
                     {searchQuery || selectedPlatform !== 'all'
