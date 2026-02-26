@@ -8,6 +8,7 @@ import FilterSection from './Website/Components/FilterSection';
 import CategoryHeader from './CategoryHeader';
 import { ArrowBigLeft, ArrowBigRight, ChevronRight, Home, Infinity } from 'lucide-react';
 import LayoutUnauth from './LayoutUnauth';
+import FAQ from '../Components/Faq';
 
 interface Library {
   id: number;
@@ -69,6 +70,11 @@ interface BrowseProps extends PageProps {
   filterValue?: string;
   filterName?: string;
   categoryData?: any;
+  browseFaqs?: Array<{
+    question: string;
+    answer: string;
+  }>;
+  faqHeading?: string;
 }
 
 const Browse: React.FC<BrowseProps> = ({
@@ -84,6 +90,8 @@ const Browse: React.FC<BrowseProps> = ({
   filterName,
   settings,
   categoryData,
+  browseFaqs = [],
+  faqHeading = 'Your Questions Answered',
   userPlanLimits,
   currentPlan,
   auth
@@ -668,6 +676,10 @@ const handleLibraryNavigation = useCallback((library: Library) => {
                   </button>
                 </div>
               </div>
+            )}
+
+            {!isAuthenticated && browseFaqs.length > 0 && filteredLibraries.length > 0 && (
+              <FAQ heading={faqHeading} faqItems={browseFaqs} />
             )}
           </>
         )}

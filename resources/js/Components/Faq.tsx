@@ -9,14 +9,19 @@ interface FAQItem {
 
 interface FAQProps {
   heading?: string;
+  faqItems?: Array<{
+    question: string;
+    answer: string;
+  }>;
 }
 
 const FAQ: React.FC<FAQProps> = ({
-  heading = "Your Questions Answered"
+  heading = "Your Questions Answered",
+  faqItems = []
 }) => {
   const [openId, setOpenId] = useState<number | null>(null);
 
-  const faqData: FAQItem[] = [
+  const defaultFaqData: FAQItem[] = [
     {
       id: 1,
       question: "What is Ripplix?",
@@ -43,6 +48,15 @@ const FAQ: React.FC<FAQProps> = ({
       answer: "All animations are handpicked from real apps and products. Our team curates and categorizes them to ensure quality and context."
     }
   ];
+
+  const faqData: FAQItem[] = (faqItems.length > 0
+    ? faqItems.map((item, index) => ({
+        id: index + 1,
+        question: item.question,
+        answer: item.answer,
+      }))
+    : defaultFaqData
+  );
 
   const toggleFAQ = (id: number) => {
     setOpenId(openId === id ? null : id);

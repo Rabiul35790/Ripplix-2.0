@@ -452,6 +452,8 @@ class LibraryController extends Controller
         $filterValue = null;
         $filterName = null;
         $categoryData = null;
+        $browseFaqs = [];
+        $faqHeading = 'Your Questions Answered';
 
         $appsFilter = $request->query('apps', $request->query('category'));
         if ($appsFilter && $appsFilter !== 'all') {
@@ -470,6 +472,8 @@ class LibraryController extends Controller
 
                 $variant = $category->variants()->where('is_active', true)->first();
                 $categoryData['variant_name'] = $variant ? $variant->name : null;
+                $browseFaqs = $this->normalizeFaqs($category->faqs ?? null);
+                $faqHeading = $category->name . ' FAQs';
             }
         }
 
@@ -479,6 +483,8 @@ class LibraryController extends Controller
                 $filterType = 'industry';
                 $filterValue = $industry->slug;
                 $filterName = $industry->name;
+                $browseFaqs = $this->normalizeFaqs($industry->faqs ?? null);
+                $faqHeading = $industry->name . ' FAQs';
             }
         }
 
@@ -488,6 +494,8 @@ class LibraryController extends Controller
                 $filterType = 'interaction';
                 $filterValue = $interaction->slug;
                 $filterName = $interaction->name;
+                $browseFaqs = $this->normalizeFaqs($interaction->faqs ?? null);
+                $faqHeading = $interaction->name . ' FAQs';
             }
         }
 
@@ -552,6 +560,8 @@ class LibraryController extends Controller
             'userPlanLimits' => $userPlanLimits,
             'currentPlan' => $currentPlan,
             'totalLibraryCount' => $totalLibraryCount,
+            'browseFaqs' => $browseFaqs,
+            'faqHeading' => $faqHeading,
         ]);
     }
 
@@ -673,6 +683,8 @@ class LibraryController extends Controller
         }
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
+        $browseFaqs = $this->normalizeFaqs($category->faqs ?? null);
+        $faqHeading = $category->name . ' FAQs';
 
         // Return minimal data for instant navigation
         return Inertia::render('Browse', [
@@ -690,6 +702,8 @@ class LibraryController extends Controller
             'userPlanLimits' => $userPlanLimits,
             'currentPlan' => $currentPlan,
             'totalLibraryCount' => $totalLibraryCount,
+            'browseFaqs' => $browseFaqs,
+            'faqHeading' => $faqHeading,
         ]);
     }
 
@@ -724,6 +738,8 @@ class LibraryController extends Controller
         }
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
+        $browseFaqs = $this->normalizeFaqs($industry->faqs ?? null);
+        $faqHeading = $industry->name . ' FAQs';
 
         // Return minimal data for instant navigation
         return Inertia::render('Browse', [
@@ -740,6 +756,8 @@ class LibraryController extends Controller
             'userPlanLimits' => $userPlanLimits,
             'currentPlan' => $currentPlan,
             'totalLibraryCount' => $totalLibraryCount,
+            'browseFaqs' => $browseFaqs,
+            'faqHeading' => $faqHeading,
         ]);
     }
 
@@ -774,6 +792,8 @@ class LibraryController extends Controller
         }
 
         $viewedLibraryIds = $this->getViewedLibraryIds($request);
+        $browseFaqs = $this->normalizeFaqs($interaction->faqs ?? null);
+        $faqHeading = $interaction->name . ' FAQs';
 
         // Return minimal data for instant navigation
         return Inertia::render('Browse', [
@@ -790,6 +810,8 @@ class LibraryController extends Controller
             'userPlanLimits' => $userPlanLimits,
             'currentPlan' => $currentPlan,
             'totalLibraryCount' => $totalLibraryCount,
+            'browseFaqs' => $browseFaqs,
+            'faqHeading' => $faqHeading,
         ]);
     }
 
@@ -971,5 +993,35 @@ class LibraryController extends Controller
             'industries' => Industry::where('is_active', true)->orderBy('name')->get(),
             'interactions' => Interaction::where('is_active', true)->orderBy('name')->get(),
         ];
+    }
+
+    private function normalizeFaqs($rawFaqs): array
+    {
+        if (is_string($rawFaqs)) {
+            $decoded = json_decode($rawFaqs, true);
+            $rawFaqs = json_last_error() === JSON_ERROR_NONE ? $decoded : [];
+        }
+
+        if (!is_array($rawFaqs)) {
+            return [];
+        }
+
+        return collect($rawFaqs)
+            ->map(function ($item) {
+                $question = trim((string) data_get($item, 'question', ''));
+                $answer = trim((string) data_get($item, 'answer', ''));
+
+                if ($question === '' || $answer === '') {
+                    return null;
+                }
+
+                return [
+                    'question' => $question,
+                    'answer' => $answer,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 }
