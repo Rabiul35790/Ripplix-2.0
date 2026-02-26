@@ -298,15 +298,28 @@ const getUnlockProButtonText = () => {
       <AnimatedGradientBorderStyles />
       <header className="bg-white dark:bg-gray-900 px-4 sm:px-6 pb-4 pt-4 sm:pt-6 font-sora dark:border-gray-700">
         <div className="flex items-center justify-between">
-          {/* Mobile Sidebar Toggle + Browse - Only on mobile */}
-          <div className="flex items-center space-x-1 lg:hidden">
-            <button
-              onClick={onMobileSidebarToggle}
-              className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors outline-none focus:outline-none"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-
+          {/* Mobile Left: Logo */}
+          <div className="flex items-center lg:hidden">
+            <Link href="/" className="flex items-center space-x-2 focus:outline-none">
+              {logo ? (
+                <img
+                  src={logo}
+                  alt="RippliX Logo"
+                  className="h-8 max-w-[120px] object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center ${logo ? 'hidden' : ''}`}>
+                <span className="text-white dark:text-black font-bold text-sm">R</span>
+              </div>
+            </Link>
+          </div>
+          {/* Mobile Right: Browse + Menu */}
+          <div className="flex items-center gap-1 lg:hidden">
             <div className="relative" ref={browseRef}>
               <button
                 onClick={toggleBrowseDropdown}
@@ -329,6 +342,12 @@ const getUnlockProButtonText = () => {
                 filters={filters || defaultFilters}
               />
             </div>
+            <button
+              onClick={onMobileSidebarToggle}
+              className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors outline-none focus:outline-none"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Logo - Desktop Only */}
@@ -396,13 +415,13 @@ const getUnlockProButtonText = () => {
             href="https://plugin.ripplix.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="lg:hidden relative text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:outline-none transition-colors text-xs whitespace-nowrap duration-500 flex items-center"
+            className="hidden relative text-[#2B235A] dark:text-gray-300 font-medium outline-none focus:outline-none transition-colors text-xs whitespace-nowrap duration-500"
           >
             <span className="opacity-80 hover:opacity-100 transition-opacity">Plugin</span>
           </a>
 
           {/* Center - Search (Desktop) */}
-          <div className="hidden sm:flex flex-1 max-w-xs sm:max-w-md lg:max-w-2xl mx-4 lg:mx-8">
+          <div className="hidden lg:flex flex-1 max-w-xs sm:max-w-md lg:max-w-2xl mx-4 lg:mx-8">
             <form onSubmit={handleSearch} className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-4 w-4 sm:h-5 sm:w-5 text-[#2B235A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,7 +451,7 @@ const getUnlockProButtonText = () => {
           </div>
 
           {/* Right side - Actions */}
-          <div className="flex items-center space-x-1.5 sm:space-x-4">
+          <div className="hidden lg:flex items-center space-x-1.5 sm:space-x-4">
             {/* Mobile Search Button */}
             <button
               onClick={handleSearchInputClick}
@@ -657,6 +676,27 @@ const getUnlockProButtonText = () => {
               </Link>
             )}
           </div>
+        </div>
+
+        {/* Mobile Search Row */}
+        <div className="lg:hidden mt-3">
+          <form onSubmit={handleSearch} className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-[#2B235A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onClick={handleSearchInputClick}
+              placeholder="Try searching 'Hover Effect'"
+              className="w-full pl-10 pr-4 py-2 bg-[#F5F5FA] dark:bg-gray-800 border border-[#CECCFF] dark:border-[#E0DAC8] rounded-lg focus:outline-none focus:ring-0 focus:border-[#E0DAC8] dark:focus:border-[#E0DAC8] outline-none ring-0 text-gray-900 dark:text-white placeholder-[#2B235A] dark:placeholder-gray-400 cursor-pointer text-sm"
+              style={{ outline: 'none', boxShadow: 'none' }}
+              readOnly
+            />
+          </form>
         </div>
       </header>
 

@@ -6,6 +6,9 @@ import Sidebar2 from './Sidebar2';
 import Header2 from './Header2';
 import HeroSection from '../Components/HeroSection';
 import { X } from 'lucide-react';
+import ProfileModal from './ProfileModal';
+import SupportModal from './SupportModal';
+import SubscriptionPricingModal from './SubscriptionPricingModal';
 
 interface Filter {
   id: number;
@@ -89,6 +92,9 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
   const authData = auth || props.auth;
   const [headerHeight, setHeaderHeight] = useState(0);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarProfileModalOpen, setIsSidebarProfileModalOpen] = useState(false);
+  const [isSidebarSupportModalOpen, setIsSidebarSupportModalOpen] = useState(false);
+  const [isSidebarPricingModalOpen, setIsSidebarPricingModalOpen] = useState(false);
 
   const handleMobileSidebarToggle = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
@@ -96,6 +102,21 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
 
   const closeMobileSidebar = () => {
     setIsMobileSidebarOpen(false);
+  };
+
+  const openSidebarProfileModal = () => {
+    closeMobileSidebar();
+    setIsSidebarProfileModalOpen(true);
+  };
+
+  const openSidebarSupportModal = () => {
+    closeMobileSidebar();
+    setIsSidebarSupportModalOpen(true);
+  };
+
+  const openSidebarPricingModal = () => {
+    closeMobileSidebar();
+    setIsSidebarPricingModalOpen(true);
   };
 
 //  const route = () => {
@@ -249,6 +270,10 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
             currentRoute={currentRoute}
             auth={authData}
             ziggy={props.ziggy}
+            onMobileItemAction={closeMobileSidebar}
+            onOpenProfileModal={openSidebarProfileModal}
+            onOpenSupportModal={openSidebarSupportModal}
+            onOpenPricingModal={openSidebarPricingModal}
           />
         </div>
       </div>
@@ -268,6 +293,9 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
                 currentRoute={currentRoute}
                 auth={authData}
                 ziggy={props.ziggy}
+                onOpenProfileModal={openSidebarProfileModal}
+                onOpenSupportModal={openSidebarSupportModal}
+                onOpenPricingModal={openSidebarPricingModal}
               />
             </div>
           </div>
@@ -278,6 +306,27 @@ const LayoutUnauth: React.FC<LayoutUnauthProps> = ({
           </main>
         </div>
       </div>
+
+      <ProfileModal
+        isOpen={isSidebarProfileModalOpen}
+        onClose={() => setIsSidebarProfileModalOpen(false)}
+        auth={authData}
+        onProfileUpdate={() => {}}
+      />
+
+      {authData?.user && (
+        <SupportModal
+          isOpen={isSidebarSupportModalOpen}
+          onClose={() => setIsSidebarSupportModalOpen(false)}
+          auth={{ user: authData.user }}
+        />
+      )}
+
+      <SubscriptionPricingModal
+        isOpen={isSidebarPricingModalOpen}
+        onClose={() => setIsSidebarPricingModalOpen(false)}
+        isAuthenticated={!!authData?.user}
+      />
     </div>
   );
 };

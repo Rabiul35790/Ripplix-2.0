@@ -88,19 +88,17 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
       {/* Dropdown */}
       <div
         ref={dropdownRef}
-        className="absolute left-0 top-16 bg-[#F7F7FC] dark:bg-gray-900 border border-[#B7B3FF] dark:border-gray-700 rounded-lg shadow-xl z-50
-                   /* Mobile styles */
-                   w-[calc(100vw-2rem)] max-w-[380px] mx-4
+        className="fixed top-16 left-4 right-4 bg-[#F7F7FC] dark:bg-gray-900 border border-[#B7B3FF] dark:border-gray-700 rounded-lg shadow-xl z-50
                    /* Tablet styles */
-                   sm:w-[500px] sm:max-w-[500px] sm:mx-0
+                   sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[500px] sm:max-w-[500px]
                    /* Desktop styles */
-                   lg:w-[800px] lg:max-w-[800px]
+                   lg:absolute lg:left-0 lg:right-auto lg:top-16 lg:translate-x-0 lg:w-[800px] lg:max-w-[800px]
                    max-h-[85vh] sm:max-h-[500px] overflow-hidden"
         style={{ touchAction: 'manipulation' }}
       >
         {/* Mobile Layout - Stacked */}
         <div className="block lg:hidden">
-          <div className="divide-y divide-[#B7B3FF] dark:divide-gray-700 h-full max-h-[85vh] overflow-y-auto">
+          <div className="divide-y divide-[#B7B3FF] dark:divide-gray-700 h-full max-h-[85vh] overflow-y-auto bg-[#F7F7FC] dark:bg-gray-900">
             {/* Categories Section */}
             <div className="px-4">
               <div className="flex items-center mb-3 sticky top-0 bg-[#efeff7e5] dark:bg-gray-900 pb-3 pt-4 -mx-4 px-4 z-10">
@@ -118,7 +116,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
               </div>
               <p className="text-xs font-semibold text-[#9D9DA8] dark:text-gray-400 mb-3">{filters.categories.length}+ Products</p>
 
-              <div className="space-y-1 max-h-32 overflow-y-auto">
+              <div className="space-y-1 bg-[#F7F7FC] dark:bg-gray-900">
                 {filters.categories.slice(0, 6).map((category) => (
                   <a
                     key={category.id}
@@ -172,7 +170,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
                 {filters.industries.length}+ Industries
             </p>
 
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1 bg-[#F7F7FC] dark:bg-gray-900">
                 {filters.industries.slice(0, 6).map((industry) => (
                 <a
                     key={industry.id}
@@ -217,7 +215,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
                 {filters.interactions.length}+ Elements
             </p>
 
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1 bg-[#F7F7FC] dark:bg-gray-900">
                 {filters.interactions.slice(0, 6).map((interaction) => (
                 <a
                     key={interaction.id}
@@ -247,10 +245,10 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
         </div>
 
         {/* Desktop Layout - Grid */}
-        <div className="hidden lg:block font-sora">
+        <div className="hidden lg:block font-sora bg-[#F7F7FC] dark:bg-gray-900">
           <div className="grid grid-cols-3 divide-x divide-[#E3E2FF] dark:divide-gray-700 h-full">
             {/* Categories Column */}
-            <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent bg-[#F7F7FC] dark:bg-gray-900">
               <div className="sticky top-0 bg-[#efeff7e5] dark:bg-gray-900 z-10 py-4 px-6 pb-2">
                 <div className="flex items-center mb-4">
                   <div className="w-8 h-8 bg-[#F7F7FCE5] dark:bg-blue-900 border border-[#E3E2FF] rounded flex items-center justify-center mr-3">
@@ -300,7 +298,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
             </div>
 
             {/* Industries Column (Updated Color Palette to Match All Apps) */}
-            <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent bg-[#F7F7FC] dark:bg-gray-900">
             <div className="sticky top-0 bg-[#efeff7e5] dark:bg-gray-900 z-10 py-4 px-6 pb-2">
                 <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-[#F7F7FCE5] dark:bg-blue-900 border border-[#E3E2FF] rounded flex items-center justify-center mr-3">
@@ -340,7 +338,7 @@ const BrowseDropdown: React.FC<BrowseDropdownProps> = ({
             </div>
 
             {/* Interactions Column (Updated Color Palette to Match All Apps) */}
-            <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            <div className="relative overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent bg-[#F7F7FC] dark:bg-gray-900">
             <div className="sticky top-0 bg-[#efeff7e5] dark:bg-gray-900 z-10 py-4 px-6 pb-2">
                 <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-[#F7F7FCE5] dark:bg-blue-900 border border-[#E3E2FF] rounded flex items-center justify-center mr-3">

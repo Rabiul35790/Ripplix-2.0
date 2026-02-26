@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
-import { BookOpen, Target, Smartphone, Zap, FolderOpen, User, Phone, Heart, Command, Star, Navigation, SquareMousePointer, Building2 } from 'lucide-react';
+import { BookOpen, Target, Smartphone, Zap, FolderOpen, User, Phone, Heart, Command, Star, Navigation, SquareMousePointer, Building2, Settings as SettingsIcon, MessageSquare, UserPlus } from 'lucide-react';
 import GoogleAdSlot from '@/Components/GoogleAdSlot';
+import axios from 'axios';
 
 interface Sidebar2Props {
   currentRoute: string;
   auth: PageProps['auth'];
   ziggy?: PageProps['ziggy'];
+  onMobileItemAction?: () => void;
+  onOpenProfileModal?: () => void;
+  onOpenSupportModal?: () => void;
+  onOpenPricingModal?: () => void;
 }
 
 interface Settings {
@@ -17,6 +22,15 @@ interface Settings {
 
 interface ExtendedPageProps extends PageProps {
   settings?: Settings;
+  currentPlan?: {
+    id: number;
+    name: string;
+    slug: string;
+    price: number;
+    billing_period: string;
+    expires_at?: string;
+    days_until_expiry?: number;
+  } | null;
 }
 
 
@@ -39,7 +53,14 @@ interface MenuItem {
   authRequired?: boolean;
 }
 
-const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
+const Sidebar2: React.FC<Sidebar2Props> = ({
+  currentRoute,
+  auth,
+  onMobileItemAction,
+  onOpenProfileModal,
+  onOpenSupportModal,
+  onOpenPricingModal,
+}) => {
   const [sidebarAd, setSidebarAd] = useState<Ad | null>(null);
   const [isLoadingAd, setIsLoadingAd] = useState(true);
   const { url, props } = usePage<ExtendedPageProps>();
@@ -52,6 +73,12 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
 
   const copyright_text = props?.settings?.copyright_text || null;
   const logo = props?.settings?.logo || null;
+  const currentPlan = props?.currentPlan || null;
+  const [currentUser, setCurrentUser] = useState(auth?.user || null);
+  const [avatarError, setAvatarError] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const adSettings = props?.adSettings;
   const canShowAds = adSettings?.can_show_ads !== false;
   const useGoogleAds = Boolean(
@@ -89,6 +116,91 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
 
     fetchSidebarAd();
   }, [canShowAds, useGoogleAds]);
+
+  useEffect(() => {
+    setCurrentUser(auth?.user || null);
+  }, [auth?.user]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [currentUser?.avatar]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchUnreadSupportCount = async () => {
+      try {
+        const response = await axios.get('/support/unread-count');
+        setUnreadSupportCount(response.data.count);
+      } catch {
+        setUnreadSupportCount(0);
+      }
+    };
+    fetchUnreadSupportCount();
+    const interval = setInterval(fetchUnreadSupportCount, 30000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  const formatText = (text = '') => text.charAt(0).toUpperCase() + text.slice(1);
+
+  const getUnlockProButtonText = () => {
+    if (!currentUser) {
+      return { full: 'Unlock Pro', short: 'Pro' };
+    }
+
+    if (currentPlan?.billing_period === 'lifetime') {
+      return { full: 'Lifetime Pro', short: 'Pro' };
+    }
+
+    if (currentPlan && currentPlan.price > 0) {
+      return {
+        full: `Pro ${formatText(currentPlan.billing_period)}`,
+        short: 'Pro'
+      };
+    }
+
+    return { full: 'Unlock Pro', short: 'Pro' };
+  };
+
+  const getUnlockProButtonStyle = () => {
+    if (!currentUser) {
+      return "bg-[#F2EDFF] dark:bg-gray-800 text-[#2B235A] dark:text-gray-300 border border-[#CECCFF] dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700";
+    }
+
+    if (currentPlan?.billing_period === 'lifetime') {
+      return "bg-[#F5F5FA] text-[#7F7F8A] pointer-events-none";
+    }
+
+    if (currentPlan && currentPlan.price > 0) {
+      return "bg-[#F5F5FA] text-[#7F7F8A] pointer-events-none";
+    }
+
+    return "holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white hover:opacity-95";
+  };
+
+  const handleLogout = () => {
+    onMobileItemAction?.();
+    router.post('/logout', {}, {
+      onSuccess: () => router.get('/', {}, { replace: true }),
+      onError: () => router.get('/', {}, { replace: true }),
+    });
+  };
+
+  const shouldShowAvatar = currentUser?.avatar && !avatarError;
+  const buttonText = getUnlockProButtonText();
+  const buttonStyle = getUnlockProButtonStyle();
 
   // Update sliding indicator position
   useEffect(() => {
@@ -276,6 +388,7 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
               key={item.name}
               href={getRouteHref(item.route)}
               data-active={active}
+              onClick={() => onMobileItemAction?.()}
               className={`flex items-center justify-between px-3 py-2 rounded-lg group focus:outline-none transition-colors duration-200 ${
                 active
                   ? 'text-[#443B82] dark:text-white !bg-[linear-gradient(90deg,_#F8F8F9_33.59%,_rgba(255,255,255,0)_114.25%)]'
@@ -302,27 +415,198 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
   );
 
   return (
+    <>
     <div className="bg-off-white rounded-t-md dark:bg-gray-900 h-[calc(100vh-theme(spacing.16))] overflow-y-auto">
       <div className="flex flex-col h-full">
-        {/* Logo - Mobile Only */}
+        {/* Mobile Top Actions */}
         <div className="lg:hidden px-5 pt-6 pb-4 dark:border-gray-700">
-          <Link href="/" className="flex items-center space-x-2 focus:outline-none">
-            {logo ? (
-              <img
-                src={logo}
-                alt="RippliX Logo"
-                className="h-8 max-w-[120px] object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
+          {currentUser ? (
+            <div className="flex items-center justify-end gap-1.5" ref={dropdownRef}>
+              <button
+                onClick={() => {
+                  if (onOpenPricingModal) {
+                    onOpenPricingModal();
+                  }
                 }}
-              />
-            ) : null}
-            <div className={`w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center ${logo ? 'hidden' : ''}`}>
-              <span className="text-white dark:text-black font-bold text-sm">R</span>
+                className={`px-3 py-2 rounded-[4px] !font-sora !font-medium text-sm transition-colors whitespace-nowrap outline-none focus:outline-none ${buttonStyle}`}
+              >
+                {buttonText.full}
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  className="bg-[#E6E7F3] dark:bg-gray-800 text-[#443B82] dark:text-gray-300 p-2 rounded-3xl border outline-none focus:outline-none border-[#CECCFF] dark:border-gray-600 dark:hover:bg-gray-700 transition-colors flex items-center justify-center w-10 h-10 overflow-hidden"
+                >
+                  {shouldShowAvatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      className="w-full h-full object-cover rounded-full"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-[13rem] max-w-[calc(100vw-3rem)] bg-[#F7F7FC] dark:bg-gray-800 rounded-lg shadow-lg border border-[#B7B3FF] dark:border-gray-700 z-[95] outline-none focus:outline-none">
+                    <div className="p-[6px]">
+                      <div className="px-4 py-2 text-sm text-[#2B235A] dark:text-gray-300 border-b border-[#E3E2FF] dark:border-gray-700">
+                        <div className="font-medium truncate">{currentUser.name}</div>
+                        <div className="text-[#9D9DA8] dark:text-gray-400 text-xs truncate">{currentUser.email}</div>
+                      </div>
+
+                      <div className='border-b border-[#E3E2FF] dark:border-gray-700'>
+                        <button
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            onOpenProfileModal?.();
+                          }}
+                          className="w-full text-left block px-2 !py-[6px] mt-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                        >
+                          <div className="flex items-center mb-1">
+                            <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
+                              <SettingsIcon className='w-4 h-4'/>
+                            </span>
+                            <span className="font-medium text-[#2B235A]">Settings</span>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            onOpenSupportModal?.();
+                          }}
+                          className="w-full text-left block px-2 !py-[6px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                        >
+                          <div className="flex items-center mb-1">
+                            <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
+                              <MessageSquare className='w-4 h-4'/>
+                            </span>
+                            <span className="font-medium text-[#2B235A]">Support</span>
+                            {unreadSupportCount > 0 && (
+                              <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-2">
+                                {unreadSupportCount}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            onOpenPricingModal?.();
+                          }}
+                          className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                        >
+                          <div className="flex items-center mb-1">
+                            <span className="bg-[#F5F5FA] border border-[#E3E2FF] text-[#2B235A] p-2 rounded-md mr-2">
+                              <UserPlus className='w-4 h-4'/>
+                            </span>
+                            <span className="font-medium text-[#2B235A]">Membership</span>
+                          </div>
+                        </button>
+                        <div className='border-t border-[#E3E2FF] dark:border-gray-700 py-2 pl-2'>
+                          <Link
+                            href={'/blog'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Blog</span>
+                            </div>
+                          </Link>
+                          <Link
+                            href={'/payment-management'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Payment Management</span>
+                            </div>
+                          </Link>
+                          <Link
+                            href={'/privacy'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Privacy Policy</span>
+                            </div>
+                          </Link>
+                          <Link
+                            href={'/terms'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Terms of Service</span>
+                            </div>
+                          </Link>
+                          <Link
+                            href={'/cookie-policy'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Cookie Policy</span>
+                            </div>
+                          </Link>
+                          <Link
+                            href={'/disclaimer'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Disclaimer</span>
+                            </div>
+                          </Link>
+                          <Link
+                            href={'/report-content-policy'}
+                            onClick={() => onMobileItemAction?.()}
+                            className="w-full text-left block px-2 !py-[6px] mb-[3px] text-sm text-gray-700 dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 focus:outline-none focus:ring-0 transition-colors duration-500"
+                          >
+                            <div className="flex items-center">
+                              <span className="font-medium text-[#2B235A]">Report Content Policy</span>
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-2 py-2 mt-[3px] text-sm text-[#2B235A] dark:text-gray-300 hover:bg-white rounded-lg dark:hover:bg-gray-700 transition-colors flex items-center outline-none focus:outline-none"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onOpenPricingModal?.()}
+                className="holographic-link bg-[linear-gradient(360deg,_#1A04B0_-126.39%,_#260F63_76.39%)] text-white px-3 py-2 rounded-[4px] !font-sora !font-medium text-sm hover:opacity-95 transition-opacity whitespace-nowrap shadow-[4px_4px_6px_0px_#34407C2E] outline-none focus:outline-none"
+              >
+                Unlock Pro
+              </button>
+              <Link
+                href="/register"
+                onClick={() => onMobileItemAction?.()}
+                className="bg-[#F2EDFF] text-[#2B235A] border border-[#CECCFF] px-3 py-2 rounded-[4px] !font-sora !font-medium text-sm hover:bg-[#ECE6FF] transition-colors whitespace-nowrap outline-none focus:outline-none"
+              >
+                Join Now
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
@@ -447,6 +731,7 @@ const Sidebar2: React.FC<Sidebar2Props> = ({ currentRoute, auth }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

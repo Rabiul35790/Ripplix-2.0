@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { X, Check, Zap, Loader2, Lock, Sparkles } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface SubscriptionPlan {
     id: number;
@@ -207,9 +208,22 @@ const SubscriptionPricingModal: React.FC<Props> = ({ isOpen, onClose, isAuthenti
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 backdrop-blur-md bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-            <div className="bg-white font-sora border-2 sm:border-3 border-[#E3E2FF] dark:bg-gray-900 rounded-md shadow-xl w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-[54rem] max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+    const modalContent = (
+        <div
+            className="backdrop-blur-md bg-black bg-opacity-50 z-[999] p-2 sm:p-4"
+            style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                width: '100vw',
+                height: '100dvh',
+                display: 'grid',
+                placeItems: 'center',
+            }}
+        >
+            <div className="bg-white font-sora border-2 sm:border-3 border-[#E3E2FF] dark:bg-gray-900 rounded-md shadow-xl w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-[54rem] max-h-[95dvh] sm:max-h-[90dvh] overflow-y-auto">
                 <div className="py-4 px-4 sm:py-6 sm:px-8 md:py-8 md:px-12 lg:px-16">
                     {/* Header */}
                     <div className="flex justify-between items-center mb-4 sm:mb-6">
@@ -394,6 +408,12 @@ const SubscriptionPricingModal: React.FC<Props> = ({ isOpen, onClose, isAuthenti
             </div>
         </div>
     );
+
+    if (typeof document === 'undefined') {
+        return null;
+    }
+
+    return createPortal(modalContent, document.body);
 };
 
 export default SubscriptionPricingModal;
