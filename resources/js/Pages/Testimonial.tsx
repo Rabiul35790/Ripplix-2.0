@@ -90,10 +90,10 @@ const Testimonials: React.FC<TestimonialsProps> = ({
       {/* Header Section */}
       <div className="text-center mb-8 sm:mb-10 lg:mb-12">
         <h2 className="font-sora text-2xl sm:text-3xl md:text-4xl lg:text-5xl !font-bold text-[#251C64] mb-3 md:mb-4 leading-tight">
-          1,200+ Creatives Can't Be Wrong
+          Trusted by 1,200+ Designers Exploring<br /> UI Animation
         </h2>
         <p className="font-poppins text-[#828287] text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-4">
-          Trusted by designers and studios who use Ripplix to explore and organize motion inspiration
+          Designers and motion teams rely on Ripplix to study real UI animation examples, refine micro-interactions and improve interaction design across web, mobile and emerging platforms.
         </p>
       </div>
 

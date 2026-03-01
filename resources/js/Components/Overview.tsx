@@ -60,12 +60,15 @@ const Overview: React.FC<OverviewProps> = ({
     <div className="w-full">
       {/* Hero Section */}
       <div className="text-center py-8 md:py-12 px-4">
-        <h1 className="font-sora text-3xl sm:text-4xl md:text-5xl !font-bold text-[#251C64] mb-3 md:mb-4 leading-tight">
-          Designed to inspire,<br />built for action
-        </h1>
+        <h2 className="font-sora text-3xl sm:text-4xl md:text-5xl !font-bold text-[#251C64] mb-3 md:mb-4 leading-tight">
+          {/* Designed to inspire,<br />built for action */}
+          Explore Real UI Animation <br />Across Apps and Platforms
+        </h2>
         <p className="font-poppins text-[#828287] text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
-          Explore 3,000+ real UI animations curated from leading<br className="hidden md:block" />
-          digital products to spark your next idea.
+          {/* Explore 3,000+ real UI animations curated from leading <br className="hidden md:block" />
+          digital products to spark your next idea. */}
+
+          Ripplix curates thousands of real UI animation examples from the apps people use every day. Discover interaction patterns across 85+ industries, 5,000+ interface moments and multiple platforms including web, mobile, smartwatch and AR/VR.
         </p>
       </div>
 
@@ -78,8 +81,10 @@ const Overview: React.FC<OverviewProps> = ({
               {filters.categories.length}+ Apps You Use Daily
             </h2>
             <p className="font-poppins text-[#828287] text-sm md:text-base mb-6 md:mb-8">
-              Save your favorite animations, organize by theme,<br className="hidden sm:block" />
-              and share boards with your team
+              {/* Save your favorite animations, organize by theme,<br className="hidden sm:block" />
+              and share boards with your team */}
+
+              Real UI animation examples from leading digital products.
             </p>
 
             {/* Image Placeholder for App Screenshots */}
@@ -120,8 +125,9 @@ const Overview: React.FC<OverviewProps> = ({
               {filters.industries.length}+ Industries
             </h2>
             <p className="font-poppins text-[#5E727E] text-xs sm:text-sm mb-4 md:mb-6">
-              Save your favorite animations, organize<br className="hidden sm:block" />
-              by theme, and share boards with your
+              {/* Save your favorite animations, organize<br className="hidden sm:block" />
+              by theme, and share boards with your */}
+              Interaction patterns tailored to different business sectors.
             </p>
 
             <div className="flex flex-wrap gap-2 relative z-[1]">
@@ -145,8 +151,9 @@ const Overview: React.FC<OverviewProps> = ({
               {total}+ Interactions
             </h2>
             <p className="font-poppins text-[#7A5D93] text-xs sm:text-sm mb-4 md:mb-6">
-              Save your favorite animations, organize<br className="hidden sm:block" />
-              by theme, and share boards with your
+              {/* Save your favorite animations, organize<br className="hidden sm:block" />
+              by theme, and share boards with your */}
+              From button feedback to loading states and scroll behaviors.
             </p>
 
             <div className="flex flex-wrap gap-2 relative z-[1]">
@@ -170,8 +177,10 @@ const Overview: React.FC<OverviewProps> = ({
               Major Platforms
             </h2>
             <p className="font-poppins text-[#71736F] text-xs sm:text-sm mb-4 md:mb-6">
-              Save your favorite animations, organize<br className="hidden sm:block" />
-              by theme, and share boards with your
+              {/* Save your favorite animations, organize<br className="hidden sm:block" />
+              by theme, and share boards with your */}
+
+              Web, mobile, smartwatch and AR/VR motion systems.
             </p>
 
             <div className="flex flex-wrap gap-2">

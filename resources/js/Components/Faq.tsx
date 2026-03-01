@@ -8,6 +8,7 @@ interface FAQItem {
 }
 
 interface FAQProps {
+ isHome?: boolean;
   heading?: string;
   faqItems?: Array<{
     question: string;
@@ -16,36 +17,42 @@ interface FAQProps {
 }
 
 const FAQ: React.FC<FAQProps> = ({
-  heading = "Your Questions Answered",
-  faqItems = []
+  heading = "Common Questions About UI Animation",
+  faqItems = [],
+  isHome
 }) => {
   const [openId, setOpenId] = useState<number | null>(null);
 
   const defaultFaqData: FAQItem[] = [
     {
       id: 1,
-      question: "What is Ripplix?",
-      answer: "Ripplix is a curated platform showcasing real UI motion and microinteractions from top digital products. It helps designers discover, study, and save animation patterns for inspiration or team reference."
+      question: "What is UI animation?",
+      answer: "UI animation refers to motion within a digital interface that helps users understand interactions, receive feedback, and navigate smoothly. This can include button feedback, loading states, page transitions, hover effects, and micro-interactions. When used thoughtfully, UI animation improves clarity, usability, and overall user experience across web, mobile, smartwatch, and emerging platforms like AR/VR."
     },
     {
       id: 2,
-      question: "Is Ripplix free to use?",
-      answer: "Yes! You can browse and explore animations for free, but with limited access. Signing up lets you create boards, save your favorite interactions, and share collections with others."
+      question: "Why is UI animation important in UX design?",
+      answer: "UI animation improves communication between the interface and the user. It provides visual feedback, reduces confusion, and guides attention during interactions. Subtle motion can indicate system status, confirm actions, or highlight important changes. When designed correctly, animation enhances usability without becoming distracting."
     },
     {
       id: 3,
-      question: "How often are new animations added?",
-      answer: "New interactions are added weekly — featuring trending motion designs across web, mobile, and emerging platforms like AR/VR."
+      question: "What are micro-interactions in UI design?",
+      answer: "Micro-interactions are small animated responses that occur when users perform an action. Examples include a button changing state, a toggle switch sliding, or a loading spinner appearing. These small moments improve engagement and make interfaces feel more responsive and intuitive."
     },
     {
       id: 4,
-      question: "Can I share boards with my team or clients?",
-      answer: "Absolutely. Ripplix lets you create custom boards and share them via a link, perfect for presenting inspiration or alignment during projects."
+      question: "How can I learn from real UI animation examples?",
+      answer: "Studying real UI animation examples from production apps helps designers understand how motion is applied in real-world contexts. By analyzing patterns across industries and platforms, you can identify effective interaction design techniques and apply them to your own projects."
     },
     {
       id: 5,
-      question: "Where do the animations come from?",
-      answer: "All animations are handpicked from real apps and products. Our team curates and categorizes them to ensure quality and context."
+      question: "Where do the animations on Ripplix come from?",
+      answer: "Ripplix curates UI animations from real digital products across multiple industries. Each example is categorized by interaction type, element, platform, and app, making it easier to explore how motion is used in different contexts."
+    },
+    {
+      id: 6,
+      question: "Is Ripplix free to use?",
+      answer: "Ripplix offers limited access for exploration, with premium features available for deeper research and organization. You can browse examples and upgrade if you need advanced filtering, boards, and collaboration features."
     }
   ];
 
@@ -66,9 +73,16 @@ const FAQ: React.FC<FAQProps> = ({
     <div className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <h2 className="font-sora text-3xl sm:text-4xl md:text-5xl !font-bold text-[#251C64] text-center mb-8 sm:mb-10 lg:mb-12">
-          {heading}
-        </h2>
+        <div className="max-w-[700px] text-center py-8 md:py-12 px-4">
+            <h2 className="font-sora text-3xl sm:text-4xl md:text-5xl !leading-tight !font-bold text-[#251C64] text-center mb-4 sm:mb-5 lg:mb-6">
+                {heading}
+            </h2>
+            {isHome && (
+            <p className="font-poppins text-[#828287] text-sm sm:text-base md:text-lg max-w-[580px] mx-auto px-4">
+                Find clear answers about UI animation, micro-interactions and motion in digital interfaces, including best practices and real-world examples.
+            </p>
+            )}
+        </div>
 
         {/* FAQ Items */}
         <div className="space-y-4">

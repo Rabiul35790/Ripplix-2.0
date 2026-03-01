@@ -747,6 +747,13 @@ const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
         </>
         )}
 
+        {!isAuthenticated && (
+            <div className="font-sora mx-4 lg:mx-14 md:mx-5 mb-2">
+            <h2 className='text-xl lg:text-2xl !font-bold text-[#2B235A] mb-2'>Browse Worlds Largest UI Animations Library</h2>
+            <p className='text-[#5E727E]'>Explore thousands of real, UI animations designed to enhance user experience and bring your<br /> web and app interfaces to life</p>
+            </div>
+        )}
+
         {/* Library Grid Section with Sticky Filter */}
         <div id="home-filter-section" className="scroll-mt-24 lg:mx-8 mt-2 sm:mt-4 lg:mt-1 pb-8 sm:pb-10 lg:pb-12 relative">
           <div className="sticky top-[60px] md:top-[68px] lg:top-[68px] z-10" style={{ contain: 'layout style paint' }}>
@@ -823,7 +830,7 @@ const handleStarClick = useCallback((library: Library, isStarred: boolean) => {
               <Testimonials />
             </div>
             <div className="lg:mx-8 mt-2 sm:mt-4 lg:mt-4 pb-8 sm:pb-10 lg:pb-12">
-              <FAQ/>
+              <FAQ isHome={true}/>
             </div>
           </>
         )}

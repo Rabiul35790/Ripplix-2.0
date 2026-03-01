@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import React, { useMemo } from 'react';
 
 interface Settings {
@@ -335,17 +336,17 @@ const HeroSection: React.FC<HeroSectionProps> = ({ settings }) => {
 
           {/* Description */}
           <p className="text-sm sm:text-base md:text-base lg:text-lg xl:text-xl text-[#555555] leading-relaxed max-w-[280px] sm:max-w-xl md:max-w-2xl lg:max-w-[720px] xl:max-w-[820px] font-normal text-center md:text-left font-poppins">
-            A curated, evolving library of the world's best UI animations. Stream inspiration, study motion systems, and design experiences users feel.
+            Ripplix is the world's largest curated UI animation library featuring 7,000+ curated UI animations from 1,000+ real apps across mobile, web, smartwatch and AR/VR platforms.
           </p>
 
           {/* CTA Section */}
           <div className="flex flex-col sm:flex-row items-center md:items-start sm:items-center gap-4 sm:gap-5 pt-2 w-full">
-            <button
-              onClick={handleBookmark}
+            <Link
+              href="/register"
               className="holographic-link2 group relative px-3.5 sm:px-7 md:px-7 lg:px-8 py-2 sm:py-3 md:py-3 lg:py-3.5 bg-[#6343D6] text-white font-semibold rounded-xl transition-all duration-300 w-auto sm:w-auto text-sm md:text-sm lg:text-base outline-none focus:outline-none focus:ring-0"
             >
-              <span className="font-sora relative z-10 !font-semibold">Bookmark Now</span>
-            </button>
+              <span className="font-sora relative z-10 !font-semibold">Get Started</span>
+            </Link>
 
             {/* User Avatars */}
             <div className="flex flex-col md:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
